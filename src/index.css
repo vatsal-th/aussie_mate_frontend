@@ -54,14 +54,14 @@ button {
   color: #111827 !important;
 }
 
+.text-primary-200 {
+  color: #6B7280 !important;
+}
+
 .text-primary-600 {
   color: #1d4ed8 !important;
 }
-
-.text-primary-200 {
-  color: #EBF2FD !important;
-}
-
+  
 .border-primary-500\/20 {
   border-color: rgba(31, 111, 235, 0.2) !important;
 }

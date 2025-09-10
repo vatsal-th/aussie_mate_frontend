@@ -95,7 +95,7 @@ const JobDetailsPage = () => {
           <Link to="/post-new-job" className="mr-4">
             <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Post New Job</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
         </div>
 
         {/* Main Content */}
@@ -103,29 +103,29 @@ const JobDetailsPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* Property Details Section */}
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-2">
                 Tell us about your property
               </h2>
-              <p className="text-sm sm:text-base text-gray-600 mb-6">
+              <p className="text-sm sm:text-base text-primary-200 mb-6">
                 Add property details to ensure the best cleaning plan for you.
               </p>
 
               {/* Property Type */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary-500 mb-2">
                   Property Type
                 </label>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     type="button"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-left flex justify-between items-center bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer"
                   >
-                    <span className={formData.propertyType ? 'text-gray-900' : 'text-gray-500'}>
+                    <span className={formData.propertyType ? 'text-primary-500' : 'text-primary-200'}>
                       {getSelectedPropertyType()}
                     </span>
                     <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                      className={`w-5 h-5 text-primary-200 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -135,16 +135,16 @@ const JobDetailsPage = () => {
                   </button>
                   
                   {isDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <div className="absolute z-10 w-full mt-[1px] bg-white border border-gray-300 rounded-lg shadow-lg py-2 px-4">
                       {propertyTypes.map((type) => (
                         <button
                           key={type.value}
                           type="button"
                           onClick={() => handlePropertyTypeSelect(type.value)}
-                          className={`w-full px-4 py-3 text-left text-sm sm:text-base hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                          className={`w-full px-4 py-3 text-left text-sm sm:text-base hover:bg-primary-200 transition-colors first:rounded-t-lg last:rounded-b-lg cursor-pointer ${
                             formData.propertyType === type.value 
-                              ? 'bg-gray-100 text-gray-900' 
-                              : 'text-gray-700'
+                              ? 'bg-primary-200 text-primary-500' 
+                              : 'text-primary-200'
                           }`}
                         >
                           {type.label}
@@ -159,14 +159,14 @@ const JobDetailsPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Bedrooms */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-primary-500 mb-2">
                     Bedrooms
                   </label>
                   <div className="flex items-center border border-gray-300 rounded-full">
                     <button
                       type="button"
                       onClick={() => handleNumberChange('bedrooms', 'decrement')}
-                      className="p-1 transition-colors bg-primary-200 ml-3"
+                      className="p-1 transition-colors bg-primary-200 ml-3 cursor-pointer"
                     >
                       <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
                     </button>
@@ -181,7 +181,7 @@ const JobDetailsPage = () => {
                     <button
                       type="button"
                       onClick={() => handleNumberChange('bedrooms', 'increment')}
-                      className="p-1 transition-colors bg-primary-500 mr-3"
+                      className="p-1 transition-colors bg-primary-500 mr-3 cursor-pointer"
                     >
                       <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
                     </button>
@@ -190,14 +190,14 @@ const JobDetailsPage = () => {
 
                 {/* Bathrooms */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-primary-500 mb-2">
                     Bathrooms
                   </label>
                   <div className="flex items-center border border-gray-300 rounded-full">
                     <button
                       type="button"
                       onClick={() => handleNumberChange('bathrooms', 'decrement')}
-                      className="p-1 transition-colors bg-primary-200 ml-3"
+                      className="p-1 transition-colors bg-primary-200 ml-3 cursor-pointer"
                     >
                       <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
                     </button>
@@ -212,7 +212,7 @@ const JobDetailsPage = () => {
                     <button
                       type="button"
                       onClick={() => handleNumberChange('bathrooms', 'increment')}
-                      className="p-1 transition-colors bg-primary-500 mr-3"
+                      className="p-1 transition-colors bg-primary-500 mr-3 cursor-pointer"
                     >
                       <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
                     </button>
@@ -223,7 +223,7 @@ const JobDetailsPage = () => {
 
             {/* Add-ons Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add-ons</h3>
+              <h3 className="text-lg font-semibold text-primary-500 mb-4">Add-ons</h3>
               <div className="space-y-3">
                 {[
                   { id: 'carpetCleaning', label: 'Carpet cleaning' },
@@ -237,7 +237,7 @@ const JobDetailsPage = () => {
                       onChange={() => handleAddonChange(addon.id)}
                       className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                     />
-                    <span className="text-sm sm:text-base text-gray-700">{addon.label}</span>
+                    <span className="text-sm sm:text-base text-primary-500">{addon.label}</span>
                   </label>
                 ))}
               </div>
@@ -245,25 +245,25 @@ const JobDetailsPage = () => {
 
             {/* Upload Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-primary-500 mb-4">
                 Upload Photos/Videos (Optional)
               </h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-gray-400 transition-colors">
+              <div className="border-2 border-dashed border-primary-200 rounded-lg p-6 sm:p-8 text-center hover:border-primary-200 transition-colors">
                 <div className="flex flex-col items-center space-y-4 ">
-                    <div className="bg-primary-200 rounded-full p-4">
+                    <div className="bg-primary-200 rounded-full p-4 cursor-pointer">
 
                   <img src={UploadCloudIcon} alt="Upload" className="w-12 h-12 sm:w-10 sm:h-10" />
                     </div>
                   <div>
-                    <p className="text-sm sm:text-base text-gray-600 mb-2">
+                    <p className="text-sm sm:text-base text-primary-200 mb-2">
                       Select photos/videos to upload
                     </p>
                     <button
                       type="button"
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto transition-colors"
+                      className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto transition-colors cursor-pointer"
                     >
+                      <span className="text-sm sm:text-base cursor-pointer">Upload Here</span>
                       <img src={UploadIcon} alt="Upload" className="w-4 h-4" />
-                      <span className="text-sm sm:text-base">Upload Here</span>
                     </button>
                   </div>
                 </div>
@@ -272,7 +272,7 @@ const JobDetailsPage = () => {
 
             {/* Instructions Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-primary-500 mb-4">
                 Anything specific we should know? (Optional)
               </h3>
               <textarea
@@ -280,15 +280,15 @@ const JobDetailsPage = () => {
                 onChange={(e) => handleInputChange('instructions', e.target.value)}
                 placeholder="Write your instructions here in any....."
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-[10px]! focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base resize-none"
               />
             </div>
 
             {/* Continue Button */}
-            <div className="pt-4">
+            <div className="flex justify-end">
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 sm:py-4 px-6 rounded-lg text-sm sm:text-base transition-colors"
+                className="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 sm:py-3 px-6 rounded-lg text-sm sm:text-base transition-colors cursor-pointer"
               >
                 Continue
               </button>
