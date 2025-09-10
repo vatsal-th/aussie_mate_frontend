@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+
+/* Global input and button styling with 36px border radius */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+textarea,
+select,
+button {
+  border-radius: 36px !important;
+}
+
+/* Force primary colors to work */
+.bg-primary-500 {
+  background-color: #1F6FEB !important;
+}
+
+.bg-primary-600 {
+  background-color: #1d4ed8 !important;
+}
+
+.text-primary-500 {
+  color: #1F6FEB !important;
+}
+
+.text-primary-600 {
+  color: #1d4ed8 !important;
+}
+
+.border-primary-500\/20 {
+  border-color: rgba(31, 111, 235, 0.2) !important;
+}
+
+.focus\:ring-primary-500:focus {
+  --tw-ring-color: #1F6FEB !important;
+}
+
+/* Custom checkbox styling */
+input[type="checkbox"] {
+  accent-color: #1F6FEB !important;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #1F6FEB !important;
+  border-color: #1F6FEB !important;
+}
