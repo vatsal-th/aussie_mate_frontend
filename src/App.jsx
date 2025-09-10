@@ -8,6 +8,8 @@ import LocationPage from './pages/LocationPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import CustomerDashboard from './pages/CustomerDashboard'
+import PostNewJobPage from './pages/PostNewJobPage'
+import JobDetailsPage from './pages/JobDetailsPage'
 
 function App() {
 
@@ -22,6 +24,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/post-new-job" element={<PostNewJobPage />} />
+        <Route path="/job-details/:serviceId" element={<JobDetailsPage />} />
         </Routes>
       </Router>
     </AuthProvider>

@@ -1,16 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import Header from '../components/Header';
-import CardBG from '../assets/CardBG.svg';
 import CardBG2 from '../assets/CardBG2.png';
 import CardBG3 from '../assets/CardBG3.png';
 import CardBG4 from '../assets/CardBG4.png';
-import CardBG5 from '../assets/CardBG5.png';
 import RewardImage from '../assets/Reward.jpg';
 import CoinImage from '../assets/coin.png';
 import CalendarIcon from '../assets/Calendar.svg';
@@ -166,11 +164,11 @@ const CustomerDashboard = () => {
                 className="w-full pl-9 sm:pl-10 pr-4 py-3 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 sm:py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors text-sm whitespace-nowrap">
+            <Link to="/post-new-job" className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 sm:py-2 rounded-full flex items-center justify-center space-x-2 transition-colors text-sm whitespace-nowrap">
               <img src={PlusIcon} alt="Plus" className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline">Post New Job</span>
               <span className="sm:hidden">Post Job</span>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -250,6 +248,14 @@ const CustomerDashboard = () => {
             
             {/* Navigation Buttons */}
             <div className="flex space-x-2">
+                 <div className="flex space-x-2">
+                     <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-sm font-medium hover:text-white border border-[#1F6FEB] rounded-full px-4 py-2 flex items-center space-x-2">
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                         <path d="M20.2974 5.32548H16.8208V3.15311C16.8208 2.17207 16.0145 1.37402 15.0234 1.37402H8.97664C7.98556 1.37402 7.17927 2.17216 7.17927 3.15311V5.32548H3.70256C1.66097 5.32548 0 6.98645 0 9.02804V19.6015C0 21.2691 1.3567 22.6258 3.02437 22.6258H20.9756C22.6433 22.6258 24 21.2691 24 19.6015V9.02804C24 6.98645 22.339 5.32548 20.2974 5.32548ZM8.58978 3.15311C8.58978 2.94297 8.75609 2.78454 8.97664 2.78454H15.0234C15.2439 2.78454 15.4102 2.94297 15.4102 3.15311V5.32548H8.58978V3.15311ZM22.5894 19.6015C22.5894 20.4913 21.8655 21.2153 20.9756 21.2153H3.02437C2.13445 21.2153 1.41051 20.4913 1.41051 19.6015V13.0138C1.63556 13.1551 1.87812 13.2663 2.13201 13.3448C2.14551 13.3489 2.15911 13.3527 2.17279 13.356L9.35787 15.112V15.6921C9.35787 16.6027 10.0988 17.3436 11.0095 17.3436H12.9905C13.9012 17.3436 14.6421 16.6027 14.6421 15.6921V15.112L21.8272 13.356C21.8409 13.3527 21.8545 13.349 21.8679 13.3448C22.1218 13.2663 22.3644 13.1551 22.5894 13.0138V19.6015H22.5894ZM10.7684 15.6921V13.7021C10.7685 13.6382 10.7939 13.5769 10.8391 13.5317C10.8843 13.4865 10.9456 13.4611 11.0095 13.461H12.9905C13.0545 13.4611 13.1157 13.4865 13.1609 13.5317C13.2061 13.5769 13.2316 13.6382 13.2316 13.7021V15.6921C13.2315 15.756 13.2061 15.8173 13.1609 15.8624C13.1157 15.9076 13.0545 15.9331 12.9905 15.9331H11.0095C10.9456 15.933 10.8843 15.9076 10.8391 15.8624C10.7939 15.8172 10.7685 15.756 10.7684 15.6921ZM22.5895 10.4493C22.5895 11.1584 22.1405 11.7756 21.47 11.9913L14.6411 13.6602C14.6187 12.7688 13.8872 12.0504 12.9905 12.0504H11.0095C10.1129 12.0504 9.38136 12.7688 9.35895 13.6602L2.53003 11.9913C1.85957 11.7756 1.41051 11.1584 1.41051 10.4493V9.02804C1.41051 7.7642 2.43871 6.736 3.70256 6.736H20.2974C21.5612 6.736 22.5894 7.7642 22.5894 9.02804V10.4493H22.5895Z" fill="white"/>
+                       </svg>
+                       <span>View Jobs</span>
+                     </button>
+                 </div>
               <button 
                 onClick={goToPrev}
                 className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-all"
