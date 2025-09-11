@@ -65,13 +65,13 @@ const JobPostingPage = () => {
                 type="text"
                 value={selectedDate}
                 onChange={handleDateChange}
-                className="w-full bg-white rounded-lg px-4 py-3 pr-10 text-primary-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#E5E7EB]"
+                className="w-full bg-white rounded-lg px-4 py-3 pr-10 text-primary-200 placeholder-gray-500 focus:outline-none  border border-[#E5E7EB] cursor-pointer"
                 placeholder="Select date"
               />
               <img 
                 src={CalendarIcon} 
                 alt="Calendar" 
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 cursor-pointer"
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ const JobPostingPage = () => {
             </span>
             <button
               onClick={handleUrgencyToggle}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
                 isUrgent ? 'bg-primary-500' : 'bg-gray-300'
               }`}
             >
@@ -131,7 +131,7 @@ const JobPostingPage = () => {
                   {selectedLocation.city}
                 </div>
               </div>
-              <button className="text-[#1F6FEB] text-sm font-medium border border-[#E5E7EB] rounded-[8px]! px-4 py-2">
+              <button className="text-[#1F6FEB] text-sm font-medium border border-[#E5E7EB] rounded-[8px]! px-4 py-2 cursor-pointer">
                 Change
               </button>
             </div>
@@ -141,7 +141,7 @@ const JobPostingPage = () => {
            <div className="flex justify-end">
              <button
                onClick={handlePostJob}
-               className="bg-primary-500 text-white font-medium py-2 px-6 rounded-lg hover:bg-primary-600 transition-colors focus:outline-none"
+               className="bg-primary-500 text-white font-medium py-2 px-6 rounded-lg hover:bg-primary-600 transition-colors focus:outline-none cursor-pointer"
              >
                Post Job
              </button>

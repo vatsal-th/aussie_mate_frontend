@@ -232,12 +232,12 @@ const JobDetailsPage = () => {
                   { id: 'windowCleaning', label: 'Window cleaning' },
                   { id: 'ovenCleaning', label: 'Oven cleaning' }
                 ].map((addon) => (
-                  <label key={addon.id} className="flex items-center space-x-3 cursor-pointer">
+                  <label key={addon.id} className="flex items-center space-x-3">
                     <input
                       type="checkbox"
                       checked={formData.addons[addon.id]}
                       onChange={() => handleAddonChange(addon.id)}
-                      className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                      className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
                     />
                     <span className="text-sm sm:text-base text-[#374151]">{addon.label}</span>
                   </label>
@@ -275,7 +275,7 @@ const JobDetailsPage = () => {
             {/* Instructions Section */}
             <div>
               <h3 className="text-lg font-semibold text-primary-500 mb-4">
-                Anything specific we should know? (Optional)
+                Anything specific we should know? <span className="text-primary-200 font-medium"> (Optional)</span>
               </h3>
               <textarea
                 value={formData.instructions}

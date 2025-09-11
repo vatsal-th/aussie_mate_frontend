@@ -71,7 +71,7 @@ const JobSuccessPage = () => {
               {/* View My Job Button */}
               <button
                 onClick={handleViewMyJob}
-                className="w-full bg-primary-500 text-white font-medium py-3 px-6 rounded-lg hover:bg-primary-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full bg-primary-500 text-white font-medium py-3 px-6 rounded-lg hover:bg-primary-600 transition-colors focus:outline-none cursor-pointer"
               >
                 View My Job
               </button>
@@ -79,10 +79,10 @@ const JobSuccessPage = () => {
               {/* Return Home Link */}
               <button
                 onClick={handleReturnHome}
-                className="flex items-center justify-center space-x-2 text-primary-500 hover:text-gray-800 transition-colors mx-auto"
+                className="flex items-center justify-center space-x-2 text-primary-500 hover:text-gray-800 transition-colors mx-auto cursor-pointer"
               >
                 <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4" />
-                <span className="text-primary-500 font-medium text-md">Return Home</span>
+                <span className="text-primary-500 font-medium text-md ">Return Home</span>
               </button>
             </div>
           </div>
