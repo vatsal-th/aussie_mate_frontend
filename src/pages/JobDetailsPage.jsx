@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import UploadIcon from '../assets/upload.svg';
 import MinusIcon from '../assets/minus.svg';
@@ -8,6 +8,7 @@ import PlusIcon from '../assets/plus.svg';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 
 const JobDetailsPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     propertyType: '',
     bedrooms: 1,
@@ -82,7 +83,8 @@ const JobDetailsPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    // Handle form submission here
+    // Navigate to job posting page
+    navigate('/job-posting');
   };
 
   return (
@@ -237,7 +239,7 @@ const JobDetailsPage = () => {
                       onChange={() => handleAddonChange(addon.id)}
                       className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                     />
-                    <span className="text-sm sm:text-base text-primary-500">{addon.label}</span>
+                    <span className="text-sm sm:text-base text-[#374151]">{addon.label}</span>
                   </label>
                 ))}
               </div>
@@ -246,13 +248,13 @@ const JobDetailsPage = () => {
             {/* Upload Section */}
             <div>
               <h3 className="text-lg font-semibold text-primary-500 mb-4">
-                Upload Photos/Videos (Optional)
+                Upload Photos/Videos <span className="text-primary-200 font-medium"> (Optional)</span>
               </h3>
               <div className="border-2 border-dashed border-primary-200 rounded-lg p-6 sm:p-8 text-center hover:border-primary-200 transition-colors">
                 <div className="flex flex-col items-center space-y-4 ">
                     <div className="bg-primary-200 rounded-full p-4 cursor-pointer">
 
-                  <img src={UploadCloudIcon} alt="Upload" className="w-12 h-12 sm:w-10 sm:h-10" />
+                  <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8 sm:w-10 sm:h-10" />
                     </div>
                   <div>
                     <p className="text-sm sm:text-base text-primary-200 mb-2">

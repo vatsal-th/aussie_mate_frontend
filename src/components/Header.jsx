@@ -16,8 +16,8 @@ const Header = () => {
           <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
             <img src={MapPinIcon} alt="Location" className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             <div className="min-w-0">
-              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">123 Example Street</div>
-              <div className="text-xs text-gray-500 truncate hidden sm:block">Sydney NSW 200, Australia</div>
+              <div className="text-xs sm:text-sm font-medium text-primary-500 truncate">123 Example Street</div>
+              <div className="text-xs text-primary-200 truncate hidden sm:block">Sydney NSW 200, Australia</div>
             </div>
           </div>
         </div>
