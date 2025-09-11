@@ -36,8 +36,8 @@ const JobPostingPage = () => {
       isUrgent,
       location: selectedLocation
     });
-    // Navigate to success page or back to dashboard
-    navigate('/customer-dashboard');
+    // Navigate to success page
+    navigate('/job-success');
   };
 
   return (
