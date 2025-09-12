@@ -98,10 +98,6 @@ const SignupPage = () => {
           <div className="flex items-center justify-center mb-4 sm:mb-6">
             <img src={logo} alt="Aussie Mate" className="h-12 sm:h-16 w-auto" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Let's get started</h2>
-          <p className="text-sm sm:text-base text-gray-600 px-2">
-            Please provide the following details to set up your Aussie Mate account.
-          </p>
         </div>
         {/* Signup Form */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
@@ -111,6 +107,10 @@ const SignupPage = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center">Let's get started</h2>
+          <p className="text-sm sm:text-base text-gray-600 px-2 text-center">
+            Please provide the following details to set up your Aussie Mate account.
+          </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="relative">
                 <input
@@ -229,7 +229,7 @@ const SignupPage = () => {
                 className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
                 <img 
-                  src={showPassword ? EyeOffIcon : EyeIcon} 
+                  src={showPassword ? EyeIcon :  EyeOffIcon} 
                   alt={showPassword ? "Hide password" : "Show password"}
                   className="w-5 h-5"
                 />
@@ -255,7 +255,7 @@ const SignupPage = () => {
                 className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
                 <img 
-                  src={showConfirmPassword ? EyeOffIcon : EyeIcon} 
+                  src={showConfirmPassword ? EyeIcon :  EyeOffIcon} 
                   alt={showConfirmPassword ? "Hide password" : "Show password"}
                   className="w-5 h-5"
                 />
@@ -287,7 +287,7 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
             >
               {isLoading ? 'Creating Account...' : 'Continue & Set My Location'}
             </button>
@@ -296,7 +296,7 @@ const SignupPage = () => {
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/" className="text-primary-500 hover:text-primary-600 font-bold">
+              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold">
                 Sign In
               </Link>
             </p>

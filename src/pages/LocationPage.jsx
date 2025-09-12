@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { userAPI } from '../services/api';
 import currentLocationIcon from "../assets/current location.svg";
 
 // Map container style
@@ -22,14 +23,25 @@ const libraries = ['places'];
 const LocationPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [map, setMap] = useState(null);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
   const navigate = useNavigate();
 
   // Google Maps API key
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY ;
+
+  // Check if user is logged in when page loads
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    if (!user) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   // Load Google Maps
   const { isLoaded } = useJsApiLoader({
@@ -62,7 +74,7 @@ const LocationPage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setShowMap(true);
+      // Map is already shown, just update location
       setSelectedLocation({
         fullAddress: "1 Denison Street, North Sydney NSW 2060, Australia",
         lat: -33.839,
@@ -94,7 +106,6 @@ const LocationPage = () => {
           
           if (data.status === "OK") {
             const fullAddress = data.results[0].formatted_address;
-            console.log("Full address:", fullAddress);
 
             const location = {
               fullAddress: fullAddress,
@@ -104,7 +115,6 @@ const LocationPage = () => {
             };
 
             setSelectedLocation(location);
-            setShowMap(true);
           } else {
             console.error("Geocoding error:", data.status, data.error_message);
             
@@ -137,7 +147,6 @@ const LocationPage = () => {
           };
 
           setSelectedLocation(location);
-          setShowMap(true);
           setError("Address lookup failed, but location coordinates are available.");
         } finally {
           setIsLoading(false);
@@ -152,27 +161,114 @@ const LocationPage = () => {
     );
   };
 
-  // Confirm location
-  const handleConfirmLocation = () => {
-    navigate("/dashboard");
+  // Handle manual address input
+  const handleManualAddressSubmit = (e) => {
+    e.preventDefault();
+    if (manualAddress.trim()) {
+      setSelectedLocation({
+        fullAddress: manualAddress.trim(),
+        lat: -33.839, // Default coordinates (can be improved with geocoding)
+        lng: 151.207,
+        coordinates: "-33.839, 151.207",
+      });
+      setShowManualInput(false);
+      setManualAddress("");
+    }
+  };
+
+  // Handle change location click
+  const handleChangeLocation = () => {
+    setShowManualInput(true);
+    setManualAddress(selectedLocation?.fullAddress || "");
+  };
+
+  // Cancel manual input
+  const handleCancelManual = () => {
+    setShowManualInput(false);
+    setManualAddress("");
+  };
+
+  // Confirm location   
+  const handleConfirmLocation = async () => {
+    // Store selected location in backend
+    if (selectedLocation) {
+      // Extract city from full address
+      const fullAddress = selectedLocation.fullAddress || '';
+      const addressParts = fullAddress.split(',');
+      const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : selectedLocation.city || 'Location';
+      
+      const locationData = {
+        address: selectedLocation.address || selectedLocation.fullAddress,
+        city: city,
+        fullAddress: selectedLocation.fullAddress,
+        coordinates: selectedLocation.coordinates
+      };
+      
+      try {
+        // Update location in backend
+        await userAPI.updateLocation(locationData);
+        
+        // Also store in localStorage for immediate UI update
+        localStorage.setItem('userLocation', JSON.stringify(locationData));
+        
+        // Dispatch custom event to update Header
+        window.dispatchEvent(new CustomEvent('locationUpdated'));
+      } catch (error) {
+        console.error('Error updating location in backend:', error);
+        // Still store in localStorage as fallback
+        localStorage.setItem('userLocation', JSON.stringify(locationData));
+        window.dispatchEvent(new CustomEvent('locationUpdated'));
+      }
+    }
+    
+    // Get user info from localStorage to determine user type
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    // If no user is logged in, redirect to login
+    if (!user) {
+      
+      navigate("/login");
+      return;
+    }
+    
+    // Check both userType and role fields
+    const userType = user?.userType || user?.role;
+    
+    
+    // Check if user is a customer (any customer role)
+    if (userType === 'Customer' || userType === 'customer') {
+      
+      navigate("/customer-dashboard");
+    } 
+    // Check if user is any type of cleaner/service provider
+    else if (userType === 'Student Cleaner' || userType === 'Professional Cleaner' || 
+             userType === 'NDIS Assistant' || userType === 'Retail Auditor' || 
+             userType === 'Pet Sitter' || userType === 'Housekeeper' ||
+             userType === 'Cleaner' || userType === 'cleaner') {
+      navigate("/cleaner-dashboard");
+    } else {
+      
+      navigate("/dashboard");
+    }
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="px-4 py-6">
-        {!showMap ? (
-          // Location Search Screen
-          <div className="max-w-md mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Pick your location
-              </h2>
-              <p className="text-gray-600">
-                Add your location so we can match you with the closest cleaners.
-              </p>
-            </div>
+        <div className="max-w-md mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Pick your location
+            </h2>
+            <p className="text-gray-600">
+              Add your location so we can match you with the closest cleaners.
+            </p>
+          </div>
 
-            <form onSubmit={handleSearch} className="space-y-6">
+          {/* Search and Location Controls */}
+          <div className="mb-4 space-y-3">
+            <form onSubmit={handleSearch} className="space-y-3">
               {/* Search Input */}
               <input
                 type="text"
@@ -202,88 +298,108 @@ const LocationPage = () => {
                   {isLoading ? "Getting location..." : "Get current location"}
                 </span>
               </button>
-
-              {error && (
-                <div className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded-lg p-3">
-                  {error}
-                </div>
-              )}
             </form>
+
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded-lg p-3">
+                {error}
+              </div>
+            )}
           </div>
-        ) : (
-          // Map Screen
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Choose your location
-            </h2>
 
-            {/* Google Map */}
-            <div className="rounded-xl overflow-hidden mb-4 border h-72">
-              {isLoaded ? (
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={
-                    selectedLocation
-                      ? { lat: selectedLocation.lat, lng: selectedLocation.lng }
-                      : defaultCenter
-                  }
-                  zoom={15}
-                  onLoad={onLoad}
-                  onUnmount={onUnmount}
-                  options={mapOptions}
-                >
-                  {selectedLocation && (
-                    <Marker
-                      position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
-                      title={selectedLocation.fullAddress}
-                    />
-                  )}
-                </GoogleMap>
-              ) : (
-                <div className="flex items-center justify-center h-full bg-gray-100">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2"></div>
-                    <p className="text-gray-600">Loading map...</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Selected Location Card */}
-            {selectedLocation && (
-              <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900 mb-2">
-                      {selectedLocation.fullAddress}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Coordinates: {selectedLocation.coordinates}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowMap(false);
-                      setSelectedLocation(null);
-                      setSearchQuery("");
-                    }}
-                    className="text-primary-500 font-medium text-sm hover:text-primary-600 ml-2"
-                  >
-                    Change
-                  </button>
+          {/* Google Map */}
+          <div className="rounded-xl overflow-hidden mb-4 border h-72">
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={
+                  selectedLocation
+                    ? { lat: selectedLocation.lat, lng: selectedLocation.lng }
+                    : defaultCenter
+                }
+                zoom={15}
+                onLoad={onLoad}
+                onUnmount={onUnmount}
+                options={mapOptions}
+              >
+                {selectedLocation && (
+                  <Marker
+                    position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
+                    title={selectedLocation.fullAddress}
+                  />
+                )}
+              </GoogleMap>
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2"></div>
+                  <p className="text-gray-600">Loading map...</p>
                 </div>
               </div>
             )}
-
-            {/* Confirm Button */}
-            <button
-              onClick={handleConfirmLocation}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 rounded-xl transition-colors"
-            >
-              Confirm Location
-            </button>
           </div>
-        )}
+
+          {/* Manual Address Input Form */}
+          {showManualInput && (
+            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+              <h3 className="font-semibold text-primary-500 mb-3">Enter Address Manually</h3>
+              <form onSubmit={handleManualAddressSubmit} className="space-y-3">
+                <textarea
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="Enter your full address..."
+                  className="w-full p-3 border border-gray-300 rounded-lg! focus:ring-1 focus:ring-primary-500 outline-none resize-none"
+                  rows={3}
+                />
+                <div className="flex space-x-2">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-600 transition-colors"
+                  >
+                    Save Address
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelManual}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Selected Location Card */}
+          {selectedLocation && !showManualInput && (
+            <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900 mb-2">
+                    {selectedLocation.fullAddress}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Coordinates: {selectedLocation.coordinates}
+                  </div>
+                </div>
+                <button
+                  onClick={handleChangeLocation}
+                  className="text-primary-500 font-medium text-sm hover:text-primary-600 ml-2"
+                >
+                  Change
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confirm Button */}
+          <button
+            onClick={handleConfirmLocation}
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 rounded-xl transition-colors"
+          >
+            Confirm Location
+          </button>
+        </div>
       </div>
     </div>
   );

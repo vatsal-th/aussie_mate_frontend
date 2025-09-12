@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import JobLiveGif from '../assets/joblive.gif';
@@ -8,10 +8,19 @@ import CardBG7 from '../assets/CardBG7.png';
 
 const JobSuccessPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get job ID from navigation state
+  const jobId = location.state?.jobId;
 
   const handleViewMyJob = () => {
-    // Navigate to job details or job list
-    navigate('/customer-dashboard');
+    if (jobId) {
+      // Navigate to specific job details
+      navigate(`/job-details/${jobId}`);
+    } else {
+      // Navigate to job list
+      navigate('/customer-dashboard');
+    }
   };
 
   const handleReturnHome = () => {

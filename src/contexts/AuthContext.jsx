@@ -21,15 +21,9 @@ export const AuthProvider = ({ children }) => {
       const storedUser = getStoredUser();
       
       if (token && storedUser) {
-        try {
-          // Verify token is still valid by fetching current user
-          const response = await authAPI.getCurrentUser();
-          setUser(response.data.user);
-        } catch (error) {
-          // Token is invalid, clear storage
-          authAPI.logout();
-          setUser(null);
-        }
+        // For now, just use stored user without API verification
+        // TODO: Add API verification when backend is ready
+        setUser(storedUser);
       }
       
       setLoading(false);
@@ -40,8 +34,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authAPI.login(credentials);
-      setUser(response.data.user);
+      const response = await authAPI.login(credentials.email, credentials.password, 'customer');
+      setUser(response.data?.user || response.user);
       return response;
     } catch (error) {
       throw error;
@@ -50,8 +44,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authAPI.register(userData);
-      setUser(response.data.user);
+      const response = await authAPI.registerCustomer(userData);
+      setUser(response.data?.user || response.user);
       return response;
     } catch (error) {
       throw error;
@@ -61,6 +55,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     authAPI.logout();
     setUser(null);
+    
+    // Clear user data from localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
   };
 
   const updateUser = (userData) => {
