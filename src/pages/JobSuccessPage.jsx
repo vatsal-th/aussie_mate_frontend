@@ -14,17 +14,10 @@ const JobSuccessPage = () => {
   const jobId = location.state?.jobId;
 
   const handleViewMyJob = () => {
-    if (jobId) {
-      // Navigate to specific job details
-      navigate(`/job-details/${jobId}`);
-    } else {
-      // Navigate to job list
-      navigate('/customer-dashboard');
-    }
+    navigate('/my-jobs');
   };
 
   const handleReturnHome = () => {
-    // Navigate back to home
     navigate('/customer-dashboard');
   };
 

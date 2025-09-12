@@ -10,6 +10,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import CustomerDashboard from './pages/CustomerDashboard'
 import PostNewJobPage from './pages/PostNewJobPage'
 import JobSuccessPage from './pages/JobSuccessPage'
+import MyJobsPage from './pages/MyJobsPage'
 
 function App() {
 
@@ -26,6 +27,7 @@ function App() {
           <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/post-new-job" element={<PostNewJobPage />} />
         <Route path="/job-success" element={<JobSuccessPage />} />
+        <Route path="/my-jobs" element={<MyJobsPage />} />
         </Routes>
       </Router>
     </AuthProvider>

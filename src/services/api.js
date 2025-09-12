@@ -21,7 +21,6 @@ const getUserInfo = () => {
   } else {
     const userType = user.userType || user.role;
   }
-
   return user;
 };
 
@@ -212,6 +211,18 @@ export const jobsAPI = {
   // Get customer's jobs
   getCustomerJobs: async (customerId) => {
     return apiRequest(`/jobs/customer/${customerId}`);
+  },
+
+  // Get all jobs (supports backend pagination/filters)
+  getAllJobs: async ({ status, serviceType, page = 1, limit = 20, location } = {}) => {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (serviceType) params.set('serviceType', serviceType);
+    if (page) params.set('page', String(page));
+    if (limit) params.set('limit', String(limit));
+    if (location) params.set('location', location); // "lng,lat"
+    const qs = params.toString();
+    return apiRequest(`/jobs${qs ? `?${qs}` : ''}`);
   },
 
   // Get job details with quotes
