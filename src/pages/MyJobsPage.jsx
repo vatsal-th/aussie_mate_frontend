@@ -73,7 +73,7 @@ const MyJobsPage = () => {
           const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           return {
-            id: j._id || j.reference || j.id,
+            id: j.jobId,
             title,
             status,
             dateLabel,

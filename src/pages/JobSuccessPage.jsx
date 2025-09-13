@@ -8,10 +8,6 @@ import CardBG7 from '../assets/CardBG7.png';
 
 const JobSuccessPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Get job ID from navigation state
-  const jobId = location.state?.jobId;
 
   const handleViewMyJob = () => {
     navigate('/my-jobs');

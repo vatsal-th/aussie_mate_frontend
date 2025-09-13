@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
@@ -6,6 +6,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import Header from '../components/Header';
+import { jobsAPI } from '../services/api';
 import CardBG2 from '../assets/CardBG2.png';
 import CardBG3 from '../assets/CardBG3.png';
 import CardBG4 from '../assets/CardBG4.png';
@@ -24,6 +25,9 @@ import RetailAuditorImage from '../assets/Retail Auditor.png';
 
 const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState('messages');
+  const [ongoingJobs, setOngoingJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const swiperRef = useRef(null);
   const navigate = useNavigate();
 
@@ -38,6 +42,75 @@ const CustomerDashboard = () => {
       swiperRef.current.swiper.slideNext();
     }
   };
+
+  // Helper functions
+  const formatDate = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const opts = { day: '2-digit', month: 'short' };
+    const date = d.toLocaleDateString('en-AU', opts);
+    const time = d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+    return `${date}, ${time}`;
+  };
+
+  const getStatusChip = (statusRaw) => {
+    const s = (statusRaw || '').toString().toLowerCase();
+    if (s === 'in_progress') {
+      return { label: 'In Progress', className: 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]' };
+    }
+    if (s === 'completed') {
+      return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
+    }
+    if (['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) {
+      return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+    }
+    return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+  };
+
+  const getActionText = (status) => {
+    const s = (status || '').toString().toLowerCase();
+    if (s === 'in_progress') return 'Track Job';
+    if (s === 'completed') return 'Rate & Review';
+    return 'View Quotes';
+  };
+
+  // Fetch jobs data
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const res = await jobsAPI.getAllJobs({ page: 1, limit: 10 });
+        const list = res?.data?.jobs || res?.data || res || [];
+
+        // Normalize into UI shape
+        const normalized = list.map((j) => {
+          const status = (j.status || '').toString();
+          const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
+          const dateLabel = formatDate(j.scheduledDate);
+          const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
+          const statusChip = getStatusChip(status);
+          
+          return {
+            id: j.jobId || j._id || j.reference || j.id,
+            title,
+            status: statusChip.label,
+            date: dateLabel,
+            action: getActionText(status),
+            assignedTo
+          };
+        });
+        
+        setOngoingJobs(normalized);
+      } catch (e) {
+        setError('Failed to load jobs');
+        console.error('Error fetching jobs:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchJobs();
+  }, []);
 
   const serviceCategories = [
     {
@@ -78,72 +151,6 @@ const CustomerDashboard = () => {
     }
   ];
 
-  const ongoingJobs = [
-    {
-      id: 'AM10432',
-      title: 'Bond Cleaning - 2 Bed Apartment',
-      status: 'Pending Quotes',
-      date: '23 Aug, 2:00 PM',
-      action: 'View Quotes',
-      assignedTo: null
-    },
-    {
-      id: 'AM10411',
-      title: 'Pet Sitting - Dog Walking',
-      status: 'In Progress',
-      date: '23 Aug, 2:00 PM',
-      action: 'Track Job',
-      assignedTo: 'Emily K.'
-    },
-    {
-      id: 'AM10399',
-      title: 'Carpet Cleaning - Living Room & 2 B...',
-      status: 'Completed',
-      date: '18 Aug, 11:00 AM',
-      action: 'Rate & Review',
-      assignedTo: 'Robert P.'
-    },
-    {
-      id: 'AM10433',
-      title: 'Housekeeping - Full Service',
-      status: 'In Progress',
-      date: '24 Aug, 10:00 AM',
-      action: 'Track Job',
-      assignedTo: 'Sarah M.'
-    },
-    {
-      id: 'AM10434',
-      title: 'Handyman - Door Repair',
-      status: 'Pending Quotes',
-      date: '25 Aug, 3:00 PM',
-      action: 'View Quotes',
-      assignedTo: null
-    },
-    {
-      id: 'AM10435',
-      title: 'NDIS Support - Personal Care',
-      status: 'Completed',
-      date: '20 Aug, 9:00 AM',
-      action: 'Rate & Review',
-      assignedTo: 'Michael T.'
-    },
-    {
-      id: 'AM10436',
-      title: 'Retail Audit - Store Check',
-      status: 'In Progress',
-      date: '26 Aug, 1:00 PM',
-      action: 'Track Job',
-      assignedTo: 'Lisa R.'
-    },
-    {
-      id: 'AM10437',
-      title: 'Deep Cleaning - Kitchen & Bathroom',
-      status: 'Pending Quotes',
-      date: '27 Aug, 11:00 AM',
-      action: 'View Quotes',
-      assignedTo: null
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -277,71 +284,91 @@ const CustomerDashboard = () => {
             </div>
           </div>
           
-          <Swiper
-            ref={swiperRef}
-            modules={[Autoplay]}
-            spaceBetween={16}
-            slidesPerView={1}
-            breakpoints={{
-              640: {
-                slidesPerView: 2,
-                spaceBetween: 16,
-              },
-                1024: {
-                  slidesPerView: 3,
+          {loading && (
+            <div className="text-center py-8">
+              <div className="text-sm text-gray-500">Loading jobs...</div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-8">
+              <div className="text-sm text-red-600">{error}</div>
+            </div>
+          )}
+          
+          {!loading && !error && ongoingJobs.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-sm text-gray-500">No jobs found</div>
+            </div>
+          )}
+          
+          {!loading && !error && ongoingJobs.length > 0 && (
+            <Swiper
+              ref={swiperRef}
+              modules={[Autoplay]}
+              spaceBetween={16}
+              slidesPerView={1}
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
                   spaceBetween: 16,
                 },
-            }}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: false,
-            }}
-            speed={800}
-            effect="slide"
-            loop={true}
-            className="!pb-4"
-          >
-            {ongoingJobs.map((job) => (
-              <SwiperSlide key={job.id}>
-                <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-custom h-48">
-                  <div className="flex flex-col justify-between h-full">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs text-[#6B7280]">{job.id}</div>
-                        {job.status && (
-                          <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${
-                            job.status === 'Pending Quotes' 
-                              ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
-                              : job.status === 'In Progress'
-                              ? 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]'
-                              : job.status === 'Completed'
-                              ? 'bg-[#E4FBED] text-[#10B981] border border-[#D2F8E0]'
-                              : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
-                          }`}>
-                            {job.status}
-                          </span>
+                  1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 16,
+                  },
+              }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              speed={800}
+              effect="slide"
+              loop={ongoingJobs.length > 1}
+              className="!pb-4"
+            >
+              {ongoingJobs.map((job) => (
+                <SwiperSlide key={job.id}>
+                  <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-custom h-48">
+                    <div className="flex flex-col justify-between h-full">
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-xs text-[#6B7280] font-medium">{job.id}</div>
+                          {job.status && (
+                            <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${
+                              job.status === 'Pending Quotes' 
+                                ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
+                                : job.status === 'In Progress'
+                                ? 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]'
+                                : job.status === 'Completed'
+                                ? 'bg-[#E4FBED] text-[#10B981] border border-[#D2F8E0]'
+                                : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
+                            }`}> 
+                              {job.status}
+                            </span>  
+                          )}
+                        </div>
+                        <h4 className="text-sm font-medium text-[#111827] mb-2 line-clamp-2">{job.title}</h4>
+                        <div className="flex items-center text-xs text-[#6B7280] mb-1">
+                          <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 mr-1" />
+                          {job.date}
+                        </div>
+                        {job.assignedTo && (
+                          <div className="flex items-center text-xs text-[#6B7280]">
+                            <img src={PersonIcon} alt="Person" className="w-4 h-4 mr-1" />
+                            Assigned to: {job.assignedTo}
+                          </div>
                         )}
                       </div>
-                      <h4 className="text-sm font-medium text-[#111827] mb-2">{job.title}</h4>
-                      <div className="flex items-center text-xs text-[#6B7280] mb-1">
-                        <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 mr-1" />
-                        {job.date}
-                      </div>
-                      {job.assignedTo && (
-                        <div className="flex items-center text-xs text-[#6B7280]">
-                          <img src={PersonIcon} alt="Person" className="w-4 h-4 mr-1" />
-                          Assigned to: {job.assignedTo}
-                        </div>
-                      )}
+                      <button className="text-[#1F6FEB] text-sm font-medium hover:text-[#0088FF] border border-[#1F6FEB] rounded-full px-4 py-2 mt-3 w-full">
+                        {job.action}
+                      </button>
                     </div>
-                    <button className="text-[#1F6FEB] text-sm font-medium hover:text-[#0088FF] border border-[#1F6FEB] rounded-full px-4 py-2 mt-3 w-full">
-                      {job.action}
-                    </button>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
         </div>
       </div>
     </div>
