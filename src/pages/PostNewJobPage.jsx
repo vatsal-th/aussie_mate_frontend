@@ -590,7 +590,7 @@ const PostNewJobPage = () => {
               <div className="absolute top-0 right-0 w-20 h-24 overflow-hidden rounded-tr-2xl">
                 <img src={CardBG2} alt="Card Background" className="w-full h-full object-cover" />
               </div>
-
+              
               {/* Bottom-left background image */}
               <div className="absolute bottom-0 left-0 w-20 h-24 overflow-hidden rounded-bl-2xl">
                 <img src={CardBG4} alt="Card Background" className="w-full h-full object-cover" />

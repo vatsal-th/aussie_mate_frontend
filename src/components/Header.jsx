@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userAPI } from '../services/api';
 import logo from '../assets/logo.png';
 import ProfileIcon from '../assets/Profile.svg';
 import NotificationIcon from '../assets/notification.svg';
-import MapPinIcon from '../assets/map-pin 1.png';
+import HeaderLocationIcon from '../assets/headerlocation.svg';
+import CardBG8 from '../assets/CardBG8.png';
+import CardBG9 from '../assets/CardBG9.png';
 
 const Header = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [userLocation, setUserLocation] = useState({
     address: '123 Example Street',
     city: 'Sydney NSW 200, Australia'
@@ -79,58 +80,58 @@ const Header = () => {
     };
   }, [user]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
-    <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm overflow-hidden" >
+      <div className="relative z-10 max-w-7xl mx-auto">
+      {/* Decorative header backgrounds */}
+      <div className="pointer-events-none select-none absolute inset-0">
+        {/* Responsive sizing for decorative backgrounds */}
+        <img src={CardBG8} alt="" aria-hidden className="absolute -top-6 -left-2 w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48 lg:w-60 lg:h-60" />
+        <img src={CardBG9} alt="" aria-hidden className="absolute -bottom-10 -right-2 w-36 h-36 sm:w-48 sm:h-48 md:w-64 md:h-64 lg:w-72 lg:h-72" />
+      </div>
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
-        {/* Logo and Location */}
-        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-          <Link to="/" className="flex-shrink-0">
-            <img src={logo} alt="Aussie Mate" className="h-10 sm:h-12 md:h-14 w-auto" />
-          </Link>
-          <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-            <img src={MapPinIcon} alt="Location" className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <div className="min-w-0">
-              <div className="text-xs sm:text-sm font-medium text-primary-500 truncate">
-                        {userLocation.address}
-              </div>
-              <div className="text-xs text-primary-200 truncate">
-                {userLocation.city || 'City not set'}
-              </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 flex items-center">
+        {/* Left: Location */}
+        <div className="flex-1 min-w-0 flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+          <div className="flex items-center justify-center"> 
+              <img src={HeaderLocationIcon} alt="Location" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs sm:text-sm md:text-base font-medium text-primary-500 truncate">
+              {userLocation.address}
+            </div>
+            <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 truncate">
+              {userLocation.city || 'City not set'}
             </div>
           </div>
         </div>
 
-        {/* Right Side Icons */}
-        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        {/* Center: Logo */}
+        <div className="flex-1 flex justify-center">
+          <Link to="/" className="flex-shrink-0">
+            <img src={logo} alt="Aussie Mate" className="h-10 sm:h-12 md:h-14 w-auto" />
+          </Link>
+        </div>
+
+        {/* Right: Icons */}
+        <div className="flex-1 flex items-center justify-end space-x-2 sm:space-x-2 md:space-x-3 flex-shrink-0">
           {/* Notification Icon */}
-          <button className="relative p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <img src={NotificationIcon} alt="Notifications" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" />
+          <button className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors">
+            <img src={NotificationIcon} alt="Notifications" className="w-7 h-7 sm:w-7 sm:h-7 md:w-9 md:h-9" />
           </button>
 
           {/* Profile Icon or Login/Register */}
           {user ? (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700 hidden sm:block">
-                Welcome, {user.firstName || user.name || 'User'}
-              </span>
+            <div className="flex items-center space-x-2 md:space-x-3">
               <Link 
                 to="/profile" 
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors"
               >
-                <img src={ProfileIcon} alt="Profile" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <img src={ProfileIcon} alt="Profile" className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
               </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-600 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100"
-              >
-                Logout
-              </button>
+              <span className="hidden sm:block text-xs sm:text-sm md:text-base text-primary-200 font-medium capitalize">
+                Welcome, {user.firstName || user.name || 'User'}
+              </span>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
@@ -149,6 +150,7 @@ const Header = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -182,8 +182,8 @@ const CustomerDashboard = () => {
 
         {/* Book a cleaner section */}
         <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl shadow-custom mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">Book a cleaner in minutes</h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-4">Post job → Receive quotes → Choose & pay securely</p>
+          <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-1">Book a cleaner in minutes</h2>
+          <p className="text-sm sm:text-base text-primary-200 mb-4">Post job → Receive quotes → Choose & pay securely</p>
           
           {/* Service Categories Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6    ">
@@ -234,8 +234,8 @@ const CustomerDashboard = () => {
             {/* Content Overlay */}
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-lg sm:text-xl font-semibold text-[#111827] mb-1">Earn MatePoints with Every Booking</h3>
-                <p className="text-sm sm:text-base text-[#111827] mb-3">Collect points on each job completed and redeem them for discounts & perks.</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-primary-500 mb-1">Earn MatePoints with Every Booking</h3>
+                <p className="text-sm sm:text-base text-[#374151] mb-3">Collect points on each job completed and redeem them for discounts & perks.</p>
                 <button className="bg-[#111827] text-white px-4 py-2 rounded-[8px] text-sm font-medium">
                   View Rewards
                 </button>
@@ -252,7 +252,7 @@ const CustomerDashboard = () => {
         {/* Ongoing Jobs Section */}
         <div className="bg-white px-4 sm:px-6 py-6 rounded-2xl shadow-custom">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Ongoing Jobs</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-primary-500">Ongoing Jobs</h3>
             
             {/* Navigation Buttons */}
             <div className="flex space-x-2">
@@ -333,7 +333,7 @@ const CustomerDashboard = () => {
                     <div className="flex flex-col justify-between h-full">
                       <div>
                         <div className="flex justify-between items-start mb-2">
-                          <div className="text-xs text-[#6B7280] font-medium">{job.id}</div>
+                          <div className="text-sm text-primary-200 font-medium">{job.id}</div>
                           {job.status && (
                             <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${
                               job.status === 'Pending Quotes' 
@@ -348,8 +348,8 @@ const CustomerDashboard = () => {
                             </span>  
                           )}
                         </div>
-                        <h4 className="text-sm font-medium text-[#111827] mb-2 line-clamp-2">{job.title}</h4>
-                        <div className="flex items-center text-xs text-[#6B7280] mb-1">
+                        <h4 className="font-medium text-primary-500 mb-2 line-clamp-2">{job.title}</h4>
+                        <div className="flex items-center text-xs font-medium text-primary-200 mb-1">
                           <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 mr-1" />
                           {job.date}
                         </div>

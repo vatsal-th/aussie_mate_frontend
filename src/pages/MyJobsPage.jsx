@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
@@ -75,8 +75,24 @@ const MyJobsPage = () => {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [jobs, setJobs] = useState([]);
+  const [allJobs, setAllJobs] = useState([]); // Store original jobs
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const calendarRef = useRef(null);
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (showCalendar && calendarRef.current && !calendarRef.current.contains(e.target)) {
+        setShowCalendar(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [showCalendar]);
 
   // Fetch jobs (all) with optional status filter per tab
   useEffect(() => {
@@ -110,10 +126,21 @@ const MyJobsPage = () => {
             address,
             payment: paymentAmount,
             quotes,
-            assignedTo
+            assignedTo,
+            createdAt: j.createdAt // Keep original for sorting
           };
         });
-        setJobs(normalized);
+        
+        // Sort by creation date (latest first)
+        const sortedJobs = normalized.sort((a, b) => {
+          if (!a.createdAt && !b.createdAt) return 0;
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        setJobs(sortedJobs);
+        setAllJobs(sortedJobs); // Store original jobs
       } catch (e) {
         setError('Failed to load jobs');
       } finally {
@@ -133,13 +160,34 @@ const MyJobsPage = () => {
       if (!s || ['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) return 'upcoming';
       return 'upcoming';
     };
-    return jobs.filter((job) => {
+    
+    // Use allJobs for filtering when any date is set
+    const hasRange = Boolean(startDate || endDate);
+    const jobsToFilter = hasRange ? allJobs : jobs;
+    
+    return jobsToFilter.filter((job) => {
       const matchesQuery = !q || job.title.toLowerCase().includes(q) || (job.id || '').toLowerCase().includes(q) || (job.address || '').toLowerCase().includes(q);
       const tab = mapTab(job.status);
       const matchesTab = activeTab === 'all' || activeTab === tab;
-      return matchesQuery && matchesTab;
+      
+      // Date range filtering (inclusive)
+      let matchesDate = true;
+      if (hasRange) {
+        if (!job.createdAt) {
+          matchesDate = false;
+        } else {
+          const jobTime = new Date(job.createdAt);
+          const jobDayStart = new Date(jobTime.getFullYear(), jobTime.getMonth(), jobTime.getDate()).getTime();
+          const startTs = startDate ? new Date(startDate).getTime() : null;
+          const endTs = endDate ? new Date(endDate).getTime() : null;
+          if (startTs !== null && jobDayStart < startTs) matchesDate = false;
+          if (endTs !== null && jobDayStart > endTs) matchesDate = false;
+        }
+      }
+      
+      return matchesQuery && matchesTab && matchesDate;
     });
-  }, [query, activeTab, jobs]);
+  }, [query, activeTab, jobs, allJobs, startDate, endDate]);
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
@@ -167,10 +215,75 @@ const MyJobsPage = () => {
               className="w-full pl-9 pr-3 py-2 sm:py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button className="p-2 sm:p-3 rounded-xl! bg-white border border-gray-200 cursor-pointer">
+          <button
+            onClick={() => setShowCalendar((v) => !v)}
+            className={`p-2 sm:p-3 rounded-xl! border cursor-pointer ${
+              startDate || endDate ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
+            }`}
+            title="Filter by date range"
+          >
             <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
+          {(startDate || endDate) && (
+            <button
+              onClick={() => { setStartDate(''); setEndDate(''); }}
+              className="p-2 sm:p-3 rounded-xl! bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors"
+              title="Clear date filter"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
+
+        {/* Calendar Panel */}
+        {showCalendar && (
+          <div ref={calendarRef} className="mb-4 bg-white rounded-2xl border border-gray-200 shadow-custom p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Filter by Date</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="px-3 py-2 text-sm rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setShowCalendar(false)}
+                  className="px-3 py-2 text-sm rounded-xl bg-[#1F6FEB] text-white hover:opacity-90 cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Start date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">End date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            {(startDate || endDate) && (
+              <div className="mt-3 text-sm text-gray-600">
+                Showing: {startDate || '—'} to {endDate || '—'}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
