@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import CardBG2 from '../assets/CardBG2.png';
 import CardBG3 from '../assets/CardBG3.png';
@@ -21,6 +21,7 @@ import { jobsAPI, handleAPIError, userAPI } from '../services/api';
 
 const PostNewJobPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1); // 1: Service Selection, 2: Job Details, 3: Final Details
@@ -121,6 +122,59 @@ const PostNewJobPage = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Restore step and form data when returning from location page
+  useEffect(() => {
+    // Check if we have a step from navigation state
+    if (location.state?.step) {
+      setCurrentStep(location.state.step);
+    }
+    
+    // Always check for saved form state on component mount
+    const savedFormState = localStorage.getItem('postJobFormState');
+    if (savedFormState) {
+      try {
+        const formState = JSON.parse(savedFormState);
+        
+        // Restore form data
+        if (formState.formData) {
+          setFormData(formState.formData);
+        }
+        
+        // Restore selected service
+        if (formState.selectedService) {
+          setSelectedService(formState.selectedService);
+        }
+        
+        // Restore final details
+        if (formState.selectedDate) {
+          setSelectedDate(formState.selectedDate);
+        }
+        if (formState.finalInstructions) {
+          setFinalInstructions(formState.finalInstructions);
+        }
+        if (formState.isUrgent !== undefined) {
+          setIsUrgent(formState.isUrgent);
+        }
+        
+      } catch (error) {
+        console.error('Error restoring form state:', error);
+      }
+    }
+  }, [location.state]);
+
+  // Separate effect for cleanup - only clear when navigating away from post-new-job
+  useEffect(() => {
+    return () => {
+      // Only clear if we're navigating away from post-new-job page AND not going to location
+      const isNavigatingToLocation = localStorage.getItem('navigatingToLocation') === 'true';
+      if (!window.location.pathname.includes('/post-new-job') && !isNavigatingToLocation) {
+        localStorage.removeItem('postJobFormState');
+      }
+      // Clear the navigation flag
+      localStorage.removeItem('navigatingToLocation');
     };
   }, []);
 
@@ -311,11 +365,51 @@ const PostNewJobPage = () => {
   };
 
   const handleChangeLocation = () => {
-    navigate('/location');
+    // Save current form data to localStorage before navigating
+    const formState = {
+      formData,
+      selectedFiles: selectedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      })),
+      selectedDate,
+      finalInstructions,
+      isUrgent,
+      selectedService
+    };
+    
+    localStorage.setItem('postJobFormState', JSON.stringify(formState));
+    
+    // Add a flag to indicate we're going to location page
+    localStorage.setItem('navigatingToLocation', 'true');
+    
+    navigate('/location', { state: { from: '/post-new-job', step: currentStep } });
   };
 
   const handleGoToProfile = () => {
-    navigate('/location');
+    // Save current form data to localStorage before navigating
+    const formState = {
+      formData,
+      selectedFiles: selectedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      })),
+      selectedDate,
+      finalInstructions,
+      isUrgent,
+      selectedService
+    };
+    
+    localStorage.setItem('postJobFormState', JSON.stringify(formState));
+    
+    // Add a flag to indicate we're going to location page
+    localStorage.setItem('navigatingToLocation', 'true');
+    
+    navigate('/location', { state: { from: '/post-new-job', step: currentStep } });
   };
 
   // Navigation handlers
@@ -426,6 +520,9 @@ const PostNewJobPage = () => {
       
 
       if (response.success) {
+        // Clear saved form state since job was posted successfully
+        localStorage.removeItem('postJobFormState');
+        
         // Navigate to success page with job ID
         navigate('/job-success', { state: { jobId: response.data._id } });
       } else {  

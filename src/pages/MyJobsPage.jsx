@@ -18,11 +18,40 @@ const tabs = [
 // Helpers
 const formatDate = (iso) => {
   if (!iso) return '';
-  const d = new Date(iso);
-  const opts = { day: '2-digit', month: 'short' };
-  const date = d.toLocaleDateString('en-AU', opts);
-  const time = d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
-  return `${date}, ${time}`;
+  
+  try {
+    const d = new Date(iso);
+    
+    // Check if date is valid
+    if (isNaN(d.getTime())) {
+      console.warn('Invalid date:', iso);
+      return '';
+    }
+    
+    // Extract date and time directly from the ISO string to avoid timezone conversion
+    const dateStr = d.toISOString().split('T')[0]; // Get YYYY-MM-DD
+    const timeStr = d.toISOString().split('T')[1].split('.')[0]; // Get HH:MM:SS
+    
+    // Parse the date parts
+    const [year, month, day] = dateStr.split('-');
+    const [hours, minutes] = timeStr.split(':');
+    
+    // Convert month number to month name
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = monthNames[parseInt(month) - 1];
+    
+    // Format time in 12-hour format
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    const timeFormatted = `${hour12}:${minutes} ${ampm}`;
+    
+    return `${day} ${monthName} ${year}, ${timeFormatted}`;
+  } catch (error) {
+    console.error('Error formatting date:', iso, error);
+    return '';
+  }
 };
 
 const getStatusChip = (statusRaw) => {
@@ -68,12 +97,13 @@ const MyJobsPage = () => {
           const status = (j.status || '').toString();
           const address = j.location?.address || j.location?.fullAddress || '';
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
-          const dateLabel = formatDate(j.scheduledDate);
+          
+          const dateLabel = formatDate(j.createdAt);
           const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
           const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           return {
-            id: j.jobId,
+            id: j.jobId || j._id || j.id || `job-${Math.random()}`,
             title,
             status,
             dateLabel,

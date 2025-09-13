@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { userAPI } from '../services/api';
 import currentLocationIcon from "../assets/current location.svg";
@@ -29,6 +29,7 @@ const LocationPage = () => {
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualAddress, setManualAddress] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Google Maps API key
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY ;
@@ -221,13 +222,26 @@ const LocationPage = () => {
       }
     }
     
+    // Check if user came from a specific page (via state or query params)
+    const fromPage = location.state?.from || new URLSearchParams(location.search).get('from');
+    const step = location.state?.step;
+    
+    // If user came from a specific page, navigate back to that page with step
+    if (fromPage) {
+      if (step) {
+        navigate(fromPage, { state: { step } });
+      } else {
+        navigate(fromPage);
+      }
+      return;
+    }
+    
     // Get user info from localStorage to determine user type
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
     
     // If no user is logged in, redirect to login
     if (!user) {
-      
       navigate("/login");
       return;
     }
@@ -235,10 +249,18 @@ const LocationPage = () => {
     // Check both userType and role fields
     const userType = user?.userType || user?.role;
     
+    // Check if this is first time location setup (no existing location in localStorage)
+    const existingLocation = localStorage.getItem('userLocation');
+    const isFirstTimeSetup = !existingLocation;
+    
+    // If it's first time setup, always go to customer-dashboard
+    if (isFirstTimeSetup) {
+      navigate("/customer-dashboard");
+      return;
+    }
     
     // Check if user is a customer (any customer role)
     if (userType === 'Customer' || userType === 'customer') {
-      
       navigate("/customer-dashboard");
     } 
     // Check if user is any type of cleaner/service provider
@@ -248,7 +270,6 @@ const LocationPage = () => {
              userType === 'Cleaner' || userType === 'cleaner') {
       navigate("/cleaner-dashboard");
     } else {
-      
       navigate("/dashboard");
     }
   };

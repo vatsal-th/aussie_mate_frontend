@@ -86,7 +86,7 @@ const CustomerDashboard = () => {
         const normalized = list.map((j) => {
           const status = (j.status || '').toString();
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
-          const dateLabel = formatDate(j.scheduledDate);
+          const dateLabel = formatDate(j.createdAt);
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           const statusChip = getStatusChip(status);
           
