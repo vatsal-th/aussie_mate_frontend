@@ -11,6 +11,8 @@ import CustomerDashboard from './pages/CustomerDashboard'
 import PostNewJobPage from './pages/PostNewJobPage'
 import JobSuccessPage from './pages/JobSuccessPage'
 import MyJobsPage from './pages/MyJobsPage'
+import ProfilePage from './pages/ProfilePage'
+import EditProfilePage from './pages/EditProfilePage'
 
 function App() {
 
@@ -28,6 +30,8 @@ function App() {
         <Route path="/post-new-job" element={<PostNewJobPage />} />
         <Route path="/job-success" element={<JobSuccessPage />} />
         <Route path="/my-jobs" element={<MyJobsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/edit-profile" element={<EditProfilePage />} />
         </Routes>
       </Router>
     </AuthProvider>
