@@ -28,6 +28,15 @@ div, span, p, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select, label 
   display: none;  /* Safari and Chrome */
 }
 
+@keyframes progress-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
 /* Override any Tailwind font classes */
 .font-sans {
   font-family: 'General Sans' !important;
