@@ -302,48 +302,62 @@ export const locationAPI = {
 export const userAPI = {
   // Update user profile
   updateProfile: async (userData) => {
-    // TODO: Implement when backend routes are available
-    console.warn('updateProfile API not implemented yet - using localStorage');
-
-    // Store in localStorage as fallback
-    const user = getUserInfo();
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-    }
-
-    return { success: true, message: 'Profile updated in localStorage' };
+    return apiRequest('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
   },
 
   // Get user profile
   getProfile: async () => {
-    // TODO: Implement when backend routes are available
-    console.warn('getProfile API not implemented yet - using localStorage');
-
-    const user = getUserInfo();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Return user data from localStorage
-    return {
-      success: true,
-      data: {
-        ...user,
-        location: JSON.parse(localStorage.getItem('userLocation') || 'null')
-      }
-    };
+    return apiRequest('/auth/me');
   },
 
   // Update user location
   updateLocation: async (locationData) => {
-    // TODO: Implement when backend routes are available
-    console.warn('updateLocation API not implemented yet - using localStorage');
+    return apiRequest('/auth/profile/location', {
+      method: 'PUT',
+      body: JSON.stringify(locationData),
+    });
+  },
 
-    // Store in localStorage as fallback
-    localStorage.setItem('userLocation', JSON.stringify(locationData));
+  // Upload profile photo
+  uploadProfilePhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-    return { success: true, message: 'Location updated in localStorage' };
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/profile/photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Profile photo upload error:', error);
+      throw error;
+    }
+  },
+
+  // Delete profile photo
+  deleteProfilePhoto: async () => {
+    return apiRequest('/auth/profile/photo', {
+      method: 'DELETE',
+    });
   },
 };
 

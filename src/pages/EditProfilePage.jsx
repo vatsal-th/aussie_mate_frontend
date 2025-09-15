@@ -26,6 +26,15 @@ const EditProfilePage = () => {
     city: ''
   });
   const [loading, setLoading] = useState(false);
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+
+  // Country code options
+  const countryCodes = [
+    '+61', '+1', '+44', '+91', '+86', '+81', '+49', '+33', '+39', '+34',
+    '+7', '+55', '+52', '+82', '+65', '+60', '+66', '+63', '+84', '+62'
+  ];
 
   useEffect(() => {
     if (user) {
@@ -82,12 +91,94 @@ const EditProfilePage = () => {
     };
   }, [user]);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isCountryDropdownOpen && !event.target.closest('.country-dropdown')) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCountryDropdownOpen]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleCountryCodeSelect = (code) => {
+    setFormData(prev => ({
+      ...prev,
+      countryCode: code
+    }));
+    setIsCountryDropdownOpen(false);
+  };
+
+  const toggleCountryDropdown = () => {
+    setIsCountryDropdownOpen(!isCountryDropdownOpen);
+  };
+
+  // Photo upload handlers
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setPhotoError('File size too large. Maximum size is 50MB.');
+      return;
+    }
+
+    setPhotoError('');
+    setPhotoLoading(true);
+
+    try {
+      const data = await userAPI.uploadProfilePhoto(file);
+
+      if (data.success) {
+        // Update user context with new photo
+        const updatedUser = {
+          ...user,
+          profilePhoto: data.data.profilePhoto,
+          profilePicture: data.data.profilePhoto?.secureUrl || data.data.profilePhoto?.url
+        };
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Dispatch custom event to update other components
+        window.dispatchEvent(new CustomEvent('userUpdated'));
+
+        // Update form data to trigger re-render
+        setFormData(prev => ({ ...prev }));
+      } else {
+        setPhotoError(data.message || 'Failed to upload photo');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      setPhotoError(error.message || 'Failed to upload photo. Please try again.');
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
+  const handleEditPhotoClick = () => {
+    document.getElementById('photo-upload').click();
   };
 
   const handleSave = async () => {
@@ -116,10 +207,7 @@ const EditProfilePage = () => {
         
         // Dispatch custom event to update other components
         window.dispatchEvent(new CustomEvent('userUpdated'));
-        
-        // Show success message (you can add a toast notification here)
-        console.log('Profile updated successfully!');
-        
+
         // Navigate back to profile page
         navigate('/profile');
       } else {
@@ -153,7 +241,7 @@ const EditProfilePage = () => {
           <div className="flex items-center h-16">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
               <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
             </button>
@@ -162,6 +250,15 @@ const EditProfilePage = () => {
         </div>
 
       <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 pt-0!">
+        {/* Hidden file input for photo upload */}
+        <input
+          id="photo-upload"
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
+
         {/* Profile Picture Section */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 relative overflow-hidden mb-4 sm:mb-6">
           {/* Background Image */}
@@ -174,9 +271,9 @@ const EditProfilePage = () => {
             {/* Profile Picture */}
             <div className="relative">
               <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                {user?.profilePicture ? (
+                {user?.profilePicture || user?.profilePhoto?.secureUrl ? (
                   <img
-                    src={user.profilePicture}
+                    src={user.profilePicture || user.profilePhoto?.secureUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
@@ -187,8 +284,17 @@ const EditProfilePage = () => {
                     </span>
                   </div>
                 )}
+                {photoLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
-              <button className="absolute bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={handleEditPhotoClick}
+                disabled={photoLoading}
+                className="absolute bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <img src={EditIcon} alt="Edit" className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-6 md:h-6" />
               </button>
             </div>
@@ -216,6 +322,13 @@ const EditProfilePage = () => {
               </div>
             </div>
           </div>
+          
+          {/* Photo Upload Error */}
+          {photoError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{photoError}</p>
+            </div>
+          )}
         </div>
 
         {/* Form Fields */}
@@ -267,11 +380,36 @@ const EditProfilePage = () => {
                 Phone number
               </label>
               <div className="flex space-x-2">
-                <div className="flex items-center px-3 py-2 sm:py-3 border border-gray-300 rounded-full bg-gray-50">
-                  <span className="text-sm sm:text-base text-gray-700">{formData.countryCode}</span>
-                  <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                <div className="relative country-dropdown">
+                  <div 
+                    className="flex items-center px-3 py-2 sm:py-3 border border-gray-300 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={toggleCountryDropdown}
+                  >
+                    <span className="text-sm sm:text-base text-primary-200 font-medium">{formData.countryCode}</span>
+                    <svg 
+                      className={`w-4 h-4 ml-1 text-primary-200 font-medium transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  
+                  {/* Dropdown Menu */}
+                  {isCountryDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                      {countryCodes.map((code) => (
+                        <div
+                          key={code}
+                          className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
+                          onClick={() => handleCountryCodeSelect(code)}
+                        >
+                          <span className="text-sm font-medium text-primary-200 font-medium">{code}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -287,11 +425,11 @@ const EditProfilePage = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-start mt-2">
+              <div className="flex items-center mt-2">
                 <div className="flex-shrink-0">
                   <img src={InfoIcon} alt="Info" className="w-4 h-4 text-blue-600" />
                 </div>
-                <p className="ml-2 text-xs sm:text-sm text-gray-500">
+                <p className="ml-2 text-xs sm:text-sm text-primary-200 font-medium">
                   Phone number can't be changed once verified. Contact support if required.
                 </p>
               </div>
@@ -301,24 +439,24 @@ const EditProfilePage = () => {
 
         {/* Default Location */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-base font-medium text-primary-500 font-semibold mb-3">
             Your default location
           </label>
           <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex items-center space-x-3">
-              <img src={HeaderLocationIcon} alt="Location" className="w-10 h-10 text-gray-500" />
+              <img src={HeaderLocationIcon} alt="Location" className="w-10 h-10" />
               <div>
-                <p className="text-sm sm:text-base font-medium text-gray-900">
+                <p className="text-sm sm:text-base font-medium text-primary-200 font-medium">
                   {userLocation.address || 'No address set'}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-primary-200 font-medium">
                   {userLocation.city || 'No city set'}
                 </p>
               </div>
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-[#1F6FEB] hover:text-primary-600 font-medium text-sm sm:text-base transition-colors"
+              className="text-[#1F6FEB] hover:text-primary-600 font-medium text-sm sm:text-base transition-colors cursor-pointer"
             >
               Change
             </button>
@@ -330,7 +468,7 @@ const EditProfilePage = () => {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white font-medium py-2 sm:py-3 px-10 rounded-xl transition-colors text-sm sm:text-base"
+            className="bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white font-medium py-2 sm:py-3 px-10 rounded-xl transition-colors text-sm sm:text-base cursor-pointer"
           >
             {loading ? 'Saving...' : 'Save'}
           </button>
