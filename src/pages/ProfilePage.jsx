@@ -97,7 +97,7 @@ const ProfilePage = () => {
                         >
                             <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
                         </button>
-                        <h1 className="text-xl font-semibold text-gray-900">My Profile</h1>
+                        <h1 className="text-xl ml-4 font-semibold text-gray-900">My Profile</h1>
                     </div>
                 </div>
 

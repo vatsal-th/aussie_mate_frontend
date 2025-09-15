@@ -13,6 +13,7 @@ import JobSuccessPage from './pages/JobSuccessPage'
 import MyJobsPage from './pages/MyJobsPage'
 import ProfilePage from './pages/ProfilePage'
 import EditProfilePage from './pages/EditProfilePage'
+import WalletPage from './pages/WalletPage'
 
 function App() {
 
@@ -32,6 +33,7 @@ function App() {
         <Route path="/my-jobs" element={<MyJobsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/edit-profile" element={<EditProfilePage />} />
+        <Route path="/wallet" element={<WalletPage />} />
         </Routes>
       </Router>
     </AuthProvider>

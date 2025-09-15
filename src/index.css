@@ -19,6 +19,15 @@ div, span, p, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select, label 
   font-family: 'General Sans' !important;
 }
 
+/* Hide scrollbar for webkit browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
 /* Override any Tailwind font classes */
 .font-sans {
   font-family: 'General Sans' !important;

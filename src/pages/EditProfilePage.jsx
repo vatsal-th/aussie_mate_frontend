@@ -13,7 +13,7 @@ import Header from '../components/Header';
 import ProfileBG from '../assets/CardBG7.png';
 
 const EditProfilePage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -181,6 +181,50 @@ const EditProfilePage = () => {
     document.getElementById('photo-upload').click();
   };
 
+  const handleDeletePhoto = async () => {
+    if (!user?.profilePhoto && !user?.profilePicture) {
+      setPhotoError('No profile photo to delete');
+      return;
+    }
+
+    setPhotoError('');
+    setPhotoLoading(true);
+
+    try {
+      const data = await userAPI.deleteProfilePhoto();
+
+      if (data.success) {
+        // Update user context to remove photo
+        const updatedUser = {
+          ...user,
+          profilePhoto: null,
+          profilePicture: null
+        };
+        
+        console.log('Photo deleted successfully, updating user:', updatedUser);
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Force update the user context immediately
+        updateUser(updatedUser);
+        
+        // Dispatch custom event to update other components
+        window.dispatchEvent(new CustomEvent('userUpdated'));
+
+        // Update form data to trigger re-render
+        setFormData(prev => ({ ...prev }));
+      } else {
+        setPhotoError(data.message || 'Failed to delete photo');
+      }
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      setPhotoError(error.message || 'Failed to delete photo. Please try again.');
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -297,6 +341,20 @@ const EditProfilePage = () => {
               >
                 <img src={EditIcon} alt="Edit" className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-6 md:h-6" />
               </button>
+              
+              {/* Delete Photo Button - Only show if photo exists */}
+              {(user?.profilePicture || user?.profilePhoto?.secureUrl) && (
+                <button 
+                  onClick={handleDeletePhoto}
+                  disabled={photoLoading}
+                  className="absolute top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-red-500 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Delete photo"
+                >
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* User Details Preview */}
