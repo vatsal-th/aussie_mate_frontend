@@ -15,6 +15,7 @@ import ProfilePage from './pages/ProfilePage'
 import EditProfilePage from './pages/EditProfilePage'
 import WalletPage from './pages/WalletPage'
 import MatePointsPage from './pages/MatePointsPage'
+import RewardSuccessPage from './pages/RewardSuccessPage'
 
 function App() {
 
@@ -36,6 +37,7 @@ function App() {
         <Route path="/edit-profile" element={<EditProfilePage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/rewards" element={<MatePointsPage />} />
+        <Route path="/reward-success" element={<RewardSuccessPage />} />
         </Routes>
       </Router>
     </AuthProvider>

@@ -67,7 +67,10 @@ const MatePointsPage = () => {
   const handleConfirmRedeem = () => {
     console.log('Redeeming reward:', selectedReward);
     setShowRedeemModal(false);
-    setSelectedReward(null);
+    // Navigate to success page with reward data
+    navigate('/reward-success', { 
+      state: { reward: selectedReward } 
+    });
   };
 
   const closeRedeemModal = () => {
@@ -196,14 +199,14 @@ const MatePointsPage = () => {
                   )}
                   <button
                     onClick={() => handleRedeem(reward)}
-                    className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                    className={`w-full py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer ${
                       isEligible
                         ? 'hover:bg-opacity-90 text-white'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                     style={{
                       backgroundColor: isEligible 
-                        ? (reward.id === 2 ? '#111827' : '#3B82F6') 
+                        ? (reward.id === 2 ? '#111827' : '#111827') 
                         : undefined
                     }}
                     disabled={!isEligible}
@@ -304,7 +307,7 @@ const MatePointsPage = () => {
             {/* Confirm Button */}
             <button
               onClick={handleConfirmRedeem}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
             >
               Confirm Redeem
             </button>
