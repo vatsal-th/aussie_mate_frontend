@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
@@ -9,12 +9,15 @@ import DownIcon from '../assets/Down.svg';
 import InfoIcon from '../assets/info.svg';
 import MetaBG from '../assets/metaBG.jpg';
 import MetaBox from '../assets/metabox.png';
+import CoinPNG from '../assets/coin3.svg';
 
 const MatePointsPage = () => {
   const navigate = useNavigate();
   const [currentPoints] = useState(345);
   const [nextRewardPoints] = useState(500);
   const [nextRewardAmount] = useState(10);
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
 
   const pointsHistory = [
     {
@@ -48,13 +51,43 @@ const MatePointsPage = () => {
       id: 2,
       title: '$20 Wallet Credit',
       pointsRequired: 1000,
-      currentPoints: 345,
+      currentPoints: 2000,
       isAvailable: false,
       bgColor: 'linear-gradient(140.46deg, #EDFCE9 1.17%, #FDFEFD 100%)'
     }
   ];
 
   const progressPercentage = (currentPoints / nextRewardPoints) * 100;
+
+  const handleRedeem = (reward) => {
+    setSelectedReward(reward);
+    setShowRedeemModal(true);
+  };
+
+  const handleConfirmRedeem = () => {
+    console.log('Redeeming reward:', selectedReward);
+    setShowRedeemModal(false);
+    setSelectedReward(null);
+  };
+
+  const closeRedeemModal = () => {
+    setShowRedeemModal(false);
+    setSelectedReward(null);
+  };
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showRedeemModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showRedeemModal]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -162,6 +195,7 @@ const MatePointsPage = () => {
                     <p className="text-sm text-primary-500 mb-4">Need {pointsNeeded} more points</p>
                   )}
                   <button
+                    onClick={() => handleRedeem(reward)}
                     className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                       isEligible
                         ? 'hover:bg-opacity-90 text-white'
@@ -195,7 +229,7 @@ const MatePointsPage = () => {
                     className="w-6 h-6 mr-4" 
                   />
                   <div>
-                    <p className="text-xl font-semibold text-gray-900">{item.title}</p>
+                    <p className="text-xl font-semibold text-primary-500">{item.title}</p>
                     <p className="text-base text-primary-200 font-medium">{item.date}</p>
                   </div>
                 </div>
@@ -219,6 +253,64 @@ const MatePointsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Redeem Modal */}
+      {showRedeemModal && selectedReward && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        >
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-custom">
+            {/* Close Button */}
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={closeRedeemModal}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Coin Illustration */}
+            <div className="flex justify-center mb-6">
+              <div className="flex space-x-2">
+                <img src={CoinPNG} alt="Coin" className="w-full h-full" />
+              </div>
+            </div>
+
+            {/* Voucher Title */}
+            <h3 className="text-xl font-semibold text-primary-500 text-center mb-6">
+              {selectedReward.title}
+            </h3>
+
+            {/* Points Information */}
+            <div className="space-y-3 mb-6 border-b border-gray-200 pb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-primary-200 font-medium">Points Required</span>
+                <span className="font-semibold text-primary-500">{selectedReward.pointsRequired} MatePoints</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-primary-200 font-medium">Your Balance</span>
+                <span className="font-semibold text-primary-500">{currentPoints} Points</span>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <p className="text-sm text-primary-200 font-medium text-center mb-6">
+              Once redeemed, points will be deducted. Rewards are non-transferable.
+            </p>
+
+            {/* Confirm Button */}
+            <button
+              onClick={handleConfirmRedeem}
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            >
+              Confirm Redeem
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
