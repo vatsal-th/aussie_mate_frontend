@@ -16,6 +16,7 @@ import EditProfilePage from './pages/EditProfilePage'
 import WalletPage from './pages/WalletPage'
 import MatePointsPage from './pages/MatePointsPage'
 import RewardSuccessPage from './pages/RewardSuccessPage'
+import InvoicesPage from './pages/InvoicesPage'
 
 function App() {
 
@@ -38,6 +39,7 @@ function App() {
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/rewards" element={<MatePointsPage />} />
         <Route path="/reward-success" element={<RewardSuccessPage />} />
+        <Route path="/invoices" element={<InvoicesPage />} />
         </Routes>
       </Router>
     </AuthProvider>
