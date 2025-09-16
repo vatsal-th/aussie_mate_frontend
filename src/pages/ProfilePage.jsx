@@ -29,6 +29,13 @@ const ProfilePage = () => {
         if (user) {
           const response = await userAPI.getProfile();
           if (response.success) {
+            // Ensure profilePhoto is available in the response
+            if (response.data?.user && !response.data.user.profilePhoto) {
+              const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+              if (storedUser.profilePhoto) {
+                response.data.user.profilePhoto = storedUser.profilePhoto;
+              }
+            }
             setUserProfile(response.data);
           }
         }
@@ -43,6 +50,13 @@ const ProfilePage = () => {
 
     // Listen for user updates
     const handleUserUpdate = () => {
+      // Update user from localStorage
+      const updatedUser = JSON.parse(localStorage.getItem('user') || 'null');
+      if (updatedUser) {
+        setUserProfile(updatedUser);
+        // Force re-render by updating state
+        setLoading(false);
+      }
       fetchProfile();
     };
 
@@ -51,6 +65,23 @@ const ProfilePage = () => {
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
+  }, [user]);
+
+  // Listen for user context changes
+  useEffect(() => {
+    if (user) {
+      // Check if profilePhoto is missing and add it from localStorage if available
+      if (!user.profilePhoto && localStorage.getItem('user')) {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser.profilePhoto) {
+          const updatedUser = { ...user, profilePhoto: storedUser.profilePhoto };
+          setUserProfile(updatedUser);
+          return;
+        }
+      }
+      
+      setUserProfile(user);
+    }
   }, [user]);
 
     const handleLogout = () => {
@@ -116,19 +147,37 @@ const ProfilePage = () => {
                             {/* Profile Picture */}
                             <div className="relative">
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                                    {userProfile?.profilePicture || user?.profilePicture || user?.profilePhoto?.secureUrl ? (
-                                        <img
-                                            src={userProfile?.profilePicture || user?.profilePicture || user?.profilePhoto?.secureUrl}
-                                            alt="Profile"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-primary-500 flex items-center justify-center">
-                                            <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold">
-                                                {(user?.firstName || user?.name || 'U').charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
+                                    {(() => {
+                                        const profileImage = user?.profilePhoto?.url || 
+                                                           user?.profilePhoto?.secureUrl || 
+                                                           user?.profilePicture || 
+                                                           userProfile?.user?.profilePhoto?.url ||
+                                                           userProfile?.user?.profilePhoto?.secureUrl ||
+                                                           userProfile?.profilePicture || 
+                                                           userProfile?.profilePhoto?.url || 
+                                                           userProfile?.profilePhoto?.secureUrl;
+                                        
+                                        if (profileImage) {
+                                            return (
+                                                <img
+                                                    src={profileImage}
+                                                    alt="Profile"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                    }}
+                                                />
+                                            );
+                                        } else {
+                                            return (
+                                                <div className="w-full h-full bg-primary-500 flex items-center justify-center">
+                                                    <span className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold">
+                                                        {(user?.firstName || user?.name || 'U').charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            );
+                                        }
+                                    })()}
                                 </div>
                                 <button
                                     onClick={handleEditProfile}
@@ -155,7 +204,7 @@ const ProfilePage = () => {
                                     <div className="flex items-center space-x-2 sm:space-x-3">
                                         <img src={PhoneIcon} alt="Phone" className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                                         <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                                            {userProfile?.phone || user?.phoneNumber || '+61 400 123 456'}
+                                            {userProfile?.phone || user?.phone || user?.phoneNumber }
                                         </span>
                                     </div>
                                 </div>

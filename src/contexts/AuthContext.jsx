@@ -35,7 +35,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials.email, credentials.password, 'customer');
-      setUser(response.data?.user || response.user);
+      const userData = response.data?.user || response.user;
+      
+      // Preserve profilePhoto from localStorage if it exists and is not in API response
+      if (userData && !userData.profilePhoto) {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (storedUser.profilePhoto) {
+          userData.profilePhoto = storedUser.profilePhoto;
+        }
+      }
+      
+      setUser(userData);
       return response;
     } catch (error) {
       throw error;

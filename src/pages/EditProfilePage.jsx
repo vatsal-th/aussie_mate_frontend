@@ -38,6 +38,18 @@ const EditProfilePage = () => {
 
   useEffect(() => {
     if (user) {
+      // Check if profilePhoto is missing and add it from localStorage if available
+      if (!user.profilePhoto && localStorage.getItem('user')) {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser.profilePhoto) {
+          const updatedUser = { ...user, profilePhoto: storedUser.profilePhoto };
+          updateUser(updatedUser);
+        } else {
+          // Try to fetch from API
+          fetchProfilePhotoFromAPI();
+        }
+      }
+      
       setFormData({
         fullName: user.firstName || user.name || '',
         email: user.email || '',
@@ -91,6 +103,22 @@ const EditProfilePage = () => {
     };
   }, [user]);
 
+  // Listen for user updates
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      const updatedUser = JSON.parse(localStorage.getItem('user') || 'null');
+      if (updatedUser) {
+        updateUser(updatedUser);
+      }
+    };
+
+    window.addEventListener('userUpdated', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
+  }, []);
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -123,6 +151,19 @@ const EditProfilePage = () => {
 
   const toggleCountryDropdown = () => {
     setIsCountryDropdownOpen(!isCountryDropdownOpen);
+  };
+
+  // Fetch profile photo from API
+  const fetchProfilePhotoFromAPI = async () => {
+    try {
+      const response = await userAPI.getProfile();
+      if (response.success && response.data?.user?.profilePhoto) {
+        const updatedUser = { ...user, profilePhoto: response.data.user.profilePhoto };
+        updateUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Error fetching profile from API:', error);
+    }
   };
 
   // Photo upload handlers
@@ -182,7 +223,7 @@ const EditProfilePage = () => {
   };
 
   const handleDeletePhoto = async () => {
-    if (!user?.profilePhoto && !user?.profilePicture) {
+    if (!user?.profilePhoto?.url && !user?.profilePhoto?.secureUrl && !user?.profilePicture) {
       setPhotoError('No profile photo to delete');
       return;
     }
@@ -201,8 +242,6 @@ const EditProfilePage = () => {
           profilePicture: null
         };
         
-        console.log('Photo deleted successfully, updating user:', updatedUser);
-        
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
@@ -219,7 +258,27 @@ const EditProfilePage = () => {
       }
     } catch (error) {
       console.error('Error deleting photo:', error);
-      setPhotoError(error.message || 'Failed to delete photo. Please try again.');
+      // If API fails, still remove the photo locally
+      if (error.message.includes('400')) {
+        setPhotoError('Photo may not exist on server, removing locally...');
+        
+        // Remove photo locally
+        const updatedUser = {
+          ...user,
+          profilePhoto: null,
+          profilePicture: null
+        };
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        updateUser(updatedUser);
+        window.dispatchEvent(new CustomEvent('userUpdated'));
+        setFormData(prev => ({ ...prev }));
+        
+        // Clear error after a moment
+        setTimeout(() => setPhotoError(''), 2000);
+      } else {
+        setPhotoError(error.message || 'Failed to delete photo. Please try again.');
+      }
     } finally {
       setPhotoLoading(false);
     }
@@ -315,9 +374,9 @@ const EditProfilePage = () => {
             {/* Profile Picture */}
             <div className="relative">
               <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                {user?.profilePicture || user?.profilePhoto?.secureUrl ? (
+                {user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture ? (
                   <img
-                    src={user.profilePicture || user.profilePhoto?.secureUrl}
+                    src={user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
@@ -343,7 +402,7 @@ const EditProfilePage = () => {
               </button>
               
               {/* Delete Photo Button - Only show if photo exists */}
-              {(user?.profilePicture || user?.profilePhoto?.secureUrl) && (
+              {(user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture) && (
                 <button 
                   onClick={handleDeletePhoto}
                   disabled={photoLoading}
