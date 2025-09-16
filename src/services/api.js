@@ -35,6 +35,32 @@ export const getStoredUser = () => {
   return userStr ? JSON.parse(userStr) : null;
 };
 
+// Mock storage for development (when backend is not available)
+const mockStorage = {
+  cards: [],
+  bankAccounts: [],
+  walletBalance: 45.00
+};
+
+// Helper functions for mock storage
+const getMockCards = () => {
+  const stored = localStorage.getItem('mock_cards');
+  return stored ? JSON.parse(stored) : [];
+};
+
+const setMockCards = (cards) => {
+  localStorage.setItem('mock_cards', JSON.stringify(cards));
+};
+
+const getMockBankAccounts = () => {
+  const stored = localStorage.getItem('mock_bank_accounts');
+  return stored ? JSON.parse(stored) : [];
+};
+
+const setMockBankAccounts = (accounts) => {
+  localStorage.setItem('mock_bank_accounts', JSON.stringify(accounts));
+};
+
 // Generic API request function
 const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
@@ -57,18 +83,21 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error(`API endpoint not found: ${endpoint}. Backend server may not be running.`);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      const textResponse = await response.text();
+      throw new Error(`Invalid JSON response: ${textResponse}`);
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || `API request failed with status ${response.status}`);
+      const errorMessage = data.error || data.message || `API request failed with status ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
-    // Don't log errors for missing endpoints during development
-    if (!error.message.includes('API endpoint not found')) {
-      console.error('API Error:', error);
-    }
     throw error;
   }
 };
@@ -356,6 +385,195 @@ export const userAPI = {
   // Delete profile photo
   deleteProfilePhoto: async () => {
     return apiRequest('/auth/profile/photo', {
+      method: 'DELETE',
+    });
+  },
+
+  // Payment Methods API
+  // Get wallet balance
+  getWalletBalance: async () => {
+    try {
+      return await apiRequest('/payments/wallet/balance');
+    } catch (error) {
+      if (error.message.includes('API endpoint not found') || error.message.includes('404')) {
+        return {
+          success: true,
+          data: {
+            currentBalance: 45.00,
+            currency: 'AUD',
+            availableBalance: 45.00,
+            pendingTransactions: 0.00
+          }
+        };
+      }
+      throw error;
+    }
+  },
+
+  // Cards API
+  getCards: async () => {
+    try {
+      return await apiRequest('/payments/cards');
+    } catch (error) {
+      if (error.message.includes('API endpoint not found') || error.message.includes('404')) {
+        const cards = getMockCards();
+        return {
+          success: true,
+          data: {
+            cards: cards
+          }
+        };
+      }
+      throw error;
+    }
+  },
+
+  addCard: async (cardData) => {
+    try {
+      return await apiRequest('/payments/cards', {
+        method: 'POST',
+        body: JSON.stringify(cardData),
+      });
+    } catch (error) {
+      // If the endpoint doesn't exist, return a mock response for development
+      if (error.message.includes('API endpoint not found') || error.message.includes('404')) {
+        // Extract last four digits from card number (remove spaces)
+        const cleanCardNumber = cardData.cardNumber.replace(/\s/g, '');
+        const lastFourDigits = cleanCardNumber.slice(-4);
+        
+        const newCard = {
+          id: `mock_card_${Date.now()}`,
+          cardHolderName: cardData.cardHolderName,
+          lastFourDigits: lastFourDigits,
+          cardType: 'Visa',
+          expiryMonth: cardData.expiry.split('/')[0],
+          expiryYear: cardData.expiry.split('/')[1],
+          isDefault: cardData.setAsDefault,
+          addedAt: new Date().toISOString()
+        };
+        
+        // Add to mock storage
+        const cards = getMockCards();
+        cards.push(newCard);
+        setMockCards(cards);
+        
+        return {
+          success: true,
+          message: 'Card added successfully',
+          data: {
+            card: newCard
+          }
+        };
+      }
+      throw error;
+    }
+  },
+
+  updateCard: async (cardId, cardData) => {
+    return apiRequest(`/payments/cards/${cardId}`, {
+      method: 'PUT',
+      body: JSON.stringify(cardData),
+    });
+  },
+
+  deleteCard: async (cardId) => {
+    return apiRequest(`/payments/cards/${cardId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  setDefaultCard: async (cardId) => {
+    return apiRequest(`/payments/cards/${cardId}/default`, {
+      method: 'PUT',
+    });
+  },
+
+  // Bank Accounts API
+  getBankAccounts: async () => {
+    try {
+      return await apiRequest('/payments/bank-accounts');
+    } catch (error) {
+      if (error.message.includes('API endpoint not found') || error.message.includes('404')) {
+        const accounts = getMockBankAccounts();
+        return {
+          success: true,
+          data: {
+            accounts: accounts
+          }
+        };
+      }
+      throw error;
+    }
+  },
+
+  addBankAccount: async (bankData) => {
+    try {
+      return await apiRequest('/payments/bank-accounts', {
+        method: 'POST',
+        body: JSON.stringify(bankData),
+      });
+    } catch (error) {
+      if (error.message.includes('API endpoint not found') || error.message.includes('404')) {
+        const newAccount = {
+          id: `mock_bank_${Date.now()}`,
+          accountName: bankData.accountName,
+          bsb: bankData.bsb,
+          lastFourDigits: bankData.accountNumber.slice(-4),
+          accountType: 'Savings',
+          isDefault: bankData.setAsDefault,
+          isVerified: false,
+          addedAt: new Date().toISOString()
+        };
+        
+        // Add to mock storage
+        const accounts = getMockBankAccounts();
+        accounts.push(newAccount);
+        setMockBankAccounts(accounts);
+        
+        return {
+          success: true,
+          message: 'Bank account added successfully',
+          data: {
+            account: newAccount
+          }
+        };
+      }
+      throw error;
+    }
+  },
+
+  updateBankAccount: async (bankId, bankData) => {
+    return apiRequest(`/payments/bank-accounts/${bankId}`, {
+      method: 'PUT',
+      body: JSON.stringify(bankData),
+    });
+  },
+
+  deleteBankAccount: async (bankId) => {
+    return apiRequest(`/payments/bank-accounts/${bankId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  setDefaultBankAccount: async (bankId) => {
+    return apiRequest(`/payments/bank-accounts/${bankId}/default`, {
+      method: 'PUT',
+    });
+  },
+
+  // Combined Payment Methods
+  getPaymentMethods: async () => {
+    return apiRequest('/payments/payment-methods');
+  },
+
+  setDefaultPaymentMethod: async (methodId) => {
+    return apiRequest(`/payments/payment-methods/${methodId}/default`, {
+      method: 'PUT',
+    });
+  },
+
+  removePaymentMethod: async (methodId) => {
+    return apiRequest(`/payments/payment-methods/${methodId}`, {
       method: 'DELETE',
     });
   },
