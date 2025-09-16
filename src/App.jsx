@@ -17,6 +17,9 @@ import WalletPage from './pages/WalletPage'
 import MatePointsPage from './pages/MatePointsPage'
 import RewardSuccessPage from './pages/RewardSuccessPage'
 import InvoicesPage from './pages/InvoicesPage'
+import NotificationSettingsPage from './pages/NotificationSettingsPage'
+import HelpSupportPage from './pages/HelpSupportPage'
+import LiveChatPage from './pages/LiveChatPage'
 
 function App() {
 
@@ -40,6 +43,9 @@ function App() {
         <Route path="/rewards" element={<MatePointsPage />} />
         <Route path="/reward-success" element={<RewardSuccessPage />} />
         <Route path="/invoices" element={<InvoicesPage />} />
+        <Route path="/notifications" element={<NotificationSettingsPage />} />
+        <Route path="/help" element={<HelpSupportPage />} />
+        <Route path="/live-chat" element={<LiveChatPage />} />
         </Routes>
       </Router>
     </AuthProvider>
