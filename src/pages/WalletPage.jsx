@@ -505,24 +505,85 @@ const WalletPage = () => {
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6">
           <h3 className="text-lg font-semibold text-primary-500 mb-4 sm:mb-6">Saved Payment Methods</h3>
           <div className="space-y-3 sm:space-y-4">
-            {paymentMethods.map((method, index) => (
-              <div
-                key={method.id || `method-${index}`}
-                className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors ${
-                  method.isAddCard || method.isAddBank ? 'cursor-pointer hover:bg-gray-100' : ''
-                }`}
-                onClick={method.isAddCard || method.isAddBank ? () => handlePaymentMethodAction(method) : undefined}
-              >
-                <div className="flex items-center space-x-3 sm:space-x-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
-                    <img src={method.icon} alt={method.name} className="w-full h-full" />
+            {paymentMethods
+              .filter((m) => !m.isAddCard)
+              .map((method, index) => (
+                <div
+                  key={method.id || `method-${index}`}
+                  className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors ${
+                    method.isAddBank ? 'cursor-pointer hover:bg-gray-100' : ''
+                  }`}
+                  onClick={method.isAddBank ? () => handlePaymentMethodAction(method) : undefined}
+                >
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                      <img src={method.icon} alt={method.name} className="w-full h-full" />
+                    </div>
+                    <div>
+                      <p className="text-sm sm:text-base font-semibold text-primary-500">{method.name}</p>
+                      <p className="text-xs sm:text-sm text-primary-200 font-medium" >{method.subtitle}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm sm:text-base font-semibold text-primary-500">{method.name}</p>
-                    <p className="text-xs sm:text-sm text-primary-200 font-medium" >{method.subtitle}</p>
-                  </div>
+                  {!method.isAddBank && (
+                    <div className="relative dropdown-container">
+                      <button
+                        onClick={() => handlePaymentMethodAction(method)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <img src={ThreeDotIcon} alt="Options" className="w-5 h-5" />
+                      </button>
+                      {activeDropdown === method.id && (
+                        <div className="absolute right-0 top-full w-48 bg-white rounded-2xl! shadow-custom border border-gray-200 z-50">
+                          <div className="py-2">
+                            <button
+                              onClick={() => handleMakeDefault(method.id)}
+                              className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                            >
+                              <img src={CheckIcon} alt="Check" className="w-5 h-5 mr-3" />
+                              <span className="text-sm font-medium text-gray-700">Make Default</span>
+                            </button>
+                            <button
+                              onClick={() => handleRemove(method.id)}
+                              className="w-full flex items-center px-4 py-3 text-left hover:bg-red-50 transition-colors"
+                            >
+                              <img src={TrashRedIcon} alt="Trash" className="w-5 h-5 mr-3" />
+                              <span className="text-sm font-medium text-red-600">Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {method.isAddCard || method.isAddBank ? (
+              ))}
+
+            {bankAccounts.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAddBankModal(true)}
+                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left"
+              >
+                Add Another Bank Account
+              </button>
+            )}
+
+            {paymentMethods
+              .filter((m) => m.isAddCard)
+              .map((method, index) => (
+                <div
+                  key={method.id || `method-${index}`}
+                  className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors cursor-pointer hover:bg-gray-100`}
+                  onClick={() => handlePaymentMethodAction(method)}
+                >
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                      <img src={method.icon} alt={method.name} className="w-full h-full" />
+                    </div>
+                    <div>
+                      <p className="text-sm sm:text-base font-semibold text-primary-500">{method.name}</p>
+                      <p className="text-xs sm:text-sm text-primary-200 font-medium" >{method.subtitle}</p>
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handlePaymentMethodAction(method)}
@@ -531,40 +592,8 @@ const WalletPage = () => {
                       <img src={ChevronRightIcon} alt="Arrow" className="w-5 h-5" />
                     </button>
                   </div>
-                ) : (
-                  <div className="relative dropdown-container">
-                    <button
-                      onClick={() => handlePaymentMethodAction(method)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <img src={ThreeDotIcon} alt="Options" className="w-5 h-5" />
-                    </button>
-                    
-                    {/* Dropdown Menu */}
-                    {activeDropdown === method.id && (
-                      <div className="absolute right-0 top-full w-48 bg-white rounded-2xl! shadow-custom border border-gray-200 z-50">
-                        <div className="py-2">
-                          <button
-                            onClick={() => handleMakeDefault(method.id)}
-                            className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                          >
-                            <img src={CheckIcon} alt="Check" className="w-5 h-5 mr-3" />
-                            <span className="text-sm font-medium text-gray-700">Make Default</span>
-                          </button>
-                          <button
-                            onClick={() => handleRemove(method.id)}
-                            className="w-full flex items-center px-4 py-3 text-left hover:bg-red-50 transition-colors"
-                          >
-                            <img src={TrashRedIcon} alt="Trash" className="w-5 h-5 mr-3" />
-                            <span className="text-sm font-medium text-red-600">Remove</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
         </div>
 
@@ -662,7 +691,7 @@ const WalletPage = () => {
           onClick={closeModal}
         >
           <div 
-            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-custom"
+            className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md md:max-w-lg shadow-custom"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -673,7 +702,7 @@ const WalletPage = () => {
                 >
                   <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
                 </button>
-                <h2 className="text-xl font-semibold text-gray-900">Add New Card</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Add New Card</h2>
               </div>
               <button
                 onClick={closeModal}
@@ -718,7 +747,7 @@ const WalletPage = () => {
               </div>
 
               {/* Expiry and CVV */}
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                 <div className="flex-1">
                   <input
                     type="text"
@@ -780,7 +809,7 @@ const WalletPage = () => {
           onClick={closeBankModal}
         >
           <div 
-            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-custom"
+            className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md md:max-w-lg shadow-custom"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -792,7 +821,7 @@ const WalletPage = () => {
                 >
                   <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
                 </button>
-                <h2 className="text-xl font-bold text-gray-900">Add Bank Account</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Add Bank Account</h2>
               </div>
               <button
                 onClick={closeBankModal}
