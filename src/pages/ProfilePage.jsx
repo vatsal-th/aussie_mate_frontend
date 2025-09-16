@@ -22,6 +22,7 @@ const ProfilePage = () => {
     const navigate = useNavigate();
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -85,8 +86,16 @@ const ProfilePage = () => {
   }, [user]);
 
     const handleLogout = () => {
+        setShowLogoutModal(true);
+    };
+
+    const confirmLogout = () => {
         logout();
         navigate('/');
+    };
+
+    const cancelLogout = () => {
+        setShowLogoutModal(false);
     };
 
     const handleEditProfile = () => {
@@ -277,6 +286,36 @@ const ProfilePage = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 p-4" 
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                >
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-auto shadow-custom border border-gray-200">
+                        <h2 className="text-xl font-semibold text-primary-500 mb-4 text-center">
+                            Logout?
+                        </h2>
+                        <p className="text-primary-200 font-medium text-center mb-6">
+                            Are you sure you want to log out of your account?
+                        </p>
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={cancelLogout}
+                                className="flex-1 bg-[#E5E7EB] hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmLogout}
+                                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

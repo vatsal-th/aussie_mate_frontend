@@ -44,7 +44,7 @@ const LiveChatPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={handleBack}
-            className="p-2 rounded-lg bg-white border border-gray-200 cursor-pointer"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
           </button>
@@ -80,13 +80,13 @@ const LiveChatPage = () => {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Type your question..."
               className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:outline-none 
-               text-gray-900 placeholder-gray-500 z-10"
+               text-gray-900 placeholder-gray-500 relative z-10"
             />
             <button
               onClick={handleSearch}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
             >
-              <img src={SearchIcon} alt="Search" className="w-4 h-4" />
+              <img src={SearchIcon} alt="Search" className="w-4 h-4" style={{ filter: 'brightness(0) invert(1)' }} />
             </button>
           </div>
         </div>

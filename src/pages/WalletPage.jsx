@@ -17,12 +17,22 @@ const WalletPage = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(1);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [showAddBankModal, setShowAddBankModal] = useState(false);
   const [cardForm, setCardForm] = useState({
     cardHolderName: '',
     cardNumber: '',
     expiry: '',
     cvv: ''
   });
+  const [bankForm, setBankForm] = useState({
+    accountName: '',
+    bsb: '',
+    accountNumber: '',
+    setAsDefault: true
+  });
+
+  // Check if user has bank details (you can modify this logic based on your data structure)
+  const hasBankDetails = false; // Set to true if user has bank details
 
   const paymentMethods = [
     {
@@ -34,16 +44,27 @@ const WalletPage = () => {
       icon: CardIcon,
       isDefault: true
     },
-    {
+    // Show Add Bank Account if user has no bank details
+    ...(!hasBankDetails ? [{
       id: 2,
+      type: 'add-bank',
+      name: 'Add Bank Account',
+      subtitle: 'Link your bank account for payments.',
+      icon: BankIcon,
+      isDefault: false,
+      isAddBank: true
+    }] : []),
+    // Only show bank details if user has them
+    ...(hasBankDetails ? [{
+      id: 3,
       type: 'bank',
       name: 'Linked Bank',
       subtitle: 'PayID: john@email.com',
       icon: BankIcon,
       isDefault: false
-    },
+    }] : []),
     {
-      id: 3,
+      id: 4,
       type: 'add',
       name: 'Add New Card',
       subtitle: 'Save and pay via cards.',
@@ -89,6 +110,9 @@ const WalletPage = () => {
     if (method.isAddCard) {
       // Open add new card modal
       setShowAddCardModal(true);
+    } else if (method.isAddBank) {
+      // Open add bank account modal
+      setShowAddBankModal(true);
     } else {
       // Toggle dropdown for existing payment method
       setActiveDropdown(activeDropdown === method.id ? null : method.id);
@@ -119,6 +143,14 @@ const WalletPage = () => {
     }));
   };
 
+  const handleBankFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setBankForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
   const handleAddCard = (e) => {
     e.preventDefault();
     console.log('Adding new card:', cardForm);
@@ -132,6 +164,19 @@ const WalletPage = () => {
     });
   };
 
+  const handleAddBank = (e) => {
+    e.preventDefault();
+    console.log('Adding new bank account:', bankForm);
+    // Here you would typically make an API call to add the bank account
+    setShowAddBankModal(false);
+    setBankForm({
+      accountName: '',
+      bsb: '',
+      accountNumber: '',
+      setAsDefault: true
+    });
+  };
+
   const closeModal = () => {
     setShowAddCardModal(false);
     setCardForm({
@@ -139,6 +184,16 @@ const WalletPage = () => {
       cardNumber: '',
       expiry: '',
       cvv: ''
+    });
+  };
+
+  const closeBankModal = () => {
+    setShowAddBankModal(false);
+    setBankForm({
+      accountName: '',
+      bsb: '',
+      accountNumber: '',
+      setAsDefault: true
     });
   };
 
@@ -155,7 +210,7 @@ const WalletPage = () => {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (showAddCardModal) {
+    if (showAddCardModal || showAddBankModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -165,7 +220,7 @@ const WalletPage = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showAddCardModal]);
+  }, [showAddCardModal, showAddBankModal]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -221,9 +276,9 @@ const WalletPage = () => {
               <div
                 key={method.id}
                 className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors ${
-                  method.isAddCard ? 'cursor-pointer hover:bg-gray-100' : ''
+                  method.isAddCard || method.isAddBank ? 'cursor-pointer hover:bg-gray-100' : ''
                 }`}
-                onClick={method.isAddCard ? () => handlePaymentMethodAction(method) : undefined}
+                onClick={method.isAddCard || method.isAddBank ? () => handlePaymentMethodAction(method) : undefined}
               >
                 <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
@@ -234,7 +289,7 @@ const WalletPage = () => {
                     <p className="text-xs sm:text-sm text-primary-200 font-medium" >{method.subtitle}</p>
                   </div>
                 </div>
-                {method.isAddCard ? (
+                {method.isAddCard || method.isAddBank ? (
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handlePaymentMethodAction(method)}
@@ -361,11 +416,19 @@ const WalletPage = () => {
             className="bg-white rounded-2xl p-6 w-full max-w-md shadow-custom"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Add New Card</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <button
+                  onClick={closeModal}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+                >
+                  <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
+                </button>
+                <h2 className="text-xl font-semibold text-gray-900">Add New Card</h2>
+              </div>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer" 
+                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -433,6 +496,106 @@ const WalletPage = () => {
                   className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg cursor-pointer"
                 >
                   Add New Card
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Bank Account Modal */}
+      {showAddBankModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+          onClick={closeBankModal}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-custom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <button
+                  onClick={closeBankModal}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+                >
+                  <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
+                </button>
+                <h2 className="text-xl font-bold text-gray-900">Add Bank Account</h2>
+              </div>
+              <button
+                onClick={closeBankModal}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddBank} className="space-y-4">
+              {/* Account Name */}
+              <div>
+                <input
+                  type="text"
+                  name="accountName"
+                  value={bankForm.accountName}
+                  onChange={handleBankFormChange}
+                  placeholder="Account Name"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+
+              {/* BSB */}
+              <div>
+                <input
+                  type="text"
+                  name="bsb"
+                  value={bankForm.bsb}
+                  onChange={handleBankFormChange}
+                  placeholder="BSB"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+
+              {/* Account Number */}
+              <div>
+                <input
+                  type="text"
+                  name="accountNumber"
+                  value={bankForm.accountNumber}
+                  onChange={handleBankFormChange}
+                  placeholder="Account Number"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+
+              {/* Set as Default Checkbox */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="setAsDefault"
+                  checked={bankForm.setAsDefault}
+                  onChange={handleBankFormChange}
+                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                />
+                <label className="ml-2 text-sm font-medium text-gray-700">
+                  Set as default payment
+                </label>
+              </div>
+
+              {/* Add Bank Account Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg cursor-pointer"
+                >
+                  Add Bank Account
                 </button>
               </div>
             </form>

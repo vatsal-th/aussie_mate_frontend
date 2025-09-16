@@ -156,7 +156,7 @@ const InvoicesPage = () => {
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
                 {/* Top Bar */}
                 <div className="flex items-center gap-3 mb-4">
-                    <button onClick={handleBack} className="p-2 rounded-lg bg-white border border-gray-200 cursor-pointer">
+                    <button onClick={handleBack} className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                         <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg sm:text-xl font-semibold text-primary-500">Invoices & Payment History</h1>
