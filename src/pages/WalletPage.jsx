@@ -36,6 +36,8 @@ const WalletPage = () => {
     accountNumber: '',
     setAsDefault: true
   });
+  const [cardError, setCardError] = useState('');
+  const [bankError, setBankError] = useState('');
 
   // Generate payment methods from API data
   const generatePaymentMethods = () => {
@@ -43,8 +45,10 @@ const WalletPage = () => {
     
     // Add existing cards
     cards.forEach(card => {
+      const normalizedCardId = card?.id || card?._id;
+      if (!normalizedCardId) return; // skip cards without valid id
       methods.push({
-        id: `card_${card.id}`,
+        id: `card_${normalizedCardId}`,
         type: card.cardType?.toLowerCase() || 'card',
         lastFour: card.lastFourDigits,
         name: `${card.cardType || 'Card'} •••• ${card.lastFourDigits}`,
@@ -58,8 +62,10 @@ const WalletPage = () => {
     
     // Add existing bank accounts
     bankAccounts.forEach(account => {
+      const normalizedBankId = account?.id || account?._id;
+      if (!normalizedBankId) return; // skip accounts without valid id
       methods.push({
-        id: `bank_${account.id}`,
+        id: `bank_${normalizedBankId}`,
         type: 'bank',
         name: 'Linked Bank',
         subtitle: `BSB: ${account.bsb} •••• ${account.lastFourDigits}`,
@@ -172,14 +178,23 @@ const WalletPage = () => {
   const handleRemove = async (methodId) => {
     try {
       setLoading(true);
+      if (!methodId) {
+        return;
+      }
       if (methodId.startsWith('card_')) {
         const cardId = methodId.replace('card_', '');
+        if (!cardId || cardId === 'undefined') {
+          return;
+        }
         const response = await userAPI.deleteCard(cardId);
         if (response.success) {
           await fetchWalletData(); // Refresh data
         }
       } else if (methodId.startsWith('bank_')) {
         const bankId = methodId.replace('bank_', '');
+        if (!bankId || bankId === 'undefined') {
+          return;
+        }
         const response = await userAPI.deleteBankAccount(bankId);
         if (response.success) {
           await fetchWalletData(); // Refresh data
@@ -286,11 +301,12 @@ const WalletPage = () => {
   const handleAddCard = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setCardError('');
     try {
       // Validate expiry format
       const expiryRegex = /^(0[1-9]|1[0-2])\/(\d{2}|\d{4})$/;
       if (!expiryRegex.test(cardForm.expiry)) {
-        console.log('Invalid expiry format');
+        setCardError('Invalid expiry format. Use MM/YY');
         setLoading(false);
         return;
       }
@@ -298,7 +314,7 @@ const WalletPage = () => {
       // Validate card number
       const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
       if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
-        console.log('Invalid card number length');
+        setCardError('Card number must be 13-19 digits');
         setLoading(false);
         return;
       }
@@ -318,10 +334,7 @@ const WalletPage = () => {
         setAsDefault: Boolean(cardForm.setAsDefault) // Ensure it's a boolean
       };
 
-      console.log('Sending card data:', cardData);
-
       const response = await userAPI.addCard(cardData);
-      console.log('API response:', response);
       
       if (response.success) {
         await fetchWalletData(); // Refresh data
@@ -333,14 +346,11 @@ const WalletPage = () => {
           cvv: '',
           setAsDefault: false
         });
-        console.log('Card added successfully');
       } else {
-        console.error('API error response:', response);
-        console.log('Error adding card');
+        setCardError(response.message || 'Failed to add card');
       }
     } catch (error) {
-      console.error('Error adding card:', error);
-      console.log('Error adding card');
+      setCardError(error?.message || 'Error adding card');
     } finally {
       setLoading(false);
     }
@@ -349,17 +359,18 @@ const WalletPage = () => {
   const handleAddBank = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setBankError('');
     try {
       // Validate BSB format (6 digits)
       if (bankForm.bsb.length !== 6) {
-        console.log('BSB must be exactly 6 digits');
+        setBankError('BSB must be exactly 6 digits');
         setLoading(false);
         return;
       }
       
       // Validate account number (4-10 digits)
       if (bankForm.accountNumber.length < 4 || bankForm.accountNumber.length > 10) {
-        console.log('Account number must be between 4 and 10 digits');
+        setBankError('Account number must be between 4 and 10 digits');
         setLoading(false);
         return;
       }
@@ -382,11 +393,10 @@ const WalletPage = () => {
           setAsDefault: true
         });
       } else {
-        alert(response.message || 'Error adding bank account');
+        setBankError(response.message || 'Failed to add bank account');
       }
     } catch (error) {
-      console.error('Error adding bank account:', error);
-      alert('Error adding bank account');
+      setBankError(error?.message || 'Error adding bank account');
     } finally {
       setLoading(false);
     }
@@ -572,7 +582,7 @@ const WalletPage = () => {
               <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
                 {cards.map((card, index) => (
                   <div
-                    key={card.id || `card-${index}`}
+                    key={card.id || card._id || `card-${index}`}
                     onClick={() => handleCardClick(index)}
                     className={`flex-shrink-0 w-64 sm:w-72 md:w-80 h-40 sm:h-44 md:h-48 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 ${
                       index === currentCardIndex
@@ -676,6 +686,11 @@ const WalletPage = () => {
             </div>
 
             <form onSubmit={handleAddCard} className="space-y-4">
+              {cardError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                  {cardError}
+                </div>
+              )}
               {/* Card Holder Name */}
               <div>
                 <input
@@ -790,6 +805,11 @@ const WalletPage = () => {
             </div>
 
             <form onSubmit={handleAddBank} className="space-y-4">
+              {bankError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                  {bankError}
+                </div>
+              )}
               {/* Account Name */}
               <div>
                 <input
