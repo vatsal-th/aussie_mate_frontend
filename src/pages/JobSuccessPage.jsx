@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect }  from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
@@ -8,6 +8,16 @@ import CardBG7 from '../assets/CardBG7.png';
 
 const JobSuccessPage = () => {
   const navigate = useNavigate();
+  const [gifStopped, setGifStopped] = useState(false);
+
+  useEffect(() => {
+    // Stop GIF after 3 seconds
+    const timer = setTimeout(() => {
+      setGifStopped(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleViewMyJob = () => {
     navigate('/my-jobs');
@@ -57,11 +67,19 @@ const JobSuccessPage = () => {
 
             {/* Success Animation - GIF above text (z-10) */}
             <div className="relative z-10 mb-12">
-              <img 
+              {!gifStopped ? (
+                <img 
                 src={JobLiveGif} 
                 alt="Job Live Animation" 
                 className="w-80 h-80 mx-auto object-contain"
-              />
+              />    
+              ) : (
+                <div className="w-80 h-80 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-16 h-16 sm:w-20 sm:h-20 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

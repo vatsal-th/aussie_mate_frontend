@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userAPI } from '../services/api';
 import logo from '../assets/logo.png';
@@ -11,9 +11,10 @@ import CardBG9 from '../assets/CardBG9.png';
 
 const Header = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [userLocation, setUserLocation] = useState({
-    address: '123 Example Street',
-    city: 'Sydney NSW 200, Australia'
+    address: 'Location not set',
+    city: 'Please set your location'
   });
 
   useEffect(() => {
@@ -80,6 +81,19 @@ const Header = () => {
     };
   }, [user]);
 
+  const handleLogoClick = () => {
+    const isCustomer = user && (
+      user.userType === 'Customer' || 
+      user.role === 'Customer'
+    );
+    
+    if (isCustomer) {
+      navigate('/customer-dashboard');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm overflow-hidden" >
       <div className="relative z-10 max-w-7xl mx-auto lg:rounded-b-2xl overflow-hidden">
@@ -107,16 +121,16 @@ const Header = () => {
         </div>
 
         {/* Center: Logo */}
-        <div className="flex-1 flex justify-center">
-          <Link to="/" className="flex-shrink-0">
+        <div className="flex-1 flex justify-center ">
+          <button onClick={handleLogoClick} className="flex-shrink-0 cursor-pointer">
             <img src={logo} alt="Aussie Mate" className="h-10 sm:h-12 md:h-14 w-auto" />
-          </Link>
+          </button>
         </div>
 
         {/* Right: Icons */}
-        <div className="flex-1 flex items-center justify-end space-x-2 sm:space-x-2 md:space-x-3 flex-shrink-0">
+        <div className="flex-1 flex items-center justify-end space-x-2 sm:space-x-2 md:space-x-3 flex-shrink-0" >
           {/* Notification Icon */}
-          <button className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors">
+          <button className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors cursor-pointer">
             <img src={NotificationIcon} alt="Notifications" className="w-7 h-7 sm:w-7 sm:h-7 md:w-9 md:h-9" />
           </button>
 

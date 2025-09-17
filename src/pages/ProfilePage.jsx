@@ -340,7 +340,7 @@ const ProfilePage = () => {
                     {/* Logout Button */}
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-red-50 transition-colors text-red-600"
+                        className="w-full flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-red-50 transition-colors text-red-600 cursor-pointer"
                     >
                         <div className="flex items-center space-x-3 sm:space-x-4">
                             <img src={LogoutIcon} alt="Logout" className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
@@ -368,13 +368,13 @@ const ProfilePage = () => {
                         <div className="flex space-x-3">
                             <button
                                 onClick={cancelLogout}
-                                className="flex-1 bg-[#E5E7EB] hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-xl transition-colors"
+                                className="flex-1 bg-[#E5E7EB] hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-xl transition-colors cursor-pointer"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmLogout}
-                                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors cursor-pointer"
                             >
                                 Logout
                             </button>

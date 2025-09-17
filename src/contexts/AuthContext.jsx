@@ -21,6 +21,11 @@ export const AuthProvider = ({ children }) => {
       const storedUser = getStoredUser();
       
       if (token && storedUser) {
+        // Ensure userType is set for consistency
+        if (!storedUser.userType && storedUser.role) {
+          storedUser.userType = storedUser.role;
+        }
+        
         // For now, just use stored user without API verification
         // TODO: Add API verification when backend is ready
         setUser(storedUser);
@@ -45,6 +50,11 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
+      // Ensure userType is set for consistency
+      if (userData && !userData.userType && userData.role) {
+        userData.userType = userData.role;
+      }
+      
       setUser(userData);
       return response;
     } catch (error) {
@@ -55,7 +65,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.registerCustomer(userData);
-      setUser(response.data?.user || response.user);
+      const userDataFromResponse = response.data?.user || response.user;
+      
+      // Ensure userType is set for consistency
+      if (userDataFromResponse && !userDataFromResponse.userType && userDataFromResponse.role) {
+        userDataFromResponse.userType = userDataFromResponse.role;
+      }
+      
+      setUser(userDataFromResponse);
       return response;
     } catch (error) {
       throw error;

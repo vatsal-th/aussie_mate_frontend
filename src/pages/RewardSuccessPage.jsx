@@ -12,6 +12,8 @@ const RewardSuccessPage = () => {
   const [voucherCode, setVoucherCode] = useState('');
   const [reward, setReward] = useState(null);
   const [redemption, setRedemption] = useState(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [gifStopped, setGifStopped] = useState(false);
 
   useEffect(() => {
     // Get reward data from navigation state or generate default
@@ -38,11 +40,37 @@ const RewardSuccessPage = () => {
       });
       setVoucherCode('AM-DIS10-2025');
     }
+
+    // Stop GIF after 3 seconds
+    const timer = setTimeout(() => {
+      setGifStopped(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [location.state]);
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(voucherCode);
-    // You could add a toast notification here
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(voucherCode);
+      setCopySuccess(true);
+      // Reset success message after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = voucherCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopySuccess(true);
+      setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
+    }
   };
 
   const handleUseReward = () => {
@@ -71,11 +99,19 @@ const RewardSuccessPage = () => {
           </div>
           {/* Success Animation - GIF */}
           <div className="flex justify-center mb-8">
-            <img 
-              src={JobLiveGif} 
-              alt="Success Animation" 
-              className="w-32 h-32 sm:w-40 sm:h-40 object-contain"
-            />
+            {!gifStopped ? (
+              <img 
+                src={JobLiveGif} 
+                alt="Success Animation" 
+                className="w-32 h-32 sm:w-40 sm:h-40 object-contain"
+              />
+            ) : (
+              <div className="w-32 h-32 sm:w-40 sm:h-40 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-16 h-16 sm:w-20 sm:h-20 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* Success Message */}
@@ -103,11 +139,31 @@ const RewardSuccessPage = () => {
               </span>
               <button
                 onClick={handleCopyCode}
-                className="bg-primary-500 hover:bg-primary-600 text-white p-2 rounded-full transition-colors cursor-pointer"
+                className={`p-2 rounded-full transition-all duration-200 cursor-pointer ${
+                  copySuccess 
+                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                    : 'bg-primary-500 hover:bg-primary-600 text-white'
+                }`}
+                title={copySuccess ? 'Copied!' : 'Copy voucher code'}
               >
-                <img src={CopyIcon} alt="Copy" className="w-4 h-4" />
+                {copySuccess ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <img src={CopyIcon} alt="Copy" className="w-4 h-4" />
+                )}
               </button>
             </div>
+            
+            {/* Copy Success Message */}
+            {copySuccess && (
+              <div className="text-center mb-2">
+                <span className="text-sm text-green-600 font-medium">
+                  ✓ Voucher code copied to clipboard!
+                </span>
+              </div>
+            )}
 
             {/* Valid Till */}
             <p className="text-sm text-primary-200 font-medium mb-4">

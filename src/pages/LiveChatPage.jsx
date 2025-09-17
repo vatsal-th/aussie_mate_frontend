@@ -121,7 +121,7 @@ const LiveChatPage = () => {
               <button
                 key={index}
                 onClick={() => handleSuggestedQuestion(questionText)}
-                className="text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50"
+                className="text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
               >
                 <p className="font-medium text-sm">
                   {questionText}
@@ -136,7 +136,7 @@ const LiveChatPage = () => {
             <button
               key={index + 2}
               onClick={() => handleSuggestedQuestion(questionText)}
-              className="w-full text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50"
+              className="w-full text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
             >
               <p className="font-medium text-sm">
                 {questionText}

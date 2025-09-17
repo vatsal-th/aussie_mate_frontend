@@ -492,7 +492,7 @@ const WalletPage = () => {
               <div className="flex justify-end w-full sm:w-auto">
                 <button
                   onClick={handleTopUp}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-[8px] text-sm font-medium shadow-custom"
+                  className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-[8px] text-sm font-medium shadow-custom cursor-pointer"
                 >
                   Top Up Wallet
                 </button>
@@ -528,7 +528,7 @@ const WalletPage = () => {
                     <div className="relative dropdown-container">
                       <button
                         onClick={() => handlePaymentMethodAction(method)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                       >
                         <img src={ThreeDotIcon} alt="Options" className="w-5 h-5" />
                       </button>
@@ -537,14 +537,14 @@ const WalletPage = () => {
                           <div className="py-2">
                             <button
                               onClick={() => handleMakeDefault(method.id)}
-                              className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                              className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer"
                             >
                               <img src={CheckIcon} alt="Check" className="w-5 h-5 mr-3" />
                               <span className="text-sm font-medium text-gray-700">Make Default</span>
                             </button>
                             <button
                               onClick={() => handleRemove(method.id)}
-                              className="w-full flex items-center px-4 py-3 text-left hover:bg-red-50 transition-colors"
+                              className="w-full flex items-center px-4 py-3 text-left hover:bg-red-50 transition-colors cursor-pointer"
                             >
                               <img src={TrashRedIcon} alt="Trash" className="w-5 h-5 mr-3" />
                               <span className="text-sm font-medium text-red-600">Remove</span>
@@ -561,7 +561,7 @@ const WalletPage = () => {
               <button
                 type="button"
                 onClick={() => setShowAddBankModal(true)}
-                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left"
+                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left cursor-pointer"
               >
                 Add Another Bank Account
               </button>
@@ -698,7 +698,7 @@ const WalletPage = () => {
               <div className="flex items-center">
                 <button
                   onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3 cursor-pointer"
                 >
                   <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
                 </button>
@@ -706,7 +706,7 @@ const WalletPage = () => {
               </div>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -779,7 +779,7 @@ const WalletPage = () => {
                   name="setAsDefault"
                   checked={cardForm.setAsDefault}
                   onChange={handleCardFormChange}
-                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
                 />
                 <label className="ml-2 text-sm font-medium text-gray-700">
                   Set as default payment method
@@ -817,7 +817,7 @@ const WalletPage = () => {
               <div className="flex items-center">
                 <button
                   onClick={closeBankModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3 cursor-pointer"
                 >
                   <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
                 </button>
@@ -825,7 +825,7 @@ const WalletPage = () => {
               </div>
               <button
                 onClick={closeBankModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -885,7 +885,7 @@ const WalletPage = () => {
                   name="setAsDefault"
                   checked={bankForm.setAsDefault}
                   onChange={handleBankFormChange}
-                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
                 />
                 <label className="ml-2 text-sm font-medium text-gray-700">
                   Set as default payment
