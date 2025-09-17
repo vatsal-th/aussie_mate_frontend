@@ -174,7 +174,7 @@ const CustomerDashboard = () => {
               <input
                 type="text"
                 placeholder="Search services, e.g. bond clean..."
-                className="w-full pl-9 sm:pl-10 pr-4 py-3 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 sm:pl-10 pr-4 py-3 bg-gray-100 rounded-lg text-sm text-primary-200 font-medium"
               />
             </div>
             <Link to="/post-new-job" className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 sm:py-2 rounded-full flex items-center justify-center space-x-2 transition-colors text-sm whitespace-nowrap">
@@ -188,7 +188,7 @@ const CustomerDashboard = () => {
         {/* Book a cleaner section */}
         <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl shadow-custom mb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-1">Book a cleaner in minutes</h2>
-          <p className="text-sm sm:text-base text-primary-200 mb-4">Post job → Receive quotes → Choose & pay securely</p>
+          <p className="text-sm sm:text-base text-primary-200 font-medium mb-4">Post job → Receive quotes → Choose & pay securely</p>
           
           {/* Service Categories Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6    ">

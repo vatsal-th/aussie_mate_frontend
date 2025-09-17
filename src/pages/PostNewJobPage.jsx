@@ -558,17 +558,17 @@ const PostNewJobPage = () => {
         <Link to="/customer-dashboard" className="mr-4">
           <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Post New Job</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
       </div>
 
       {/* Main Content */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom">
         {/* Title and Description */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-primary-500 mb-3">
             What do you need help with today?
           </h2>
-          <p className="text-gray-600 text-base sm:text-lg">
+          <p className="text-primary-200 font-medium text-sm sm:text-base">
             Pick a service to get started with hassle-free cleaning today.
           </p>
         </div>
@@ -606,7 +606,7 @@ const PostNewJobPage = () => {
               </div>
 
               {/* Service Name */}
-              <div className="relative z-10 text-xs sm:text-lg font-medium text-gray-900">{service.name}</div>
+              <div className="relative z-10 text-xs sm:text-lg font-medium text-primary-500">{service.name}</div>
             </div>
           ))}
         </div>
@@ -632,7 +632,7 @@ const PostNewJobPage = () => {
             <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-2">
               Tell us about your property
             </h2>
-            <p className="text-sm sm:text-base text-primary-200 mb-6">
+            <p className="text-sm sm:text-base text-primary-200 font-medium mb-6">
               Add property details to ensure the best cleaning plan for you.
             </p>
 
@@ -645,7 +645,7 @@ const PostNewJobPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer text-primary-200 font-medium"
                 >
                   <span className={formData.propertyType ? 'text-primary-500' : 'text-primary-200'}>
                     {getSelectedPropertyType()}
@@ -762,7 +762,7 @@ const PostNewJobPage = () => {
                     onChange={() => handleAddonChange(addon.id)}
                     className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
                   />
-                  <span className="text-sm sm:text-base text-[#374151]">{addon.label}</span>
+                  <span className="text-sm sm:text-base text-[#374151] font-medium">{addon.label}</span>
                 </label>
               ))}
             </div>
