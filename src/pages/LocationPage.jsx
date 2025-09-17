@@ -279,10 +279,10 @@ const LocationPage = () => {
       <div className="px-4 py-6">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-primary-500 mb-2">
               Pick your location
             </h2>
-            <p className="text-gray-600">
+            <p className="text-primary-200 font-medium">
               Add your location so we can match you with the closest cleaners.
             </p>
           </div>
@@ -304,7 +304,7 @@ const LocationPage = () => {
                 type="button"
                 onClick={handleGetCurrentLocation}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-3 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-3 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
@@ -315,7 +315,7 @@ const LocationPage = () => {
                     className="w-8 h-8"
                   />
                 )}
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-primary-500">
                   {isLoading ? "Getting location..." : "Get current location"}
                 </span>
               </button>
@@ -363,26 +363,26 @@ const LocationPage = () => {
           {/* Manual Address Input Form */}
           {showManualInput && (
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-              <h3 className="font-semibold text-primary-500 mb-3">Enter Address Manually</h3>
+              <h3 className="font-medium text-primary-500 mb-3">Enter Address Manually</h3>
               <form onSubmit={handleManualAddressSubmit} className="space-y-3">
                 <textarea
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="Enter your full address..."
-                  className="w-full p-3 border border-gray-300 rounded-lg! focus:ring-1 focus:ring-primary-500 outline-none resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg! focus:ring-1 focus:ring-primary-500 outline-none resize-none text-primary-500 font-medium"
                   rows={3}
                 />
                 <div className="flex space-x-2">
                   <button
                     type="submit"
-                    className="flex-1 bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-600 transition-colors"
+                    className="flex-1 bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-600 transition-colors cursor-pointer font-medium"
                   >
                     Save Address
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelManual}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-gray-200 text-primary-200 hover:text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer font-medium"
                   >
                     Cancel
                   </button>
@@ -396,16 +396,16 @@ const LocationPage = () => {
             <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="font-semibold text-gray-900 mb-2">
+                  <div className="font-medium text-primary-500 mb-2">
                     {selectedLocation.fullAddress}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-primary-200 font-medium">
                     Coordinates: {selectedLocation.coordinates}
                   </div>
                 </div>
                 <button
                   onClick={handleChangeLocation}
-                  className="text-primary-500 font-medium text-sm hover:text-primary-600 ml-2"
+                  className="text-[#1F6FEB] font-semibold text-sm hover:text-primary-600 ml-2 cursor-pointer"
                 >
                   Change
                 </button>
@@ -416,7 +416,7 @@ const LocationPage = () => {
           {/* Confirm Button */}
           <button
             onClick={handleConfirmLocation}
-            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 rounded-xl transition-colors"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer"
           >
             Confirm Location
           </button>

@@ -67,12 +67,12 @@ const LoginPage = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">Welcome Back</h2>
-          <p className="text-sm md:text-base text-gray-600 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary-500 mb-2 text-center">Welcome Back</h2>
+          <p className="text-sm md:text-base text-primary-200 font-medium text-center">
             Log in to continue booking and managing your cleaning services with ease.
           </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-500 mb-2">
                 Phone or email
               </label>
               <input
@@ -87,7 +87,7 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-500 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -103,7 +103,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                 >
                   {showPassword ? (
                     <img src={eyeIcon} alt="Show password" className="w-5 h-5" />
@@ -115,7 +115,7 @@ const LoginPage = () => {
             </div>
 
             <div className="text-right">
-              <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 font-medium">
+              <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 font-medium cursor-pointer">
                 Forgot password?
               </Link>
             </div>
@@ -123,14 +123,14 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-xl transition-colors duration-200 text-base touch-manipulation"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-xl transition-colors duration-200 text-base touch-manipulation cursor-pointer"
             >
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
           <div className="text-center mt-6">
-            <p className="text-gray-600">
+            <p className="text-primary-200 font-medium">
               Don't have an account?{' '}
               <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
                 Sign Up

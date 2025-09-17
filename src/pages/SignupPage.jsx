@@ -107,8 +107,8 @@ const SignupPage = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center">Let's get started</h2>
-          <p className="text-sm sm:text-base text-gray-600 px-2 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-primary-500 mb-2 text-center">Let's get started</h2>
+          <p className="text-sm sm:text-base text-primary-200 font-medium px-2 text-center">
             Please provide the following details to set up your Aussie Mate account.
           </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -122,7 +122,7 @@ const SignupPage = () => {
                   className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer text-base"
                   required
                 />
-                <label className="absolute left-4 top-1 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+                <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                   First Name
                 </label>
               </div>
@@ -136,7 +136,7 @@ const SignupPage = () => {
                   className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer text-base"
                   required
                 />
-                <label className="absolute left-4 top-1 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+                <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                   Last Name
                 </label>
               </div>
@@ -152,7 +152,7 @@ const SignupPage = () => {
                 className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
                 required
               />
-              <label className="absolute left-4 top-1 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                 Email Address
               </label>
             </div>
@@ -167,7 +167,7 @@ const SignupPage = () => {
                 className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
                 required
               />
-              <label className="absolute left-4 top-1 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                 Phone Number
               </label>
             </div>
@@ -178,14 +178,14 @@ const SignupPage = () => {
                 onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                 className="w-full px-4 border border-gray-300 rounded-[36px] focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
               >
-                <span className={`${formData.role ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`${formData.role ? 'text-primary-500' : 'text-primary-500'}`}>
                   {formData.role || 'Select your role'}
                 </span>
               </div>
               {/* Custom dropdown arrow */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                 <svg 
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} 
+                  className={`w-5 h-5 text-primary-500 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -203,7 +203,7 @@ const SignupPage = () => {
                       onClick={() => handleRoleSelect(role)}
                       className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl text-sm sm:text-base"
                     >
-                      <span className="text-gray-900">{role}</span>
+                      <span className="text-primary-500">{role}</span>
                     </div>
                   ))}
                 </div>
@@ -220,13 +220,13 @@ const SignupPage = () => {
                 className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
                 required
               />
-              <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+              <label className="absolute left-4 top-2 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                 Password
               </label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-primary-500 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
                 <img 
                   src={showPassword ? EyeIcon :  EyeOffIcon} 
@@ -246,13 +246,13 @@ const SignupPage = () => {
                 className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
                 required
               />
-              <label className="absolute left-4 top-1 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
+              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                 Confirm Password
               </label>
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
                 <img 
                   src={showConfirmPassword ? EyeIcon :  EyeOffIcon} 
@@ -263,21 +263,21 @@ const SignupPage = () => {
             </div>
             
             {/* Terms & Conditions Checkbox */}
-            <div className="flex items-start space-x-2 sm:space-x-3 mt-4 sm:mt-6">
-              <div className="flex items-center h-5">
+            <div className="flex items-center space-x-2 sm:space-x-3 mt-4 sm:mt-6">
+              <div className="flex items-center justify-center">
                 <input
                   type="checkbox"
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-1 accent-primary-500"
+                  className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-1 accent-primary-500 cursor-pointer"
                   required
                 />
               </div>
-              <div className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                <label className="cursor-pointer">
+              <div className="text-xs sm:text-base leading-relaxed">
+                <label className="cursor-pointer text-primary-200 font-medium" >
                   I agree to the{' '}
-                  <Link to="/terms" className="text-primary-500 hover:text-primary-600 font-medium underline">
+                  <Link to="/terms" className="text-primary-500 hover:text-primary-600 font-medium underline cursor-pointer">
                     Terms & Conditions
                   </Link>
                 </label>
@@ -287,16 +287,16 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
             >
               {isLoading ? 'Creating Account...' : 'Continue & Set My Location'}
             </button>
           </form>
           
           <div className="text-center mt-4 sm:mt-6">
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-base text-primary-200 font-medium">
               Already have an account?{' '}
-              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold">
+              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold cursor-pointer">
                 Sign In
               </Link>
             </p>
