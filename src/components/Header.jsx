@@ -151,7 +151,7 @@ const Header = () => {
             <div className="flex items-center space-x-2">
               <Link
                 to="/login"
-                className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded hover:bg-gray-100"
+                className="text-base text-primary-200 font-medium hover:text-gray-800 px-3 py-1 rounded hover:bg-gray-100"
               >
                 Login
               </Link>

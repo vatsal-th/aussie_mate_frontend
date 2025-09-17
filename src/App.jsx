@@ -20,6 +20,7 @@ import InvoicesPage from './pages/InvoicesPage'
 import NotificationSettingsPage from './pages/NotificationSettingsPage'
 import HelpSupportPage from './pages/HelpSupportPage'
 import LiveChatPage from './pages/LiveChatPage'
+import VerifyDocumentsPage from './pages/VerifyDocumentsPage'
 
 function App() {
 
@@ -46,6 +47,7 @@ function App() {
         <Route path="/notifications" element={<NotificationSettingsPage />} />
         <Route path="/help" element={<HelpSupportPage />} />
         <Route path="/live-chat" element={<LiveChatPage />} />
+        <Route path="/verify-documents" element={<VerifyDocumentsPage />} />
         </Routes>
       </Router>
     </AuthProvider>

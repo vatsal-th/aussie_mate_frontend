@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 import EyeIcon from '../assets/eye 1.svg';
 import EyeOffIcon from '../assets/eye-off 1.svg';
+import InfoIcon from '../assets/info.svg';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -73,7 +74,14 @@ const SignupPage = () => {
       const { agreeToTerms, ...userData } = formData;
       
       await register(userData);
-      navigate('/location');
+      
+      // Navigate based on user role
+      if (formData.role === 'Customer') {
+        navigate('/location');
+      } else {
+        // For other roles, navigate to document verification
+        navigate('/verify-documents');
+      }
     } catch (error) {
       console.error('Registration error in component:', error);
       setError(error.message || 'Registration failed. Please try again.');
@@ -261,6 +269,26 @@ const SignupPage = () => {
                 />
               </button>
             </div>
+              {/* Student Work Hours Info */}
+            {formData.role === 'Student Cleaner' && (
+              <div className="flex items-start space-x-2 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g clipPath="url(#clip0_233_17022)">
+                    <path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 12V9" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 6H9.0075" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_233_17022">
+                      <rect width="18" height="18" fill="white"/>
+                    </clipPath>
+                  </defs>
+                </svg>
+                <p className="text-xs sm:text-sm text-primary-500 font-medium">
+                  A student is allowed to work only 20 hours per week.
+                </p>
+              </div>
+            )}
             
             {/* Terms & Conditions Checkbox */}
             <div className="flex items-center space-x-2 sm:space-x-3 mt-4 sm:mt-6">
@@ -283,13 +311,20 @@ const SignupPage = () => {
                 </label>
               </div>
             </div>
+
+          
             
             <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
             >
-              {isLoading ? 'Creating Account...' : 'Continue & Set My Location'}
+              {isLoading 
+                ? 'Creating Account...' 
+                : formData.role === 'Customer' 
+                  ? 'Continue & Set My Location' 
+                  : 'Continue For Verification'
+              }
             </button>
           </form>
           
