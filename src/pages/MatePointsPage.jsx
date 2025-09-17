@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
@@ -10,67 +10,119 @@ import InfoIcon from '../assets/info.svg';
 import MetaBG from '../assets/metaBG.jpg';
 import MetaBox from '../assets/metabox.png';
 import CoinPNG from '../assets/coin3.svg';
+import { matePointsAPI } from '../services/api';
 
 const MatePointsPage = () => {
   const navigate = useNavigate();
-  const [currentPoints] = useState(345);
+  const [currentPoints, setCurrentPoints] = useState(0);
   const [nextRewardPoints] = useState(500);
   const [nextRewardAmount] = useState(10);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyHasNext, setHistoryHasNext] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
-  const pointsHistory = [
-    {
-      id: 1,
-      type: 'completed',
-      title: 'Completed Job',
-      date: '18 Aug, 2025',
-      points: 25,
-      icon: ArrowUpIcon
-    },
-    {
-      id: 2,
-      type: 'cancelled',
-      title: 'Cancelled Job',
-      date: '10 Aug, 2025',
-      points: -10,
-      icon: ArrowDownIcon
-    }
-  ];
+  const pointsHistory = useMemo(() => {
+    const allHistory = history.map((tx) => {
+      // Map /mate-points/transactions payload
+      const pointsVal = (typeof tx.points === 'number') ? tx.points : (tx.amount ?? 0);
+      const isEarn = pointsVal > 0;
+      const icon = isEarn ? ArrowUpIcon : ArrowDownIcon;
+      const title = tx.description || (isEarn ? 'Points Earned' : 'Points Redeemed');
+      const dateIso = tx.date || tx.createdAt || tx.processedAt || Date.now();
+      const date = new Date(dateIso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+      return {
+        id: tx.id || tx._id || `${tx.type}-${dateIso}`,
+        type: tx.type || (isEarn ? 'earn' : 'redeem'),
+        title,
+        date,
+        points: pointsVal,
+        icon
+      };
+    });
+    
+    // Show only first 2 items if not showing all
+    return showAllHistory ? allHistory : allHistory.slice(0, 2);
+  }, [history, showAllHistory]);
 
-  const availableRewards = [
+  const availableRewards = useMemo(() => ([
     {
       id: 1,
       title: '$10 Discount Voucher',
       pointsRequired: 500,
-      currentPoints: 345,
-      isAvailable: false,
+      currentPoints: currentPoints,
+      isAvailable: currentPoints >= 500,
       bgColor: 'linear-gradient(120.74deg, #E9EEFC 0.11%, #FFFFFF 100.11%)'
     },
     {
       id: 2,
       title: '$20 Wallet Credit',
       pointsRequired: 1000,
-      currentPoints: 2000,
-      isAvailable: false,
+      currentPoints: currentPoints,
+      isAvailable: currentPoints >= 1000,
       bgColor: 'linear-gradient(140.46deg, #EDFCE9 1.17%, #FDFEFD 100%)'
     }
-  ];
+  ]), [currentPoints]);
 
-  const progressPercentage = (currentPoints / nextRewardPoints) * 100;
+  const progressPercentage = Math.min(100, (currentPoints / nextRewardPoints) * 100);
+
+  const fetchPoints = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await matePointsAPI.getPoints();
+      // Expected: { success, data: { points, totalEarned, totalRedeemed, lastActivity } }
+      const pts = res?.data?.points ?? 0;
+      setCurrentPoints(pts);
+    } catch (e) {
+      setError(e.message || 'Failed to load mate points');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchHistory = async (page = 1) => {
+    try {
+      const res = await matePointsAPI.getTransactions(page, 10);
+      const transactions = res?.data?.transactions || [];
+      setHistory(transactions);
+      const pagination = res?.data?.pagination;
+      setHistoryHasNext(Boolean(pagination?.hasNextPage));
+      setHistoryPage(page);
+    } catch (e) {
+      // Non-blocking
+    }
+  };
+
+  useEffect(() => {
+    fetchPoints();
+    fetchHistory(1);
+  }, []);
 
   const handleRedeem = (reward) => {
     setSelectedReward(reward);
     setShowRedeemModal(true);
   };
 
-  const handleConfirmRedeem = () => {
-    console.log('Redeeming reward:', selectedReward);
-    setShowRedeemModal(false);
-    // Navigate to success page with reward data
-    navigate('/reward-success', { 
-      state: { reward: selectedReward } 
-    });
+  const handleConfirmRedeem = async () => {
+    if (!selectedReward) return;
+    try {
+      setLoading(true);
+      const res = await matePointsAPI.redeem(selectedReward.pointsRequired);
+      setShowRedeemModal(false);
+      await fetchPoints();
+      await fetchHistory(1);
+      navigate('/reward-success', { state: { reward: selectedReward, redemption: res?.data } });
+    } catch (e) {
+      setError(e.message || 'Failed to redeem points');
+      setShowRedeemModal(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const closeRedeemModal = () => {
@@ -108,6 +160,18 @@ const MatePointsPage = () => {
           </button>
           <h1 className="ml-4 text-xl font-semibold text-gray-900">MatePoints Rewards</h1>
         </div>
+
+        {/* Error / Loading */}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+        {loading && (
+          <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-600 text-sm">
+            Loading MatePoints...
+          </div>
+        )}
 
         {/* Rewards Banner */}
         <div className="mb-6 rounded-2xl shadow-custom border border-[#F3F3F3] overflow-hidden">
@@ -244,6 +308,18 @@ const MatePointsPage = () => {
               </div>
             ))}
           </div>
+          
+          {/* View More/Less Button */}
+          {history.length > 2 && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setShowAllHistory(!showAllHistory)}
+                className="text-white hover:text-primary-500 font-medium text-base transition-colors cursor-pointer bg-primary-500 px-4 py-2 rounded-lg"
+              >
+                {showAllHistory ? 'View Less' : `View More (${history.length - 2} more)`}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer Note */}

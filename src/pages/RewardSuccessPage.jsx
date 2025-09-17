@@ -11,13 +11,25 @@ const RewardSuccessPage = () => {
   const location = useLocation();
   const [voucherCode, setVoucherCode] = useState('');
   const [reward, setReward] = useState(null);
+  const [redemption, setRedemption] = useState(null);
 
   useEffect(() => {
     // Get reward data from navigation state or generate default
     if (location.state?.reward) {
       setReward(location.state.reward);
-      const code = `AM-DIS${location.state.reward.pointsRequired === 500 ? '10' : '20'}-2025`;
-      setVoucherCode(code);
+      // Get redemption data from navigation state
+      if (location.state?.redemption) {
+        setRedemption(location.state.redemption);
+        // Use redemption ID as voucher code - check both possible locations
+        const redemptionId = location.state.redemption.redemptionId || 
+                           location.state.redemption.id || 
+                           location.state.redemption.data?.redemptionId;
+        setVoucherCode(redemptionId || `AM-DIS${location.state.reward.pointsRequired === 500 ? '10' : '20'}-2025`);
+      } else {
+        // Fallback to generated code if no redemption data
+        const code = `AM-DIS${location.state.reward.pointsRequired === 500 ? '10' : '20'}-2025`;
+        setVoucherCode(code);
+      }
     } else {
       // Default data if no state passed
       setReward({
@@ -104,7 +116,7 @@ const RewardSuccessPage = () => {
 
             {/* Balance */}
             <p className="text-sm text-primary-500 font-semibold mb-2">
-              Your MatePoints Balance: 45
+              Your MatePoints Balance: {redemption?.newPointBalance || '45'}
             </p>
 
             {/* Use Reward Button */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { userAPI } from '../services/api';
+import { userAPI, jobsAPI, matePointsAPI } from '../services/api';
 import EditIcon from '../assets/edit.svg';
 import HelpIcon from '../assets/help.svg';
 import InvoiceIcon from '../assets/invoice.svg';
@@ -23,6 +23,8 @@ const ProfilePage = () => {
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [jobStats, setJobStats] = useState({ completed: 0, reviews: 0 });
+    const [matePoints, setMatePoints] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -47,7 +49,71 @@ const ProfilePage = () => {
       }
     };
 
+    const fetchJobStats = async () => {
+      try {
+        if (user) {
+          // Try different API endpoints to get jobs
+          let jobsResponse;
+          let jobs = [];
+          
+          try {
+            // First try getCustomerJobs
+            jobsResponse = await jobsAPI.getCustomerJobs(user.id || user._id);
+            if (jobsResponse.success) {
+              jobs = jobsResponse.data.jobs || jobsResponse.data || [];
+            }
+          } catch (e) {
+            // getCustomerJobs failed, will try getAllJobs
+          }
+          
+          // If no jobs from getCustomerJobs, try getAllJobs with completed filter
+          if (jobs.length === 0) {
+            try {
+              jobsResponse = await jobsAPI.getAllJobs({ status: 'completed' });
+              if (jobsResponse.success) {
+                jobs = jobsResponse.data.jobs || jobsResponse.data || [];
+              }
+            } catch (e) {
+              // getAllJobs with completed filter failed, trying all jobs
+              jobsResponse = await jobsAPI.getAllJobs();
+              if (jobsResponse.success) {
+                jobs = jobsResponse.data.jobs || jobsResponse.data || [];
+              }
+            }
+          }
+          
+          // Check different possible status values
+          const completedJobs = jobs.filter(job => 
+            job.status === 'completed' || 
+            job.status === 'Completed' || 
+            job.status === 'COMPLETED' ||
+            job.jobStatus === 'completed' ||
+            job.jobStatus === 'Completed'
+          ).length;
+          
+          setJobStats(prev => ({ ...prev, completed: completedJobs }));
+        }
+      } catch (error) {
+        console.error('Error fetching job stats:', error);
+        // Set a fallback value
+        setJobStats(prev => ({ ...prev, completed: 0 }));
+      }
+    };
+
+    const fetchMatePoints = async () => {
+      try {
+        const pointsResponse = await matePointsAPI.getPoints();
+        if (pointsResponse.success) {
+          setMatePoints(pointsResponse.data.points || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching mate points:', error);
+      }
+    };
+
     fetchProfile();
+    fetchJobStats();
+    fetchMatePoints();
 
     // Listen for user updates
     const handleUserUpdate = () => {
@@ -228,7 +294,7 @@ const ProfilePage = () => {
                                 <div className="flex justify-center mb-1 sm:mb-2 ">
                                     <img src={StarIcon} alt="Reviews" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">15</div>
+                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.reviews}</div>
                                 <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Reviews</div>
                             </div>
 
@@ -236,7 +302,7 @@ const ProfilePage = () => {
                                 <div className="flex justify-center mb-1 sm:mb-2">
                                     <img src={JobIcon} alt="Jobs" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">12</div>
+                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.completed}</div>
                                 <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Jobs Completed</div>
                             </div>
 
@@ -244,7 +310,7 @@ const ProfilePage = () => {
                                 <div className="flex justify-center mb-1 sm:mb-2">
                                     <img src={WalletIcon} alt="MatePoints" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">345</div>
+                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{matePoints}</div>
                                 <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">MatePoints</div>
                             </div>
                         </div>

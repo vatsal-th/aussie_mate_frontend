@@ -579,6 +579,34 @@ export const userAPI = {
   },
 };
 
+// Mate Points API
+export const matePointsAPI = {
+  // Get current user's mate points summary
+  getPoints: async () => {
+    return apiRequest('/mate-points');
+  },
+
+  // Redeem mate points (supports only 500 or 1000 based on backend rules)
+  redeem: async (pointsToRedeem) => {
+    return apiRequest('/mate-points/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ pointsToRedeem })
+    });
+  },
+
+  // Get redemption history (paginated)
+  getRedemptions: async (page = 1, limit = 10) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return apiRequest(`/mate-points/redemptions?${params.toString()}`);
+  },
+
+  // Get point transactions (earn/redeem/cancellation etc.)
+  getTransactions: async (page = 1, limit = 10) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return apiRequest(`/mate-points/transactions?${params.toString()}`);
+  }
+};
+
 // File upload helper (Cloudinary)
 export const uploadFile = async (file) => {
   const formData = new FormData();
@@ -701,6 +729,7 @@ export default {
   quotesAPI,
   locationAPI,
   userAPI,
+  matePointsAPI,
   uploadFile,
   uploadFileToCloudinary,
   uploadMultipleFilesToCloudinary,
