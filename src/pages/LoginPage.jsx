@@ -80,7 +80,7 @@ const LoginPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 text-base"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 text-base"
                 placeholder="johndoe08@gmail.com"
                 required
               />
@@ -96,7 +96,7 @@ const LoginPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 text-base"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 text-base"
                   placeholder="JohnDoe@123"
                   required
                 />

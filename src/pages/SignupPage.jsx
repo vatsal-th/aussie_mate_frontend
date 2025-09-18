@@ -127,7 +127,7 @@ const SignupPage = () => {
                   placeholder=""
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer text-base"
+                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer text-base"
                   required
                 />
                 <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -141,7 +141,7 @@ const SignupPage = () => {
                   placeholder=""
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer text-base"
+                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer text-base"
                   required
                 />
                 <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -157,8 +157,8 @@ const SignupPage = () => {
                 placeholder=""
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
-                required
+                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
+                required  
               />
               <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
                 Email Address
@@ -172,7 +172,7 @@ const SignupPage = () => {
                 placeholder=""
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
+                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
               <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -184,7 +184,7 @@ const SignupPage = () => {
             <div className="relative">
               <div
                 onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="w-full px-4 border border-gray-300 rounded-[36px] focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
+                className="w-full px-4 border border-gray-300 rounded-[36px] focus:outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
               >
                 <span className={`${formData.role ? 'text-primary-500' : 'text-primary-500'}`}>
                   {formData.role || 'Select your role'}
@@ -225,7 +225,7 @@ const SignupPage = () => {
                 placeholder=""
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
+                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
               <label className="absolute left-4 top-2 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -251,7 +251,7 @@ const SignupPage = () => {
                 placeholder=""
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
+                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
               <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -298,7 +298,7 @@ const SignupPage = () => {
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:ring-primary-500 focus:ring-1 accent-primary-500 cursor-pointer"
+                    className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:outline-none accent-primary-500 cursor-pointer"
                   required
                 />
               </div>

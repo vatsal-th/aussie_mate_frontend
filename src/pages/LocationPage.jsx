@@ -296,7 +296,7 @@ const LocationPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for area, street name..."
-                className="w-full pl-4 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 outline-none text-base"
+                className="w-full pl-4 pr-4 py-4 border border-gray-300 rounded-xl focus:outline-none"
               />
 
               {/* Get Current Location */}
@@ -304,7 +304,7 @@ const LocationPage = () => {
                 type="button"
                 onClick={handleGetCurrentLocation}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-3 py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center space-x-3 py-3 px-4 border border-[#1F6FEB] rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
@@ -315,7 +315,7 @@ const LocationPage = () => {
                     className="w-8 h-8"
                   />
                 )}
-                <span className="font-medium text-primary-500">
+                <span className="font-medium text-[#1F6FEB]">
                   {isLoading ? "Getting location..." : "Get current location"}
                 </span>
               </button>
@@ -369,7 +369,7 @@ const LocationPage = () => {
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="Enter your full address..."
-                  className="w-full p-3 border border-gray-300 rounded-lg! focus:ring-1 focus:ring-primary-500 outline-none resize-none text-primary-500 font-medium"
+                  className="w-full p-3 border border-gray-300 rounded-lg! focus:outline-none resize-none text-primary-500 font-medium"
                   rows={3}
                 />
                 <div className="flex space-x-2">
@@ -416,7 +416,7 @@ const LocationPage = () => {
           {/* Confirm Button */}
           <button
             onClick={handleConfirmLocation}
-            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 rounded-xl transition-colors cursor-pointer"
           >
             Confirm Location
           </button>

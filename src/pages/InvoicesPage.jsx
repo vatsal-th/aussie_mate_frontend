@@ -172,7 +172,7 @@ const InvoicesPage = () => {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search invoices..."
-                            className="w-full pl-12 pr-3 py-2 sm:py-3 bg-white text-primary-200 font-medium border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full pl-12 pr-3 py-2 sm:py-3 bg-white text-primary-200 font-medium border border-gray-200 rounded-xl focus:outline-none"
                         />
                     </div>
                     <button
@@ -223,7 +223,7 @@ const InvoicesPage = () => {
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
                                 />
                             </div>
                             <div>
@@ -232,7 +232,7 @@ const InvoicesPage = () => {
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
                                 />
                             </div>
                         </div>

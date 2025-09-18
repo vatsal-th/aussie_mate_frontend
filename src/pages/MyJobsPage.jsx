@@ -212,7 +212,7 @@ const MyJobsPage = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search jobs..."
-              className="w-full pl-9 pr-3 py-2 sm:py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-2 sm:py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none"  
             />
           </div>
           <button
@@ -264,7 +264,7 @@ const MyJobsPage = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
                 />
               </div>
               <div>
@@ -273,7 +273,7 @@ const MyJobsPage = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
                 />
               </div>
             </div>
@@ -292,7 +292,7 @@ const MyJobsPage = () => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-[8px]! text-sm font-medium whitespace-nowrap cursor-pointer ${
-                activeTab === t.id ? 'bg-[#EBF2FD] text-[#1F6FEB]' : 'bg-white text-gray-600 border border-gray-200  focus:ring-primary-500'
+                activeTab === t.id ? 'bg-[#EBF2FD] text-[#1F6FEB]' : 'bg-white text-gray-600 border border-gray-200  focus:outline-none'
               }`}
             >
               {t.label}

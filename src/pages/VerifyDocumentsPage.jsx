@@ -46,8 +46,8 @@ const VerifyDocumentsPage = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Navigate to next step or dashboard
-      navigate('/customer-dashboard');
+      // Navigate to availability page
+      navigate('/set-availability');
     } catch (error) {
       setError('Failed to submit documents. Please try again.');
     } finally {
@@ -120,7 +120,7 @@ const VerifyDocumentsPage = () => {
                 value={formData.abnNumber}
                 onChange={handleInputChange}
                 placeholder="Enter your 11-digit ABN"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 font-medium "
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 font-medium "
                 required
               />
               <p className="text-sm text-primary-200 font-medium mt-1">
@@ -139,7 +139,7 @@ const VerifyDocumentsPage = () => {
                 value={formData.tfnNumber}
                 onChange={handleInputChange}
                 placeholder="Enter number"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 font-medium"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 font-medium"
                 required
               />
               <p className="text-sm text-primary-200 font-medium mt-1">
@@ -181,7 +181,7 @@ const VerifyDocumentsPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-2 sm:px-3 sm:py-3 rounded-xl transition-colors duration-200 text-sm sm:text-base"
+                className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-2 sm:px-4 sm:py-3 rounded-xl transition-colors duration-200 text-sm sm:text-base cursor-pointer"
               >
                 {isLoading ? 'Submitting Documents...' : 'Submit Documents & Set Availability'}
               </button>

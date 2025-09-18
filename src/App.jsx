@@ -21,6 +21,9 @@ import NotificationSettingsPage from './pages/NotificationSettingsPage'
 import HelpSupportPage from './pages/HelpSupportPage'
 import LiveChatPage from './pages/LiveChatPage'
 import VerifyDocumentsPage from './pages/VerifyDocumentsPage'
+import SetAvailabilityPage from './pages/SetAvailabilityPage'
+import SetCleanerLocationPage from './pages/SetCleanerLocationPage'
+import SelectServicesPage from './pages/SelectServicesPage'
 
 function App() {
 
@@ -48,6 +51,9 @@ function App() {
         <Route path="/help" element={<HelpSupportPage />} />
         <Route path="/live-chat" element={<LiveChatPage />} />
         <Route path="/verify-documents" element={<VerifyDocumentsPage />} />
+        <Route path="/set-availability" element={<SetAvailabilityPage />} />
+        <Route path="/set-cleaner-location" element={<SetCleanerLocationPage />} />
+        <Route path="/select-services" element={<SelectServicesPage />} />
         </Routes>
       </Router>
     </AuthProvider>

@@ -728,7 +728,7 @@ const WalletPage = () => {
                   value={cardForm.cardHolderName}
                   onChange={handleCardFormChange}
                   placeholder="Card holder name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                   required
                 />
               </div>
@@ -741,7 +741,7 @@ const WalletPage = () => {
                   value={cardForm.cardNumber}
                   onChange={handleCardFormChange}
                   placeholder="Card Number"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                   required
                 />
               </div>
@@ -755,7 +755,7 @@ const WalletPage = () => {
                     value={cardForm.expiry}
                     onChange={handleCardFormChange}
                     placeholder="MM/YY"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
                 </div>
@@ -766,7 +766,7 @@ const WalletPage = () => {
                     value={cardForm.cvv}
                     onChange={handleCardFormChange}
                     placeholder="123"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
                 </div>
@@ -779,7 +779,7 @@ const WalletPage = () => {
                   name="setAsDefault"
                   checked={cardForm.setAsDefault}
                   onChange={handleCardFormChange}
-                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
+                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:outline-none cursor-pointer"
                 />
                 <label className="ml-2 text-sm font-medium text-gray-700">
                   Set as default payment method
@@ -847,7 +847,7 @@ const WalletPage = () => {
                   value={bankForm.accountName}
                   onChange={handleBankFormChange}
                   placeholder="Account Name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                   required
                 />
               </div>
@@ -860,7 +860,7 @@ const WalletPage = () => {
                     value={bankForm.bsb}
                     onChange={handleBankFormChange}
                     placeholder="123456"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
               </div>
@@ -873,7 +873,7 @@ const WalletPage = () => {
                   value={bankForm.accountNumber}
                   onChange={handleBankFormChange}
                   placeholder="Account Number"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                   required
                 />
               </div>
@@ -885,7 +885,7 @@ const WalletPage = () => {
                   name="setAsDefault"
                   checked={bankForm.setAsDefault}
                   onChange={handleBankFormChange}
-                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
+                    className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:outline-none cursor-pointer"
                 />
                 <label className="ml-2 text-sm font-medium text-gray-700">
                   Set as default payment

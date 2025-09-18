@@ -645,7 +645,7 @@ const PostNewJobPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer text-primary-200 font-medium"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer text-primary-200 font-medium"
                 >
                   <span className={formData.propertyType ? 'text-primary-500' : 'text-primary-200'}>
                     {getSelectedPropertyType()}
@@ -699,7 +699,7 @@ const PostNewJobPage = () => {
                     type="number"
                     value={formData.bedrooms}
                     onChange={(e) => handleInputChange('bedrooms', parseInt(e.target.value) || 1)}
-                    className="flex-1 px-4 py-3 text-center border-0 focus:ring-0 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="flex-1 px-4 py-3 text-center border-0 focus:outline-none text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     min="1"
                     max="10"
                   />
@@ -730,7 +730,7 @@ const PostNewJobPage = () => {
                     type="number"
                     value={formData.bathrooms}
                     onChange={(e) => handleInputChange('bathrooms', parseInt(e.target.value) || 1)}
-                    className="flex-1 px-4 py-3 text-center border-0 focus:ring-0 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="flex-1 px-4 py-3 text-center border-0 focus:outline-none text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     min="1"
                     max="10"
                   />
@@ -760,7 +760,7 @@ const PostNewJobPage = () => {
                     type="checkbox"
                     checked={formData.addons[addon.id]}
                     onChange={() => handleAddonChange(addon.id)}
-                    className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                    className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:outline-none cursor-pointer"
                   />
                   <span className="text-sm sm:text-base text-[#374151] font-medium">{addon.label}</span>
                 </label>
@@ -879,7 +879,7 @@ const PostNewJobPage = () => {
               onChange={(e) => handleInputChange('instructions', e.target.value)}
               placeholder="Write your instructions here in any....."
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-[10px]! focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-[10px]! focus:outline-none text-sm sm:text-base resize-none"
             />
           </div>
 
@@ -972,7 +972,7 @@ const PostNewJobPage = () => {
               type="date"
               value={selectedDate ? new Date(selectedDate).toISOString().split('T')[0] : ''}
               onChange={handleDatePickerChange}
-              className="w-full bg-white rounded-lg px-4 py-3 pr-10 text-primary-200 placeholder-gray-500 focus:outline-none border border-[#E5E7EB] cursor-pointer"
+                className="w-full bg-white rounded-lg px-4 py-3 pr-10 text-primary-200 placeholder-gray-500 focus:outline-none border border-gray-300 cursor-pointer"
               min={new Date().toISOString().split('T')[0]}
               style={{
                 colorScheme: 'light',
@@ -992,7 +992,7 @@ const PostNewJobPage = () => {
             value={finalInstructions}
             onChange={handleFinalInstructionsChange}
             placeholder="Write your instructions here in any..."
-            className="w-full bg-white rounded-[8px]! px-4 py-3 text-gray-900 placeholder-primary-200 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-[#E5E7EB] resize-none"
+            className="w-full bg-white rounded-[8px]! px-4 py-3 text-gray-900 placeholder-primary-200 focus:outline-none border border-gray-300 resize-none"
             rows={4}
           />
         </div>
@@ -1004,7 +1004,7 @@ const PostNewJobPage = () => {
           </span>
           <button
             onClick={handleUrgencyToggle}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${isUrgent ? 'bg-primary-500' : 'bg-gray-300'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isUrgent ? 'bg-primary-500' : 'bg-gray-300'
               }`}
           >
             <span

@@ -132,7 +132,7 @@ const ResetPasswordPage = () => {
                 placeholder=" "
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
+                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
               <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
@@ -158,7 +158,7 @@ const ResetPasswordPage = () => {
                 placeholder=" "
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none transition-all duration-200 peer"
+                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
               <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
