@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import { userAPI } from '../services/api';
 
 const SetAvailabilityPage = () => {
   const navigate = useNavigate();
   const [availability, setAvailability] = useState({
-    monday: true,
-    tuesday: false,
-    wednesday: true,
-    thursday: false,
-    friday: true,
-    saturday: false,
-    sunday: false,
+    monday: { isAvailable: true, startTime: '09:00', endTime: '17:00', breaks: [] },
+    tuesday: { isAvailable: false, startTime: null, endTime: null, breaks: [] },
+    wednesday: { isAvailable: true, startTime: '09:00', endTime: '17:00', breaks: [] },
+    thursday: { isAvailable: false, startTime: null, endTime: null, breaks: [] },
+    friday: { isAvailable: true, startTime: '09:00', endTime: '17:00', breaks: [] },
+    saturday: { isAvailable: false, startTime: null, endTime: null, breaks: [] },
+    sunday: { isAvailable: false, startTime: null, endTime: null, breaks: [] },
     repeatWeekly: true
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const days = [
     { key: 'monday', label: 'Monday' },
@@ -29,7 +31,13 @@ const SetAvailabilityPage = () => {
   const handleDayToggle = (day) => {
     setAvailability(prev => ({
       ...prev,
-      [day]: !prev[day]
+      [day]: {
+        ...prev[day],
+        isAvailable: !prev[day].isAvailable,
+        startTime: !prev[day].isAvailable ? '09:00' : null,
+        endTime: !prev[day].isAvailable ? '17:00' : null,
+        breaks: !prev[day].isAvailable ? [] : prev[day].breaks
+      }
     }));
   };
 
@@ -43,18 +51,36 @@ const SetAvailabilityPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
-      // Here you would save the availability data
-      console.log('Saving availability:', availability);
+      // Prepare schedule data for API
+      const scheduleData = {
+        schedule: {
+          monday: availability.monday,
+          tuesday: availability.tuesday,
+          wednesday: availability.wednesday,
+          thursday: availability.thursday,
+          friday: availability.friday,
+          saturday: availability.saturday,
+          sunday: availability.sunday
+        },
+        repeatWeekly: availability.repeatWeekly,
+        timezone: 'Australia/Melbourne'
+      };
+
+      // Save availability via API
+      const response = await userAPI.setAvailability(scheduleData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-       // Navigate to cleaner location page
-       navigate('/set-cleaner-location');
+      if (response.success) {
+        // Navigate to cleaner location page
+        navigate('/set-cleaner-location');
+      } else {
+        setError(response.message || 'Failed to save availability. Please try again.');
+      }
     } catch (error) {
       console.error('Error saving availability:', error);
+      setError('Failed to save availability. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +119,13 @@ const SetAvailabilityPage = () => {
             </p>
           </div>
 
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Weekly Availability */}
             <div className="mb-8">
@@ -106,7 +139,7 @@ const SetAvailabilityPage = () => {
                       {day.label}
                     </span>
                     <ToggleSwitch
-                      isOn={availability[day.key]}
+                      isOn={availability[day.key].isAvailable}
                       onToggle={() => handleDayToggle(day.key)}
                     />
                   </div>

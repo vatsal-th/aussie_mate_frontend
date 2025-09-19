@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 import EyeIcon from '../assets/eye 1.svg';
 import EyeOffIcon from '../assets/eye-off 1.svg';
-import InfoIcon from '../assets/info.svg';
+
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -37,6 +37,7 @@ const SignupPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
@@ -63,6 +64,32 @@ const SignupPage = () => {
         return;
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('Please enter a valid email address');
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate password strength
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate Australian phone number (mobile or landline)
+      const cleanedPhoneForValidation = formData.phone.replace(/[^\d+]/g, '');
+      const auMobile = /^(?:\+?61|0)4\d{8}$/; // +61 4xxxxxxxx or 04xxxxxxxx
+      const auLandline = /^(?:\+?61|0)[2378]\d{8}$/; // +61 2/3/7/8 xxxxxxxx or 02/03/07/08 xxxxxxxx
+      if (!(auMobile.test(cleanedPhoneForValidation) || auLandline.test(cleanedPhoneForValidation))) {
+        setError('Please enter a valid Australian phone (04xx xxx xxx or +614xx xxx xxx, or +612/3/7/8 for landlines)');
+        setIsLoading(false);
+        return;
+      }
+
+
       // Validate terms agreement
       if (!formData.agreeToTerms) {
         setError('Please agree to the Terms & Conditions');
@@ -73,18 +100,84 @@ const SignupPage = () => {
       // Prepare data for API
       const { agreeToTerms, ...userData } = formData;
       
-      await register(userData);
+      // Format phone number for backend (E.164 for AU)
+      const formatPhoneNumber = (phone) => {
+        const cleaned = phone.replace(/[^\d+]/g, '');
+        if (cleaned.startsWith('+61')) {
+          return cleaned;
+        }
+        if (cleaned.startsWith('+')) {
+          return cleaned; // already E.164 for another country
+        }
+        if (cleaned.startsWith('0')) {
+          // Convert 0XXXXXXXXX to +61XXXXXXXXX
+          return '+61' + cleaned.slice(1);
+        }
+        if (cleaned.startsWith('61')) {
+          return '+' + cleaned;
+        }
+        // Fallback: assume AU without prefix
+        return '+61' + cleaned;
+      };
+
+      // Map role to userType for backend compatibility
+      const roleMapping = {
+        'Customer': 'customer',
+        'Student Cleaner': 'cleaner',
+        'Professional Cleaner': 'cleaner',
+        'NDIS Assistant': 'cleaner',
+        'Retail Auditor': 'cleaner',
+        'Pet Sitter': 'cleaner',
+        'Housekeeper': 'cleaner'
+      };
+
+      // Create clean API data with only required fields
+      const apiData = {
+        firstName: userData.firstName.trim(),
+        lastName: userData.lastName.trim(),
+        email: userData.email.trim().toLowerCase(),
+        phone: formatPhoneNumber(userData.phone.trim()),
+        password: userData.password,
+        confirmPassword: userData.confirmPassword,
+        userType: roleMapping[userData.role] || userData.role.toLowerCase(),
+        role: userData.role, // Keep the original role for backend
+      };
+      
+      
+      
+      await register(apiData);
       
       // Navigate based on user role
       if (formData.role === 'Customer') {
         navigate('/location');
       } else {
-        // For other roles, navigate to document verification
+        // For cleaner roles, navigate to document verification first
         navigate('/verify-documents');
       }
     } catch (error) {
-      console.error('Registration error in component:', error);
-      setError(error.message || 'Registration failed. Please try again.');
+      
+      
+      // Show more detailed error information
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error.status === 400) {
+        errorMessage = 'Invalid data provided. Please check all fields and try again.';
+        if (error.response && error.response.errors) {
+          const errorDetails = Object.values(error.response.errors).join(', ');
+          errorMessage = `Validation errors: ${errorDetails}`;
+        }
+      } else if (error.status === 409) {
+        errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
+      } else if (error.status === 422) {
+        errorMessage = 'Please check your information and try again.';
+        if (error.response && error.response.message) {
+          errorMessage = error.response.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +262,6 @@ const SignupPage = () => {
               <input
                 type="tel"
                 name="phone"
-                placeholder=""
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
@@ -217,6 +309,7 @@ const SignupPage = () => {
                 </div>
               )}
             </div>
+            
             
             <div className="relative">
               <input
@@ -269,26 +362,6 @@ const SignupPage = () => {
                 />
               </button>
             </div>
-              {/* Student Work Hours Info */}
-            {formData.role === 'Student Cleaner' && (
-              <div className="flex items-start space-x-2 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g clipPath="url(#clip0_233_17022)">
-                    <path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 12V9" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 6H9.0075" stroke="#1F6FEB" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_233_17022">
-                      <rect width="18" height="18" fill="white"/>
-                    </clipPath>
-                  </defs>
-                </svg>
-                <p className="text-xs sm:text-sm text-primary-500 font-medium">
-                  A student is allowed to work only 20 hours per week.
-                </p>
-              </div>
-            )}
             
             {/* Terms & Conditions Checkbox */}
             <div className="flex items-center space-x-2 sm:space-x-3 mt-4 sm:mt-6">

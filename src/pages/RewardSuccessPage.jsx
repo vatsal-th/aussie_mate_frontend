@@ -74,8 +74,6 @@ const RewardSuccessPage = () => {
   };
 
   const handleUseReward = () => {
-    console.log('Using reward:', reward);
-    // Navigate to where the reward can be used
     navigate('/customer-dashboard');
   };
 

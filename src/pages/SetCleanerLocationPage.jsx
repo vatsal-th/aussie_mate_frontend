@@ -4,6 +4,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import Header from '../components/Header';
 import CurrentLocationIcon from '../assets/currentLocation.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
+import { userAPI } from '../services/api';
 
 // Map container style
 const mapContainerStyle = {
@@ -58,6 +59,39 @@ const SetCleanerLocationPage = () => {
 
   const onUnmount = useCallback(() => {
     setMap(null);
+  }, []);
+
+  // Load saved location and search radius from backend on mount
+  useEffect(() => {
+    const loadUserLocation = async () => {
+      try {
+        const res = await userAPI.getProfile();
+        const userData = res?.data?.user || res?.data || null;
+        if (!userData) return;
+
+        const savedRadius = typeof userData.searchRadius === 'number'
+          ? userData.searchRadius
+          : (typeof userData.location?.searchRadius === 'number' ? userData.location.searchRadius : null);
+        if (typeof savedRadius === 'number') {
+          setSearchRadius(savedRadius);
+        }
+
+        const lat = userData.location?.coordinates?.lat;
+        const lng = userData.location?.coordinates?.lng;
+        const addr = userData.address || userData.location?.address;
+        if (lat != null && lng != null && addr) {
+          setSelectedLocation({
+            address: addr,
+            fullAddress: addr,
+            lat,
+            lng,
+          });
+        }
+      } catch (_) {
+        // ignore profile load errors; fall back to defaults
+      }
+    };
+    loadUserLocation();
   }, []);
 
   // Get current location with Google Maps API
@@ -175,18 +209,44 @@ const SetCleanerLocationPage = () => {
   };
 
   const handleSave = async () => {
+    if (!selectedLocation) {
+      setError('Please select a location first.');
+      return;
+    }
+
     setIsLoading(true);
+    setError('');
+    
     try {
-      // Here you would save the location and radius
-      console.log('Saving location:', selectedLocation, 'Radius:', searchRadius);
+      // Prepare location data for API
+      const locationData = {
+        address: selectedLocation.fullAddress || selectedLocation.address,
+        location: {
+          coordinates: {
+            lat: selectedLocation.lat,
+            lng: selectedLocation.lng
+          }
+        },
+        searchRadius: searchRadius
+      };
+
+      // Save location via API
+      const response = await userAPI.updateLocation(locationData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Navigate to service selection page
-      navigate('/select-services');
+      if (response.success) {
+        // Persist search radius separately to avoid backend defaulting
+        try {
+          await userAPI.updateSearchRadius(searchRadius);
+        } catch (_) {
+          // ignore if radius save fails
+        }
+        navigate('/select-services');
+      } else {
+        setError(response.message || 'Failed to save location. Please try again.');
+      }
     } catch (error) {
       console.error('Error saving location:', error);
+      setError('Failed to save location. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -93,7 +93,10 @@ const apiRequest = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const errorMessage = data.error || data.message || `API request failed with status ${response.status}`;
-      throw new Error(errorMessage);
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      error.response = data;
+      throw error;
     }
 
     return data;
@@ -123,19 +126,35 @@ export const authAPI = {
 
   // Register customer
   registerCustomer: async (userData) => {
-    const response = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
+    try {
+      // Log the data being sent for debugging
+      
+      const response = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
 
-    // Store token and user data if registration includes auto-login
-    if (response.success && response.data && response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    } else {
+      // Store token and user data if registration includes auto-login
+      if (response.success && response.data && response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Registration API error:', error);
+      // Log the full error response if available
+      if (error.response) {
+        console.error('Error response:', error.response);
+        if (error.response.errors) {
+          console.error('Validation errors:', error.response.errors);
+          error.response.errors.forEach((err, index) => {
+            console.error(`Error ${index + 1}:`, err);
+          });
+        }
+      }
+      throw error;
     }
-
-    return response;
   },
 
   // Register cleaner
@@ -344,7 +363,7 @@ export const userAPI = {
 
   // Update user location
   updateLocation: async (locationData) => {
-    return apiRequest('/auth/profile/location', {
+    return apiRequest('/auth/address', {
       method: 'PUT',
       body: JSON.stringify(locationData),
     });
@@ -576,6 +595,111 @@ export const userAPI = {
     return apiRequest(`/payments/payment-methods/${methodId}`, {
       method: 'DELETE',
     });
+  },
+
+  saveUserServices: async (services) => {
+    return apiRequest('/auth/services', {
+      method: 'POST',
+      body: JSON.stringify({ services }),
+    });
+  },
+
+  getUserServices: async () => {
+    return apiRequest('/auth/services');
+  },
+
+  updateServiceStatus: async (serviceId, isActive) => {
+    return apiRequest(`/auth/services/${serviceId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ isActive }),
+    }); 
+  },
+
+  // Availability Management API
+  setAvailability: async (availabilityData) => {
+    return apiRequest('/auth/availability', {
+      method: 'POST',
+      body: JSON.stringify(availabilityData),
+    });
+  },
+
+  getAvailability: async () => {
+    return apiRequest('/auth/availability');
+  },
+
+  updateAvailability: async (availabilityData) => {
+    return apiRequest('/auth/availability', {
+      method: 'PUT',
+      body: JSON.stringify(availabilityData),
+    });
+  },
+
+  // Search Radius Management API
+  updateSearchRadius: async (searchRadius) => {
+    return apiRequest('/auth/search-radius', {
+      method: 'PUT',
+      body: JSON.stringify({ searchRadius }),
+    });
+  },
+
+  // Document Verification API
+  uploadDocuments: async (formData) => {
+    try {
+      // For FormData, we need to use fetch directly instead of apiRequest
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/auth/documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData, // Don't stringify FormData
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        const error = new Error(data.message || `API request failed with status ${response.status}`);
+        error.status = response.status;
+        error.response = data;
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Document upload API error:', error);
+      if (error.response) {
+        console.error('Document upload error response:', error.response);
+      }
+      throw error;
+    }
+  },
+
+  getDocumentStatus: async () => {
+    return apiRequest(  '/auth/documents/status');
+  },
+
+  updateDocument: async (documentType, documentData) => {
+    return apiRequest(`/auth/documents/${documentType}`, {
+      method: 'PUT',
+      body: JSON.stringify(documentData),
+    });
+  },
+
+  // Search & Discovery API
+  searchCleaners: async (query, lat, lng, radius, role) => {
+    const params = new URLSearchParams();
+    if (query) params.set('query', query);
+    if (lat) params.set('lat', lat);
+    if (lng) params.set('lng', lng);
+    if (radius) params.set('radius', radius);
+    if (role) params.set('role', role);
+    
+    return apiRequest(`/search?${params.toString()}`);
+  },
+
+  // Statistics & Analytics API
+  getCleanerStatistics: async () => {
+    return apiRequest('/statistics');
   },
 };
 
