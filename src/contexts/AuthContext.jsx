@@ -25,12 +25,8 @@ export const AuthProvider = ({ children }) => {
         if (!storedUser.userType && storedUser.role) {
           storedUser.userType = storedUser.role;
         }
-        
-        // For now, just use stored user without API verification
-        // TODO: Add API verification when backend is ready
         setUser(storedUser);
       }
-      
       setLoading(false);
     };
 
@@ -40,7 +36,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials.email, credentials.password, 'customer');
+      
       const userData = response.data?.user || response.user;
+      const token = response.data?.token || response.token;
       
       // Preserve profilePhoto from localStorage if it exists and is not in API response
       if (userData && !userData.profilePhoto) {
@@ -55,6 +53,15 @@ export const AuthProvider = ({ children }) => {
         userData.userType = userData.role;
       }
       
+      // Store user and token in localStorage
+      if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      
+      if (token) {
+        localStorage.setItem('authToken', token);
+      }
+      
       setUser(userData);
       return response;
     } catch (error) {
@@ -65,11 +72,20 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.registerCustomer(userData);
+      
       const userDataFromResponse = response.data?.user || response.user;
+      const token = response.data?.token || response.token;
       
       // Ensure userType is set for consistency
       if (userDataFromResponse && !userDataFromResponse.userType && userDataFromResponse.role) {
         userDataFromResponse.userType = userDataFromResponse.role;
+      }
+      // Store user and token in localStorage
+      if (userDataFromResponse) {
+        localStorage.setItem('user', JSON.stringify(userDataFromResponse));
+      }
+      if (token) {
+        localStorage.setItem('authToken', token);
       }
       
       setUser(userDataFromResponse);

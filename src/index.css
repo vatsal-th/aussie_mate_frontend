@@ -1,6 +1,30 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/* Custom utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Profile menu icon consistency */
+.profile-menu-icon {
+  width: 24px !important;
+  height: 24px !important;
+  object-fit: contain;
+  display: block;
+}
+
 /* Apply General Sans font globally - ONLY General Sans */
 * {
   font-family: 'General Sans' !important;

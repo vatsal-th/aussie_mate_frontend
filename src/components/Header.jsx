@@ -130,7 +130,10 @@ const Header = () => {
         {/* Right: Icons */}
         <div className="flex-1 flex items-center justify-end space-x-2 sm:space-x-2 md:space-x-3 flex-shrink-0" >
           {/* Notification Icon */}
-          <button className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors cursor-pointer">
+          <button 
+            onClick={() => navigate('/notifications')}
+            className="relative p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg! transition-colors cursor-pointer"
+          >
             <img src={NotificationIcon} alt="Notifications" className="w-7 h-7 sm:w-7 sm:h-7 md:w-9 md:h-9" />
           </button>
 

@@ -30,11 +30,17 @@ const LoginPage = () => {
 
     try {
       const response = await login(formData);
+      
+      // Get user data from response
+      const userData = response.data?.user || response.user;
+      const userRole = userData?.role || userData?.userType;
+      
       // Navigate based on user role
-      if (response.data.user.role === 'Customer') {
+      if (userRole === 'Customer') {
         navigate('/customer-dashboard');
+      } else if (['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper'].includes(userRole)) {
+        navigate('/cleaner-dashboard');
       } else {
-        // For other roles, navigate to home or appropriate dashboard
         navigate('/');
       }
     } catch (error) {

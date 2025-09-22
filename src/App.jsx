@@ -24,6 +24,10 @@ import VerifyDocumentsPage from './pages/VerifyDocumentsPage'
 import SetAvailabilityPage from './pages/SetAvailabilityPage'
 import SetCleanerLocationPage from './pages/SetCleanerLocationPage'
 import SelectServicesPage from './pages/SelectServicesPage'
+import CleanerDashboard from './pages/CleanerDashboard'
+import NotificationPage from './pages/NotificationPage'
+import EarningsPage from './pages/EarningsPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
 
@@ -37,23 +41,106 @@ function App() {
           <Route path="/location" element={<LocationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-        <Route path="/post-new-job" element={<PostNewJobPage />} />
-        <Route path="/job-success" element={<JobSuccessPage />} />
-        <Route path="/my-jobs" element={<MyJobsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/edit-profile" element={<EditProfilePage />} />
-        <Route path="/wallet" element={<WalletPage />} />
-        <Route path="/rewards" element={<MatePointsPage />} />
-        <Route path="/reward-success" element={<RewardSuccessPage />} />
-        <Route path="/invoices" element={<InvoicesPage />} />
-        <Route path="/notifications" element={<NotificationSettingsPage />} />
-        <Route path="/help" element={<HelpSupportPage />} />
-        <Route path="/live-chat" element={<LiveChatPage />} />
-        <Route path="/verify-documents" element={<VerifyDocumentsPage />} />
-        <Route path="/set-availability" element={<SetAvailabilityPage />} />
-        <Route path="/set-cleaner-location" element={<SetCleanerLocationPage />} />
-        <Route path="/select-services" element={<SelectServicesPage />} />
+          <Route path="/customer-dashboard" element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerDashboard />
+            </ProtectedRoute>
+          } />
+        <Route path="/post-new-job" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <PostNewJobPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/job-success" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <JobSuccessPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-jobs" element={
+          <ProtectedRoute>
+            <MyJobsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/edit-profile" element={
+          <ProtectedRoute>
+            <EditProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/wallet" element={
+          <ProtectedRoute>
+            <WalletPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/rewards" element={
+          <ProtectedRoute>
+            <MatePointsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/reward-success" element={
+          <ProtectedRoute>
+            <RewardSuccessPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <InvoicesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <NotificationPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/notification-settings" element={
+          <ProtectedRoute>
+            <NotificationSettingsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/help" element={
+          <ProtectedRoute>
+            <HelpSupportPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/live-chat" element={
+          <ProtectedRoute>
+            <LiveChatPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/verify-documents" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <VerifyDocumentsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/set-availability" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <SetAvailabilityPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/set-cleaner-location" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <SetCleanerLocationPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/select-services" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <SelectServicesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cleaner-dashboard" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <CleanerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/earnings" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <EarningsPage />
+          </ProtectedRoute>
+        } />
         </Routes>
       </Router>
     </AuthProvider>

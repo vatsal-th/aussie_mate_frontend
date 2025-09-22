@@ -16,6 +16,11 @@ import RightIcon from '../assets/right.svg';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import Header from '../components/Header';
 import ProfileBG from '../assets/CardBG7.png';
+import ProfileIcon from '../assets/profileEdit.svg';
+import ProfileCalendarIcon from '../assets/profileAvailability.svg';
+import VerifyDocumentsIcon from '../assets/invoice.svg';
+import EarningsIcon from '../assets/profileDollar.svg';
+
 
 const ProfilePage = () => {
     const { user, logout } = useAuth();
@@ -155,8 +160,9 @@ const ProfilePage = () => {
         setShowLogoutModal(true);
     };
 
-    const confirmLogout = () => {
+    const confirmLogout = async () => {
         logout();
+        await new Promise(resolve => setTimeout(resolve, 100));
         navigate('/');
     };
 
@@ -173,10 +179,20 @@ const ProfilePage = () => {
     };
 
     const profileMenuItems = [
-        { icon: JobIcon, label: 'My Jobs', path: '/my-jobs' },
-        { icon: WalletIcon, label: 'Wallet & Payments', path: '/wallet' },
-        { icon: StarIcon, label: 'MatePoints & Rewards', path: '/rewards' },
-        { icon: InvoiceIcon, label: 'Invoices & History', path: '/invoices' },
+        { icon: ProfileIcon, label: 'Edit Profile', path: '/edit-profile' },
+        
+        // Customer-only menu items
+        ...(user?.role === 'Customer' ? [{ icon: JobIcon, label: 'My Jobs', path: '/my-jobs' }] : []),
+        ...(user?.role === 'Customer' ? [{ icon: WalletIcon, label: 'Wallet & Payments', path: '/wallet' }] : []),
+        ...(user?.role === 'Customer' ? [{ icon: StarIcon, label: 'MatePoints & Rewards', path: '/rewards' }] : []),
+        ...(user?.role === 'Customer' ? [{ icon: InvoiceIcon, label: 'Invoices & History', path: '/invoices' }] : []),
+        
+        // Cleaner-only menu items
+        ...(user?.role !== 'Customer' ? [{ icon: VerifyDocumentsIcon, label: 'Verification & Documents', path: '/verify-documents' }] : []),
+        ...(user?.role !== 'Customer' ? [{ icon: EarningsIcon, label: 'Payments & Payouts', path: '/earnings' }] : []),
+        ...(user?.role !== 'Customer' ? [{ icon: ProfileCalendarIcon, label: 'Availability & Geo-fencing', path: '/set-availability' }] : []),
+        
+        // Common menu items for all users
         { icon: NotificationIcon, label: 'Notifications Settings', path: '/notifications' },
         { icon: HelpIcon, label: 'Help & Support', path: '/help' },
     ];
@@ -209,7 +225,7 @@ const ProfilePage = () => {
 
             <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 pt-0! px-4 sm:px-6 lg:px-8">
                 {/* Profile and Statistics Container */}
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6" >
+                <div className=" grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6" >
                     {/* Profile Information Card */}
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 relative overflow-hidden flex-1 w-full justify-center items-center">
                         {/* Background Image */}
@@ -287,34 +303,36 @@ const ProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* Statistics Card */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 flex-1">
-                        <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                            <div className="text-center border-r border-gray-200 ">
-                                <div className="flex justify-center mb-1 sm:mb-2 ">
-                                    <img src={StarIcon} alt="Reviews" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                    {/* Statistics Card - Only for Customers */}
+                    {user?.role === 'Customer' && (
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 flex-1">
+                            <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                                <div className="text-center border-r border-gray-200 ">
+                                    <div className="flex justify-center mb-1 sm:mb-2 ">
+                                        <img src={StarIcon} alt="Reviews" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                                    </div>
+                                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.reviews}</div>
+                                    <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Reviews</div>
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.reviews}</div>
-                                <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Reviews</div>
-                            </div>
 
-                            <div className="text-center border-r border-gray-200">
-                                <div className="flex justify-center mb-1 sm:mb-2">
-                                    <img src={JobIcon} alt="Jobs" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                                <div className="text-center border-r border-gray-200">
+                                    <div className="flex justify-center mb-1 sm:mb-2">
+                                        <img src={JobIcon} alt="Jobs" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                                    </div>
+                                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.completed}</div>
+                                    <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Jobs Completed</div>
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.completed}</div>
-                                <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Jobs Completed</div>
-                            </div>
 
-                            <div className="text-center">
-                                <div className="flex justify-center mb-1 sm:mb-2">
-                                    <img src={WalletIcon} alt="MatePoints" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                                <div className="text-center">
+                                    <div className="flex justify-center mb-1 sm:mb-2">
+                                        <img src={WalletIcon} alt="MatePoints" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
+                                    </div>
+                                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{matePoints}</div>
+                                    <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">MatePoints</div>
                                 </div>
-                                <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{matePoints}</div>
-                                <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">MatePoints</div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
 
@@ -327,8 +345,8 @@ const ProfilePage = () => {
                             onClick={() => handleNavigation(item.path)}
                             className="w-full flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer"
                         >
-                            <div className="flex items-center space-x-3 sm:space-x-4">
-                                <img src={item.icon} alt={item.label} className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
+                             <div className="flex items-center space-x-3 sm:space-x-4">                            
+                         <img src={item.icon} alt={item.label} className=" flex-shrink-0 text-primary-500" />
                                 <span className="text-xs sm:text-sm md:text-base font-medium text-primary-500">
                                     {item.label}
                                 </span>
@@ -343,7 +361,7 @@ const ProfilePage = () => {
                         className="w-full flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-red-50 transition-colors text-red-600 cursor-pointer"
                     >
                         <div className="flex items-center space-x-3 sm:space-x-4">
-                            <img src={LogoutIcon} alt="Logout" className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 flex-shrink-0" />
+                            <img src={LogoutIcon} alt="Logout" className=" flex-shrink-0 text-red-600" />
                             <span className="text-xs sm:text-sm md:text-base font-medium">
                                 Logout
                             </span>

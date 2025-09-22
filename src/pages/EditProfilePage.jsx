@@ -16,7 +16,8 @@ const EditProfilePage = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     countryCode: '+61'
@@ -51,7 +52,8 @@ const EditProfilePage = () => {
       }
       
       setFormData({
-        fullName: user.firstName || user.name || '',
+        firstName: user.firstName || user.name || '',
+        lastName: user.lastName || '',
         email: user.email || '',
         phone: user.phoneNumber || user.phone || '',
         countryCode: '+61'
@@ -289,8 +291,9 @@ const EditProfilePage = () => {
     try {
       // Update profile using userAPI
       const updateData = {
-        firstName: formData.fullName,
-        name: formData.fullName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
         phoneNumber: formData.phone,
         phone: formData.phone
@@ -419,7 +422,7 @@ const EditProfilePage = () => {
             {/* User Details Preview */}
             <div className="flex-1 min-w-0">
               <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-2 sm:mb-3 capitalize">
-                {formData.fullName || user?.firstName || user?.name || 'User Name'}
+                {`${formData.firstName || user?.firstName || user?.name || 'User'} ${formData.lastName || user?.lastName || ''}`.trim()}
               </h2>
 
               <div className="space-y-2 sm:space-y-3">
@@ -451,10 +454,10 @@ const EditProfilePage = () => {
         {/* Form Fields */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Full Name */}
+            {/* First Name */}
             <div>
               <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
-                Full Name
+                First Name
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -462,11 +465,31 @@ const EditProfilePage = () => {
                 </div>
                 <input
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your first name"
+                />
+              </div>
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
+                Last Name
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <img src={ProfileIcon} alt="Profile" className="w-4 h-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
+                  placeholder="Enter your last name"
                 />
               </div>
             </div>
@@ -492,7 +515,7 @@ const EditProfilePage = () => {
             </div>
 
             {/* Phone Number */}
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
                 Phone number
               </label>
