@@ -164,7 +164,7 @@ const VerificationStatusPage = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
 
-            <div className="mx-auto w-full max-w-3xl px-4 py-6">
+            <div className="mx-auto w-full max-w-2xl px-4 py-6">
                 {/* Page title with back */}
                 <div className="mb-4 flex items-center gap-2">
                     <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
