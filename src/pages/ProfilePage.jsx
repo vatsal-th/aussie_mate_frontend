@@ -188,7 +188,7 @@ const ProfilePage = () => {
         ...(user?.role === 'Customer' ? [{ icon: InvoiceIcon, label: 'Invoices & History', path: '/invoices' }] : []),
         
         // Cleaner-only menu items
-        ...(user?.role !== 'Customer' ? [{ icon: VerifyDocumentsIcon, label: 'Verification & Documents', path: '/verify-documents' }] : []),
+        ...(user?.role !== 'Customer' ? [{ icon: VerifyDocumentsIcon, label: 'Verification & Documents', path: '/verification' }] : []),
         ...(user?.role !== 'Customer' ? [{ icon: EarningsIcon, label: 'Payments & Payouts', path: '/earnings' }] : []),
         ...(user?.role !== 'Customer' ? [{ icon: ProfileCalendarIcon, label: 'Availability & Geo-fencing', path: '/set-availability' }] : []),
         
