@@ -309,7 +309,7 @@ export const quotesAPI = {
     return apiRequest(`/jobs/${jobId}/quotes/${quoteId}/accept`, {
       method: 'POST',
     });
-  },
+  },  
 
   // Get cleaner's quotes
   getCleanerQuotes: async (status = null) => {
@@ -675,7 +675,7 @@ export const userAPI = {
   },
 
   getDocumentStatus: async () => {
-    return apiRequest(  '/auth/documents/status');
+    return apiRequest('/auth/documents/status');
   },
 
   updateDocument: async (documentType, documentData) => {
