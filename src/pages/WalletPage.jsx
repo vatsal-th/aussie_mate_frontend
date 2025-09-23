@@ -859,7 +859,7 @@ const WalletPage = () => {
                     name="bsb"
                     value={bankForm.bsb}
                     onChange={handleBankFormChange}
-                    placeholder="123456"
+                    placeholder="BSB Number"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
@@ -872,7 +872,7 @@ const WalletPage = () => {
                   name="accountNumber"
                   value={bankForm.accountNumber}
                   onChange={handleBankFormChange}
-                  placeholder="Account Number"
+                  placeholder="Account Number (without spaces)"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                   required
                 />

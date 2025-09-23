@@ -11,11 +11,94 @@ const NotificationSettingsPage = () => {
 
   // State for toggle switches
   const [notifications, setNotifications] = useState({
+    // Cleaner-specific notifications
+    jobAlerts: true,
+    bidUpdates: true,
+    bookingConfirmed: false,
+    paymentsPayouts: true,
+    verificationDocuments: false,
+    chatMessages: false,
+    promotionsSurveys: true,
+    // Customer-specific notifications
     pushNotifications: true,
     jobUpdates: false,
     promotions: true,
     loyaltyUpdates: false
   });
+
+  // Cleaner notification settings
+  const cleanerNotifications = [
+    {
+      key: 'jobAlerts',
+      title: 'Job Alerts',
+      description: 'New jobs within radius',
+      isOn: notifications.jobAlerts
+    },
+    {
+      key: 'bidUpdates',
+      title: 'Bid Updates',
+      description: 'When customers view, accept, or reject your quote.',
+      isOn: notifications.bidUpdates
+    },
+    {
+      key: 'bookingConfirmed',
+      title: 'Booking Confirmed',
+      description: 'Get alerts when a booking is locked in.',
+      isOn: notifications.bookingConfirmed
+    },
+    {
+      key: 'paymentsPayouts',
+      title: 'Payments & Payouts',
+      description: 'Escrow release, payout processed, or payment hold.',
+      isOn: notifications.paymentsPayouts
+    },
+    {
+      key: 'verificationDocuments',
+      title: 'Verification & Documents',
+      description: 'ABN, Police Check, and ID status updates.',
+      isOn: notifications.verificationDocuments
+    },
+    {
+      key: 'chatMessages',
+      title: 'Chat Messages',
+      description: 'Messages from customers, linked to jobs.',
+      isOn: notifications.chatMessages
+    },
+    {
+      key: 'promotionsSurveys',
+      title: 'Promotions & Surveys',
+      description: 'Special offers, loyalty updates, and feedback surveys.',
+      isOn: notifications.promotionsSurveys
+    }
+  ];
+
+  // Customer notification settings
+  const customerNotifications = [
+    {
+      key: 'pushNotifications',
+      title: 'Push Notifications',
+      description: 'Allow Aussie Mate to send you alerts.',
+      isOn: notifications.pushNotifications
+    },
+    {
+      key: 'jobUpdates',
+      title: 'Job Updates',
+      description: 'Get updates about bids, bookings & job status.',
+      isOn: notifications.jobUpdates
+    },
+    {
+      key: 'promotions',
+      title: 'Promotions',
+      description: 'Receive offers, discounts & new services.',
+      isOn: notifications.promotions
+    },
+    {
+      key: 'loyaltyUpdates',
+      title: 'Loyalty / MatePoints Updates',
+      description: 'Be notified when you earn or redeem MatePoints.',
+      isOn: notifications.loyaltyUpdates
+    }
+  ];
 
   const handleBack = () => {
     navigate(-1);
@@ -61,96 +144,91 @@ const NotificationSettingsPage = () => {
             Notification Settings
           </h1>
         </div>
-        {
-          user?.role === 'Customer' && (
-            <div>
-          {/* General Section */}
-          <div className="mb-6">
-            <h2 className="text-sm font-semibold text-primary-200 uppercase tracking-wide mb-2">
-              GENERAL
-            </h2>
-
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 space-y-4">
-              {/* Push Notifications */}
-              <div className="flex items-center justify-between py-2">
+        {/* Notification Settings - Show for all users except customers */}
+        {user?.role !== 'Customer' && (
+          <div className="bg-white rounded-2xl border border-gray-200">
+            {cleanerNotifications.map((notification, index) => (
+              <div 
+                key={notification.key}
+                className={`flex items-center justify-between py-4 px-2 mx-4 ${
+                  index < cleanerNotifications.length - 1 ? 'border-b border-gray-100' : ''
+                }`}
+              >
                 <div className="flex-1">
-                  <h3 className="text-base font-semibold text-primary-500 mb-1">
-                    Push Notifications
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">
+                    {notification.title}
                   </h3>
-                  <p className="text-sm text-primary-200 font-medium">
-                    Allow Aussie Mate to send you alerts.
+                  <p className="text-sm text-gray-500">
+                    {notification.description}
                   </p>
                 </div>
                 <ToggleSwitch
-                  isOn={notifications.pushNotifications}
-                  onToggle={() => toggleNotification('pushNotifications')}
-                  className="cursor-pointer "
+                  isOn={notification.isOn}
+                  onToggle={() => toggleNotification(notification.key)}
                 />
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Job Updates */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-primary-500 mb-1">
-                    Job Updates
-                  </h3>
-                  <p className="text-sm text-primary-200 font-medium">
-                    Get updates about bids, bookings & job status.
-                  </p>
-                </div>
-                <ToggleSwitch
-                  isOn={notifications.jobUpdates}
-                  onToggle={() => toggleNotification('jobUpdates')}
-                />
+        {/* Customer-specific settings */}
+        {user?.role === 'Customer' && (
+          <div>
+            {/* General Section */}
+            <div className="mb-6">
+              <h2 className="text-sm font-semibold text-primary-200 uppercase tracking-wide mb-2">
+                GENERAL
+              </h2>
+
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 space-y-4">
+                {customerNotifications.slice(0, 2).map((notification) => (
+                  <div key={notification.key} className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-primary-500 mb-1">
+                        {notification.title}
+                      </h3>
+                      <p className="text-sm text-primary-200 font-medium">
+                        {notification.description}
+                      </p>
+                    </div>
+                    <ToggleSwitch
+                      isOn={notification.isOn}
+                      onToggle={() => toggleNotification(notification.key)}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Offers & Loyalty Section */}
+            <div className="mb-6">
+              <h2 className="text-sm font-semibold text-primary-200 uppercase tracking-wide mb-2">
+                OFFERS & LOYALTY
+              </h2>
+
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 space-y-4">
+                {customerNotifications.slice(2).map((notification) => (
+                  <div key={notification.key} className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-primary-500 mb-1">
+                        {notification.title}
+                      </h3>
+                      <p className="text-sm text-primary-200 font-medium">
+                        {notification.description}
+                      </p>
+                    </div>
+                    <ToggleSwitch
+                      isOn={notification.isOn}
+                      onToggle={() => toggleNotification(notification.key)}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-
-          {/* Offers & Loyalty Section */}
-          <div className="mb-6">
-            <h2 className="text-sm font-semibold text-primary-200 uppercase tracking-wide mb-2">
-              OFFERS & LOYALTY
-            </h2>
-
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 space-y-4">
-              {/* Promotions */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-primary-500 mb-1">
-                    Promotions
-                  </h3>
-                  <p className="text-sm text-primary-200 font-medium">
-                    Receive offers, discounts & new services.
-                  </p>
-                </div>
-                <ToggleSwitch
-                  isOn={notifications.promotions}
-                  onToggle={() => toggleNotification('promotions')}
-                />
-              </div>
-
-              {/* Loyalty / MatePoints Updates */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-primary-500 mb-1">
-                    Loyalty / MatePoints Updates
-                  </h3>
-                  <p className="text-sm text-primary-200 font-medium">
-                    Be notified when you earn or redeem MatePoints.
-                  </p>
-                </div>
-                <ToggleSwitch
-                  isOn={notifications.loyaltyUpdates}
-                  onToggle={() => toggleNotification('loyaltyUpdates')}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-          )
-        }
+        )}
        
-
       </div>
     </div>
   );

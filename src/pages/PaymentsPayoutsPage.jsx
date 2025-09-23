@@ -95,12 +95,12 @@ const PaymentsPayoutsPage = () => {
                     </div>
                 )}
 
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-4 sm:space-y-6 bg-white rounded-2xl border border-[#F3F3F3] py-4 sm:py-6 px-4 sm:px-6 shadow-custom">
                     {/* Your Active Payout Method */}
-                    <div>
+                    <div >
                         <h2 className="text-sm sm:text-base font-semibold text-primary-500 mb-3 sm:mb-4">Your Active Payout Method</h2>
                         
-                        <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5">
+                        <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5 shadow-custom">
                             <div className="text-xs text-primary-200 font-medium mb-2">{payoutData.activeMethod.type}</div>
                             
                             <div className="flex items-center justify-between mb-3">
@@ -133,7 +133,7 @@ const PaymentsPayoutsPage = () => {
                         
                         <div className="space-y-2">
                             {payoutMethods.map((method) => (
-                                <div key={method.id} className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 cursor-pointer">
+                                <div key={method.id} className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 cursor-pointer shadow-custom">
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
                                             type="radio"
@@ -164,7 +164,7 @@ const PaymentsPayoutsPage = () => {
                         
                         <div className="space-y-2">
                             {payoutData.payoutHistory.map((payout) => (
-                                <div key={payout.id} className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 cursor-pointer">
+                                <div key={payout.id} className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 cursor-pointer shadow-custom">
                                         <div className="text-sm text-primary-200 font-medium">{payout.date}</div>
                                         <div className="text-base sm:text-xl font-semibold text-primary-500">{payout.amount}</div>
                                     <div className="text-sm text-primary-200 font-medium">{payout.description}</div>

@@ -327,9 +327,9 @@ const AvailabilityPage = () => {
                     </div>
                 )}
 
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-4 sm:space-y-6 bg-white rounded-2xl border border-[#F3F3F3] py-4 sm:py-6 px-4 sm:px-6 shadow-custom">
                     {/* Availability Section */}
-                    <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5">
+                    <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5 shadow-custom">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
                             <span className="text-sm sm:text-base font-medium text-primary-500">Available?</span>
                             <ToggleSwitch 
@@ -372,7 +372,7 @@ const AvailabilityPage = () => {
                     </div>
 
                     {/* Location Preferences Section */}
-                    <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5">
+                    <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5 shadow-custom">
                         <h2 className="text-sm sm:text-base font-semibold text-primary-500 mb-3 sm:mb-4">Location Preferences</h2>
 
                         {/* Current Location */}
@@ -436,6 +436,7 @@ const AvailabilityPage = () => {
                     </div>
 
                     {/* Save Button */}
+                    <div className="flex justify-end">
                     <button
                         onClick={handleSave}
                         disabled={loading}
@@ -443,6 +444,7 @@ const AvailabilityPage = () => {
                     >
                         {loading ? 'Saving...' : 'Save'}
                     </button>
+                    </div>
                 </div>
             </div>
 
