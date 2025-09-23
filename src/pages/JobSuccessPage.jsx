@@ -73,13 +73,7 @@ const JobSuccessPage = () => {
                 alt="Job Live Animation" 
                 className="w-80 h-80 mx-auto object-contain"
               />    
-              ) : (
-                <div className="w-80 h-80 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-16 h-16 sm:w-20 sm:h-20 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Action Buttons */}

@@ -514,6 +514,9 @@ const PostNewJobPage = () => {
         videos: []
       };
       
+      console.log('📸 Selected files before posting:', selectedFiles);
+      console.log('📸 Files object:', files);
+      console.log('📸 Photos length:', files.photos.length);
 
       // Create job
       const response = await jobsAPI.createJobWithFiles(jobData, files);
@@ -770,7 +773,7 @@ const PostNewJobPage = () => {
 
           {/* Upload Section */}
           <div>
-            <h3 className="text-lg font-semibold text-primary-500 mb-4">
+            <h3 className="text-lg font-semibold text-primary-500 mb-4 cursor-pointer">
               Upload Photos/Videos <span className="text-primary-200 font-medium"> (Optional)</span>
             </h3>
 

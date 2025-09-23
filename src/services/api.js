@@ -220,10 +220,15 @@ export const jobsAPI = {
     });
 
     // Add photo files
+    console.log('🔍 API - files.photos:', files.photos);
+    console.log('🔍 API - files.photos.length:', files.photos?.length);
     if (files.photos && files.photos.length > 0) {
-      files.photos.forEach(photo => {
+      files.photos.forEach((photo, index) => {
+        console.log(`🔍 API - Adding photo ${index}:`, photo.name, photo.type, photo.size);
         formData.append('photos', photo);
       });
+    } else {
+      console.log('🔍 API - No photos to upload');
     }
 
     // Add video files
