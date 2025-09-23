@@ -23,6 +23,7 @@ import LiveChatPage from './pages/LiveChatPage'
 import VerifyDocumentsPage from './pages/VerifyDocumentsPage'
 import VerificationStatusPage from './pages/VerificationStatusPage'
 import AvailabilityPage from './pages/AvailabilityPage'
+import PaymentsPayoutsPage from './pages/PaymentsPayoutsPage'
 import SetAvailabilityPage from './pages/SetAvailabilityPage'
 import SetCleanerLocationPage from './pages/SetCleanerLocationPage'
 import SelectServicesPage from './pages/SelectServicesPage'
@@ -98,7 +99,7 @@ function App() {
             <NotificationPage />
           </ProtectedRoute>
         } />
-        <Route path="/notification-settings" element={
+        <Route path="/notifications-settings" element={
           <ProtectedRoute>
             <NotificationSettingsPage />
           </ProtectedRoute>
@@ -126,6 +127,11 @@ function App() {
         <Route path="/availability" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <AvailabilityPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <PaymentsPayoutsPage />
           </ProtectedRoute>
         } />
         <Route path="/set-availability" element={

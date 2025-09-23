@@ -101,10 +101,10 @@ const SetCleanerLocationPage = () => {
       return;
     }
 
-    setIsLoading(true);
+      setIsLoading(true);
     setError("");
 
-    navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
@@ -161,10 +161,10 @@ const SetCleanerLocationPage = () => {
         } finally {
           setIsLoading(false);
         }
-      },
+        },
       (err) => {
         console.error("Location error:", err);
-        setIsLoading(false);
+          setIsLoading(false);
         
         let errorMessage = "Unable to access your location. ";
         switch (err.code) {
@@ -280,8 +280,8 @@ const SetCleanerLocationPage = () => {
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2"></div>
                 <p className="text-gray-600">Loading map...</p>
-              </div>
             </div>
+          </div>
           )}
         </div>
 
@@ -289,14 +289,14 @@ const SetCleanerLocationPage = () => {
         <div className="bg-white rounded-b-2xl p-6 space-y-6">
           {/* Address Display */}
           {selectedLocation ? (
-            <div className="flex items-start space-x-3">
-              <img src={MapPinIcon} alt="Location" className="w-5 h-5 mt-1 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-primary-500 text-sm">
+          <div className="flex items-start space-x-3">
+            <img src={MapPinIcon} alt="Location" className="w-5 h-5 mt-1 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-primary-500 text-sm">
                   {selectedLocation.fullAddress || selectedLocation.address}
-                </p>
-              </div>
+              </p>
             </div>
+          </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-gray-500 text-sm">
@@ -336,7 +336,7 @@ const SetCleanerLocationPage = () => {
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
             ) : (
-              <img src={CurrentLocationIcon} alt="Current Location" className="w-5 h-5" />
+            <img src={CurrentLocationIcon} alt="Current Location" className="w-5 h-5" />
             )}
             <span className="font-medium">
               {isLoading ? "Getting location..." : "Use Current Location"}
@@ -392,11 +392,11 @@ const SetCleanerLocationPage = () => {
             onClick={handleSave}
             disabled={isLoading}
             className= "bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-colors duration-200"
-            >
-              {isLoading ? 'Saving...' : 'Save Preferences'}
-            </button>
-          </div>
+          >
+            {isLoading ? 'Saving...' : 'Save Preferences'}
+          </button>
         </div>
+      </div>
       </div>
     </div>
   );
