@@ -72,8 +72,8 @@ const ResetPasswordPage = () => {
             <div className="flex items-center justify-center mb-4 sm:mb-6">
               <img src={logo} alt="Aussie Mate" className="h-12 sm:h-16 w-auto" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Password Reset Successfully!</h2>
-            <p className="text-sm sm:text-base text-gray-600 px-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary-500 mb-2">Password Reset Successfully!</h2>
+            <p className="text-sm sm:text-base text-primary-200 font-medium px-2">
               Your password has been updated successfully. You can now log in with your new password.
             </p>
           </div>
@@ -86,13 +86,13 @@ const ResetPasswordPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Password Updated!</h3>
-              <p className="text-sm text-gray-600 mb-6">
+              <h3 className="text-lg font-semibold text-primary-250 mb-2">Password Updated!</h3>
+              <p className="text-sm text-primary-200 font-medium mb-6">
                 Your password has been successfully reset. You can now log in with your new password.
               </p>
               <Link
                 to="/"
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base inline-block"
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base inline-block"
               >
                 Continue to Login
               </Link>
@@ -180,7 +180,7 @@ const ResetPasswordPage = () => {
             <button
               type="submit"
               disabled={isLoading || !token}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
             >
               {isLoading ? 'Resetting Password...' : 'Reset Password'}
             </button>
@@ -189,7 +189,7 @@ const ResetPasswordPage = () => {
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               Remember your password?{' '}
-              <Link to="/" className="text-primary-500 hover:text-primary-600 font-bold">
+              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold">
                 Sign In
               </Link>
             </p>

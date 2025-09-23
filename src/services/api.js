@@ -183,6 +183,22 @@ export const authAPI = {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    return apiRequest('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Reset password
+  resetPassword: async (token, password, confirmPassword) => {
+    return apiRequest('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password, confirmPassword }),
+    });
+  },
 };
 
 // Jobs API

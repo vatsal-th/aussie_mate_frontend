@@ -63,13 +63,13 @@ const ForgotPasswordPage = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => setIsSubmitted(false)}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
                 >
                   Send Another Email
                 </button>
                 <Link
                   to="/"
-                  className="block w-full text-center text-primary-500 hover:text-primary-600 font-bold py-3 px-4 rounded-3xl border border-primary-500 hover:bg-primary-50 transition-colors duration-200 text-sm sm:text-base"
+                  className="block w-full text-center text-primary-500 hover:text-primary-600 font-medium py-3 px-4 rounded-3xl border border-primary-500 hover:bg-primary-50 transition-colors duration-200 text-sm sm:text-base"
                 >
                   Back to Login
                 </Link>
@@ -121,7 +121,7 @@ const ForgotPasswordPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
             >
               {isLoading ? 'Sending...' : 'Send Reset Link'}
             </button>
@@ -130,7 +130,7 @@ const ForgotPasswordPage = () => {
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               Remember your password?{' '}
-              <Link to="/ " className="text-primary-500 hover:text-primary-600 font-bold">
+              <Link to="/ " className="text-primary-500 hover:text-primary-600 font-semibold">
                 Sign In
               </Link>
             </p>
