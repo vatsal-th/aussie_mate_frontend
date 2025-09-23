@@ -190,7 +190,7 @@ const ProfilePage = () => {
         // Cleaner-only menu items
         ...(user?.role !== 'Customer' ? [{ icon: VerifyDocumentsIcon, label: 'Verification & Documents', path: '/verification' }] : []),
         ...(user?.role !== 'Customer' ? [{ icon: EarningsIcon, label: 'Payments & Payouts', path: '/earnings' }] : []),
-        ...(user?.role !== 'Customer' ? [{ icon: ProfileCalendarIcon, label: 'Availability & Geo-fencing', path: '/set-availability' }] : []),
+        ...(user?.role !== 'Customer' ? [{ icon: ProfileCalendarIcon, label: 'Availability & Geo-fencing', path: '/availability' }] : []),
         
         // Common menu items for all users
         { icon: NotificationIcon, label: 'Notifications Settings', path: '/notifications' },

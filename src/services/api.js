@@ -129,18 +129,18 @@ export const authAPI = {
     try {
       // Log the data being sent for debugging
       
-      const response = await apiRequest('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      });
+    const response = await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
 
-      // Store token and user data if registration includes auto-login
-      if (response.success && response.data && response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
+    // Store token and user data if registration includes auto-login
+    if (response.success && response.data && response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
 
-      return response;
+    return response;
     } catch (error) {
       console.error('Registration API error:', error);
       // Log the full error response if available
@@ -309,7 +309,7 @@ export const quotesAPI = {
     return apiRequest(`/jobs/${jobId}/quotes/${quoteId}/accept`, {
       method: 'POST',
     });
-  },  
+  },
 
   // Get cleaner's quotes
   getCleanerQuotes: async (status = null) => {
@@ -629,12 +629,16 @@ export const userAPI = {
 
   updateAvailability: async (availabilityData) => {
     return apiRequest('/auth/availability', {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify(availabilityData),
     });
   },
 
   // Search Radius Management API
+  getSearchRadius: async () => {
+    return apiRequest('/auth/search-radius');
+  },
+
   updateSearchRadius: async (searchRadius) => {
     return apiRequest('/auth/search-radius', {
       method: 'PUT',

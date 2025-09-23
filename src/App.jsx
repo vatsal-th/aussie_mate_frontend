@@ -22,6 +22,7 @@ import HelpSupportPage from './pages/HelpSupportPage'
 import LiveChatPage from './pages/LiveChatPage'
 import VerifyDocumentsPage from './pages/VerifyDocumentsPage'
 import VerificationStatusPage from './pages/VerificationStatusPage'
+import AvailabilityPage from './pages/AvailabilityPage'
 import SetAvailabilityPage from './pages/SetAvailabilityPage'
 import SetCleanerLocationPage from './pages/SetCleanerLocationPage'
 import SelectServicesPage from './pages/SelectServicesPage'
@@ -120,6 +121,11 @@ function App() {
         <Route path="/verification" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <VerificationStatusPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/availability" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <AvailabilityPage />
           </ProtectedRoute>
         } />
         <Route path="/set-availability" element={
