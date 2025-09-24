@@ -72,14 +72,14 @@
         lastModifiedDate: new Date(file.lastModified).toISOString()
       });
 
-      // Validate file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      // Validate file size (2MB limit to avoid 413 errors)
+      const maxSize = 2 * 1024 * 1024; // 2MB in bytes (reduced to avoid 413 errors)
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      console.log(`📄 [VerifyDocuments] File size validation: ${fileSizeMB}MB / 5MB (${file.size} / ${maxSize} bytes)`);
+      console.log(`📄 [VerifyDocuments] File size validation: ${fileSizeMB}MB / 2MB (${file.size} / ${maxSize} bytes)`);
       
       if (file.size > maxSize) {
-        console.error(`❌ [VerifyDocuments] File too large: ${fileSizeMB}MB > 5MB`);
-        setError('File size must be less than 5MB');
+        console.error(`❌ [VerifyDocuments] File too large: ${fileSizeMB}MB > 2MB`);
+        setError('File size must be less than 2MB to avoid server errors. Please compress your file or use a smaller file.');
         return;
       }
 
@@ -248,6 +248,15 @@
           tfnNumber: formData.tfnNumber || 'not provided'
         });
 
+        // Additional validation for total upload size
+        const maxTotalSize = 5 * 1024 * 1024; // 5MB total limit
+        if (totalUploadSize > maxTotalSize) {
+          console.error(`❌ [VerifyDocuments] Total upload size too large: ${totalSizeMB}MB > 5MB`);
+          setError(`Total upload size (${totalSizeMB}MB) exceeds the 5MB limit. Please reduce file sizes or upload fewer files.`);
+          setIsLoading(false);
+          return;
+        }
+
         // Log FormData contents for debugging
         console.log('📦 [VerifyDocuments] FormData entries:');
         for (let [key, value] of formDataToSend.entries()) {
@@ -281,7 +290,17 @@
           stack: error.stack,
           name: error.name
         });
-        setError('Failed to submit documents. Please try again.');
+        
+        // Handle specific error types
+        if (error.message === 'Failed to fetch') {
+          setError('Network error: Unable to connect to server. This might be due to CORS policy or server being down. Please check your internet connection and try again.');
+        } else if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
+          setError('File too large: The server rejected the upload because the files are too large. Please reduce file sizes and try again.');
+        } else if (error.message.includes('CORS')) {
+          setError('CORS error: The server is not configured to accept requests from this domain. Please contact support.');
+        } else {
+          setError(`Upload failed: ${error.message}. Please try again.`);
+        }
       } finally {
         console.log('🏁 [VerifyDocuments] Document submission process completed');
         setIsLoading(false);

@@ -734,6 +734,21 @@ export const userAPI = {
         name: error.name,
         status: error.status
       });
+      
+      // Enhanced error handling for common issues
+      if (error.message === 'Failed to fetch') {
+        console.error('💥 [uploadDocuments] Network error - possible causes:');
+        console.error('  - CORS policy blocking the request');
+        console.error('  - Server is down or unreachable');
+        console.error('  - Network connectivity issues');
+        console.error('  - SSL/TLS certificate problems');
+      } else if (error.message.includes('413')) {
+        console.error('💥 [uploadDocuments] File too large error (413)');
+        console.error('  - Server rejected the request due to file size');
+        console.error('  - Check server upload limits');
+        console.error('  - Consider compressing files');
+      }
+      
       if (error.response) {
         console.error('💥 [uploadDocuments] Document upload error response:', error.response);
       }
