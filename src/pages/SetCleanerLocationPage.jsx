@@ -103,13 +103,10 @@ const SetCleanerLocationPage = () => {
             lng,
           });
         } else {
-          console.warn('⚠️ [SetCleanerLocation] Invalid coordinates or missing address:', {
-            hasValidCoordinates,
-            lat,
-            lng,
-            addr,
-            reason: !hasValidCoordinates ? 'Invalid coordinates' : 'Missing address'
-          });
+          console.warn('⚠️ [SetCleanerLocation] No valid coordinates or address found - user needs to set location first');
+          console.log('ℹ️ [SetCleanerLocation] This is normal for new users who haven\'t set their location yet');
+          console.log('ℹ️ [SetCleanerLocation] User can use "Use Current Location" or manual address entry');
+          // Don't set selectedLocation - let the user choose their location
         }
       } catch (_) {
         // ignore profile load errors; fall back to defaults
@@ -148,6 +145,14 @@ const SetCleanerLocationPage = () => {
               lng: longitude,
             };
 
+            console.log('📍 [SetCleanerLocation] Setting current location:', {
+              fullAddress: fullAddress,
+              lat: latitude,
+              lng: longitude,
+              latType: typeof latitude,
+              lngType: typeof longitude
+            });
+
             setSelectedLocation(location);
           } else {
             console.error("Geocoding error:", data.status, data.error_message);
@@ -179,6 +184,14 @@ const SetCleanerLocationPage = () => {
             lat: latitude,
             lng: longitude,
           };
+
+          console.log('📍 [SetCleanerLocation] Setting fallback location (geocoding failed):', {
+            address: location.address,
+            lat: latitude,
+            lng: longitude,
+            latType: typeof latitude,
+            lngType: typeof longitude
+          });
 
           setSelectedLocation(location);
           setError("Address lookup failed, but location coordinates are available.");
@@ -245,27 +258,33 @@ const SetCleanerLocationPage = () => {
       // Prepare location data for API
       const locationData = {
         address: selectedLocation.fullAddress || selectedLocation.address,
-        location: {
-          coordinates: {
-            lat: selectedLocation.lat,
-            lng: selectedLocation.lng
-          }
-        },
-        searchRadius: searchRadius
+        coordinates: {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng
+        }
       };
+      
+      console.log('📍 [SetCleanerLocation] Sending location data to backend:', locationData);
 
       // Save location via API
       const response = await userAPI.updateLocation(locationData);
       
       if (response.success) {
+        console.log('✅ [SetCleanerLocation] Location saved successfully');
+        
         // Persist search radius separately to avoid backend defaulting
         try {
+          console.log('📏 [SetCleanerLocation] Saving search radius:', searchRadius);
           await userAPI.updateSearchRadius(searchRadius);
-        } catch (_) {
-          // ignore if radius save fails
+          console.log('✅ [SetCleanerLocation] Search radius saved successfully');
+        } catch (radiusError) {
+          console.warn('⚠️ [SetCleanerLocation] Failed to save search radius:', radiusError);
+          // Don't fail the whole process if radius save fails
         }
+        
         navigate('/select-services');
       } else {
+        console.error('❌ [SetCleanerLocation] Failed to save location:', response.message);
         setError(response.message || 'Failed to save location. Please try again.');
       }
     } catch (error) {
