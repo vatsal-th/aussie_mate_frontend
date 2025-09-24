@@ -62,92 +62,46 @@
   const handleFileUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
-      console.log('📄 [VerifyDocuments] File selected for upload:', {
-        fieldName: fieldName,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        fileSizeMB: (file.size / (1024 * 1024)).toFixed(2),
-        lastModified: file.lastModified,
-        lastModifiedDate: new Date(file.lastModified).toISOString()
-      });
-
-      // Validate file size (50MB limit to match backend)
-      const maxSize = 50 * 1024 * 1024; // 50MB in bytes (matching backend limit)
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      console.log(`📄 [VerifyDocuments] File size validation: ${fileSizeMB}MB / 50MB (${file.size} / ${maxSize} bytes)`);
-      
-      if (file.size > maxSize) {
-        console.error(`❌ [VerifyDocuments] File too large: ${fileSizeMB}MB > 50MB`);
-        setError('File size must be less than 50MB. Please compress your file or use a smaller file.');
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
         return;
       }
 
       // Validate file type
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-      console.log(`📄 [VerifyDocuments] File type validation: ${file.type} in allowed types:`, allowedTypes);
-      
       if (!allowedTypes.includes(file.type)) {
-        console.error(`❌ [VerifyDocuments] Invalid file type: ${file.type}`);
         setError('Only PDF, JPEG, JPG, and PNG files are allowed');
         return;
       }
 
-      console.log('✅ [VerifyDocuments] File validation passed, processing...');
-
       try {
-        console.log('🔄 [VerifyDocuments] Converting file to base64 for preview...');
+        // Store the original file object and convert to base64 for preview
         const base64 = await convertToBase64(file);
-        console.log('✅ [VerifyDocuments] Base64 conversion successful, length:', base64.length);
-        
-        const fileData = {
-          file: base64, // Keep base64 for preview
-          originalFile: file, // Store original file for upload
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size
-        };
-        
-        console.log('📄 [VerifyDocuments] File data prepared:', {
-          fileName: fileData.fileName,
-          fileType: fileData.fileType,
-          fileSize: fileData.fileSize,
-          fileSizeMB: (fileData.fileSize / (1024 * 1024)).toFixed(2),
-          base64Length: fileData.file.length
-        });
         
         setFormData({
           ...formData,
-          [fieldName]: fileData
+          [fieldName]: {
+            file: base64, // Keep base64 for preview
+            originalFile: file, // Store original file for upload
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size
+          }
         });
         setError('');
-        console.log('✅ [VerifyDocuments] File successfully added to form data');
       } catch (error) {
-        console.error('💥 [VerifyDocuments] Error processing file:', error);
         setError('Failed to process file. Please try again.');
       }
     }
   };
 
   const convertToBase64 = (file) => {
-    console.log('🔄 [VerifyDocuments] Starting base64 conversion for file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result.split(',')[1];
-        console.log('✅ [VerifyDocuments] Base64 conversion completed, result length:', result.length);
-        resolve(result);
-      };
-      reader.onerror = error => {
-        console.error('💥 [VerifyDocuments] Base64 conversion failed:', error);
-        reject(error);
-      };
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
     });
   };
 
@@ -157,13 +111,9 @@
       setError('');
       setIsLoading(true);
 
-      console.log('📄 [VerifyDocuments] Starting document submission...');
-      console.log('📄 [VerifyDocuments] Current form data:', formData);
-
       try {
         // Validate required fields
         if (!formData.abnNumber.trim()) {
-          console.error('❌ [VerifyDocuments] ABN Number is required');
           setError('ABN Number is required.');
           setIsLoading(false);
           return;
@@ -171,138 +121,46 @@
 
         // Check if at least one document is uploaded
         const hasDocuments = formData.policeCheck || formData.visaWorkRights || formData.trainingCertificates;
-        console.log('📄 [VerifyDocuments] Document check:', {
-          hasPoliceCheck: !!formData.policeCheck,
-          hasVisaWorkRights: !!formData.visaWorkRights,
-          hasTrainingCertificates: !!formData.trainingCertificates,
-          hasAnyDocuments: hasDocuments
-        });
-        
         if (!hasDocuments) {
-          console.error('❌ [VerifyDocuments] No documents uploaded');
           setError('Please upload at least one document.');
           setIsLoading(false);
           return;
         }
 
         // Create FormData for file upload (backend expects multipart/form-data)
-        console.log('📦 [VerifyDocuments] Creating FormData for upload...');
         const formDataToSend = new FormData();
         formDataToSend.append('abnNumber', formData.abnNumber);
         if (formData.tfnNumber) {
           formDataToSend.append('tfnNumber', formData.tfnNumber);
         }
 
-        let totalUploadSize = 0;
-        let fileCount = 0;
-
         // Add files to FormData (use original file objects)
         if (formData.policeCheck) {
-          const file = formData.policeCheck.originalFile;
-          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-          totalUploadSize += file.size;
-          fileCount++;
-          console.log(`📄 [VerifyDocuments] Adding policeCheck file:`, {
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            sizeMB: fileSizeMB
-          });
-          formDataToSend.append('policeCheck', file);
+          formDataToSend.append('policeCheck', formData.policeCheck.originalFile);
         }
         
         if (formData.visaWorkRights) {
-          const file = formData.visaWorkRights.originalFile;
-          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-          totalUploadSize += file.size;
-          fileCount++;
-          console.log(`📄 [VerifyDocuments] Adding visaWorkRights file:`, {
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            sizeMB: fileSizeMB
-          });
-          formDataToSend.append('visaWorkRights', file);
+          formDataToSend.append('visaWorkRights', formData.visaWorkRights.originalFile);
         }
         
         if (formData.trainingCertificates) {
-          const file = formData.trainingCertificates.originalFile;
-          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-          totalUploadSize += file.size;
-          fileCount++;
-          console.log(`📄 [VerifyDocuments] Adding trainingCertificates file:`, {
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            sizeMB: fileSizeMB
-          });
-          formDataToSend.append('trainingCertificates', file);
+          formDataToSend.append('trainingCertificates', formData.trainingCertificates.originalFile);
         }
 
-        const totalSizeMB = (totalUploadSize / (1024 * 1024)).toFixed(2);
-        console.log(`📦 [VerifyDocuments] FormData prepared:`, {
-          fileCount: fileCount,
-          totalSize: totalUploadSize,
-          totalSizeMB: totalSizeMB,
-          abnNumber: formData.abnNumber,
-          tfnNumber: formData.tfnNumber || 'not provided'
-        });
-
-        // Additional validation for total upload size (500MB total limit for up to 10 files)
-        const maxTotalSize = 500 * 1024 * 1024; // 500MB total limit (10 files × 50MB each)
-        if (totalUploadSize > maxTotalSize) {
-          console.error(`❌ [VerifyDocuments] Total upload size too large: ${totalSizeMB}MB > 500MB`);
-          setError(`Total upload size (${totalSizeMB}MB) exceeds the 500MB limit. Please reduce file sizes or upload fewer files.`);
-          setIsLoading(false);
-          return;
-        }
-
-        // Log FormData contents for debugging
-        console.log('📦 [VerifyDocuments] FormData entries:');
-        for (let [key, value] of formDataToSend.entries()) {
-          if (value instanceof File) {
-            const fileSizeMB = (value.size / (1024 * 1024)).toFixed(2);
-            console.log(`📦 [VerifyDocuments] FormData[${key}]: File - ${value.name} (${fileSizeMB}MB)`);
-          } else {
-            console.log(`📦 [VerifyDocuments] FormData[${key}]:`, value);
-          }
-        }
         
         // Submit documents via API
-        console.log('🌐 [VerifyDocuments] Calling userAPI.uploadDocuments...');
         const response = await userAPI.uploadDocuments(formDataToSend);
         
-        console.log('📡 [VerifyDocuments] API response received:', response);
         
         if (response.success) {
-          console.log('✅ [VerifyDocuments] Document submission successful!');
-          console.log('✅ [VerifyDocuments] Navigating to availability page...');
           // Navigate to availability page
           navigate('/set-availability');
         } else {
-          console.error('❌ [VerifyDocuments] Document submission failed:', response.message);
           setError(response.message || 'Failed to submit documents. Please try again.');
         }
       } catch (error) {
-        console.error('💥 [VerifyDocuments] Error submitting documents:', error);
-        console.error('💥 [VerifyDocuments] Error details:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-        
-        // Handle specific error types
-        if (error.message === 'Failed to fetch') {
-          setError('Network error: Unable to connect to server. This might be due to CORS policy or server being down. Please check your internet connection and try again.');
-        } else if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
-          setError('File too large: The server rejected the upload because the files are too large. Please ensure each file is under 50MB and total upload is under 500MB.');
-        } else if (error.message.includes('CORS')) {
-          setError('CORS error: The server is not configured to accept requests from this domain. Please contact support.');
-        } else {
-          setError(`Upload failed: ${error.message}. Please try again.`);
-        }
+        setError('Failed to submit documents. Please try again.');
       } finally {
-        console.log('🏁 [VerifyDocuments] Document submission process completed');
         setIsLoading(false);
       }
     };
