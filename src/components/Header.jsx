@@ -82,7 +82,7 @@ const Header = () => {
     if (isCustomer) {
       navigate('/customer-dashboard');
     } else {
-      navigate('/');
+      navigate('/cleaner-dashboard');
     }
   };
 

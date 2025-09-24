@@ -40,7 +40,6 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data?.user || response.user;
       const token = response.data?.token || response.token;
       
-      // Preserve profilePhoto from localStorage if it exists and is not in API response
       if (userData && !userData.profilePhoto) {
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (storedUser.profilePhoto) {
@@ -48,7 +47,6 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // Ensure userType is set for consistency
       if (userData && !userData.userType && userData.role) {
         userData.userType = userData.role;
       }
