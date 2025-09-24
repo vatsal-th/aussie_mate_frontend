@@ -46,9 +46,16 @@ const Header = () => {
       if (storedLocation) {
         try {
           const location = JSON.parse(storedLocation);
+          
+          // Extract address and city from fullAddress
+          const fullAddress = location.fullAddress || location.address || '';
+          const addressParts = fullAddress.split(',');
+          const address = addressParts[0]?.trim() || 'Location not set';
+          const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : (location.city || 'Please set your location');
+          
           setUserLocation({
-            address: location.address?.split(',')[0] || 'Location not set',
-            city: location.city || 'Please set your location'
+            address: address,
+            city: city
           });
         } catch (error) {
           console.error('Error parsing stored location:', error);
@@ -66,13 +73,12 @@ const Header = () => {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events (for same-tab updates)
+    // Listen for custom location update events
     const handleLocationUpdate = () => {
       updateLocation();
     };
 
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('locationUpdated', handleLocationUpdate);
 
     return () => {
