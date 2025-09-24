@@ -78,12 +78,37 @@ const SetCleanerLocationPage = () => {
         const lat = userData.location?.coordinates?.lat;
         const lng = userData.location?.coordinates?.lng;
         const addr = userData.address || userData.location?.address;
-        if (lat != null && lng != null && addr) {
+        
+        console.log('🗺️ [SetCleanerLocation] Coordinates check:', {
+          lat: lat,
+          lng: lng,
+          latType: typeof lat,
+          lngType: typeof lng,
+          latNull: lat === null,
+          lngNull: lng === null,
+          addr: addr
+        });
+        
+        // Check for valid coordinates (not null, not undefined, and not 0,0)
+        const hasValidCoordinates = lat != null && lng != null && 
+                                   lat !== 0 && lng !== 0 && 
+                                   !isNaN(lat) && !isNaN(lng);
+        
+        if (hasValidCoordinates && addr) {
+          console.log('✅ [SetCleanerLocation] Setting location with valid coordinates');
           setSelectedLocation({
             address: addr,
             fullAddress: addr,
             lat,
             lng,
+          });
+        } else {
+          console.warn('⚠️ [SetCleanerLocation] Invalid coordinates or missing address:', {
+            hasValidCoordinates,
+            lat,
+            lng,
+            addr,
+            reason: !hasValidCoordinates ? 'Invalid coordinates' : 'Missing address'
           });
         }
       } catch (_) {

@@ -178,8 +178,8 @@
         // Handle specific error types
         if (error.message === 'Failed to fetch') {
           setError('Network error: Unable to connect to server. Please check your internet connection and try again.');
-        } else if (error.message.includes('Server returned HTML instead of JSON') || error.type === 'JSON_PARSE_ERROR') {
-          setError('Server Error: The API endpoint is not working properly. This usually means the backend route is not configured correctly. Please contact support.');
+        } else if (error.message.includes('Server returned HTML instead of JSON') || error.message.includes('<!DOCTYPE') || error.name === 'SyntaxError') {
+          setError('Backend Error (500): The server encountered an internal error while processing your upload. This is a backend issue - please contact support or check server logs.');
         } else if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
           setError('File too large: The server rejected the upload. Please reduce file sizes and try again.');
         } else if (error.message.includes('CORS')) {

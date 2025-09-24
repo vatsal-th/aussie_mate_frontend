@@ -689,6 +689,16 @@ export const userAPI = {
       console.log('📡 [uploadDocuments] Response status:', response.status);
       console.log('📡 [uploadDocuments] Response headers:', Object.fromEntries(response.headers.entries()));
 
+      // Check if response is HTML (error page) instead of JSON
+      const contentType = response.headers.get('content-type');
+      console.log('📡 [uploadDocuments] Response content-type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.error('❌ [uploadDocuments] Non-JSON response received (first 500 chars):', textResponse.substring(0, 500));
+        throw new Error(`Server returned HTML instead of JSON (Status: ${response.status}). This is a backend error - check server logs.`);
+      }
+
       const data = await response.json();
       console.log('📡 [uploadDocuments] Response data:', data);
       
