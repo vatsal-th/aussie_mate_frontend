@@ -24,42 +24,30 @@ const Header = () => {
         // First try to get from backend
         if (user) {
           const userProfile = await userAPI.getProfile();
-          if (userProfile.success && userProfile.data && userProfile.data.location) {
-            const location = userProfile.data.location;
+          console.log('📍 [Header] Backend profile response:', userProfile);
+          
+          // Check different possible locations for user data
+          const userData = userProfile.data?.user || userProfile.data || userProfile;
+          const location = userData?.location;
+          
+          if (location) {
+            console.log('📍 [Header] Backend location data:', location);
+            
+            // Extract address and city from fullAddress or address
+            const fullAddress = location.fullAddress || location.address || '';
+            const addressParts = fullAddress.split(',');
+            const address = addressParts[0]?.trim() || 'Location not set';
+            const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : (location.city || 'Please set your location');
+            
             setUserLocation({
-              address: location.address?.split(',')[0] || 'Location not set',
-              city: location.city || 'Please set your location'
+              address: address,
+              city: city
             });
             return;
           }
         }
       } catch (error) {
         console.error('Error fetching location from backend:', error);
-        // If it's an authentication error, use localStorage fallback
-        if (error.message === 'User not authenticated') {
-          console.warn('User authentication issue, using localStorage fallback');
-        }
-      }
-
-      // Fallback to localStorage
-      const storedLocation = localStorage.getItem('userLocation');
-      if (storedLocation) {
-        try {
-          const location = JSON.parse(storedLocation);
-          
-          // Extract address and city from fullAddress
-          const fullAddress = location.fullAddress || location.address || '';
-          const addressParts = fullAddress.split(',');
-          const address = addressParts[0]?.trim() || 'Location not set';
-          const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : (location.city || 'Please set your location');
-          
-          setUserLocation({
-            address: address,
-            city: city
-          });
-        } catch (error) {
-          console.error('Error parsing stored location:', error);
-        }
       }
     };
 
