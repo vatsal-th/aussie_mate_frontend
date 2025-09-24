@@ -174,7 +174,7 @@ const CustomerDashboard = () => {
               <input
                 type="text"
                 placeholder="Search services, e.g. bond clean..."
-                className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-gray-100 rounded-lg text-sm text-primary-200 font-medium"
+                className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-gray-100 rounded-lg text-sm text-primary-200 font-medium focus:outline-none"
               />
             </div>
             <Link to="/post-new-job" className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-3 sm:px-4 py-2 sm:py-2 rounded-full flex items-center justify-center space-x-2 transition-colors text-xs sm:text-sm whitespace-nowrap">

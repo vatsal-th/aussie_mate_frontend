@@ -669,9 +669,40 @@ export const userAPI = {
 
   // Document Verification API
   uploadDocuments: async (formData) => {
+    console.log('📄 [uploadDocuments] Starting document upload...');
+    
+    // Log FormData contents for debugging
+    console.log('📦 [uploadDocuments] FormData entries:');
+    let totalSize = 0;
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        const fileSizeMB = (value.size / (1024 * 1024)).toFixed(2);
+        totalSize += value.size;
+        console.log(`📦 [uploadDocuments] FormData[${key}]: File - ${value.name} (${fileSizeMB}MB)`, {
+          name: value.name,
+          type: value.type,
+          size: value.size,
+          sizeMB: fileSizeMB,
+          lastModified: value.lastModified
+        });
+      } else {
+        console.log(`📦 [uploadDocuments] FormData[${key}]:`, value);
+      }
+    }
+    const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+    console.log(`📦 [uploadDocuments] Total upload size: ${totalSizeMB}MB (${totalSize} bytes)`);
+
     try {
       // For FormData, we need to use fetch directly instead of apiRequest
       const token = getAuthToken();
+      console.log('🔑 [uploadDocuments] Auth token present:', !!token);
+
+      console.log('🌐 [uploadDocuments] Making API request to:', `${API_BASE_URL}/auth/documents`);
+      console.log('🌐 [uploadDocuments] Request method: POST');
+      console.log('🌐 [uploadDocuments] Request headers:', {
+        'Authorization': `Bearer ${token ? token.substring(0, 20) + '...' : 'null'}`
+      });
+
       const response = await fetch(`${API_BASE_URL}/auth/documents`, {
         method: 'POST',
         headers: {
@@ -680,20 +711,31 @@ export const userAPI = {
         body: formData, // Don't stringify FormData
       });
 
+      console.log('📡 [uploadDocuments] Response status:', response.status);
+      console.log('📡 [uploadDocuments] Response headers:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
       
       if (!response.ok) {
+        console.error('❌ [uploadDocuments] API Error Response:', data);
         const error = new Error(data.message || `API request failed with status ${response.status}`);
         error.status = response.status;
         error.response = data;
         throw error;
       }
 
+      console.log('✅ [uploadDocuments] Success response:', data);
       return data;
     } catch (error) {
-      console.error('Document upload API error:', error);
+      console.error('💥 [uploadDocuments] Document upload API error:', error);
+      console.error('💥 [uploadDocuments] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        status: error.status
+      });
       if (error.response) {
-        console.error('Document upload error response:', error.response);
+        console.error('💥 [uploadDocuments] Document upload error response:', error.response);
       }
       throw error;
     }
