@@ -24,14 +24,12 @@ const Header = () => {
         // First try to get from backend
         if (user) {
           const userProfile = await userAPI.getProfile();
-          console.log('📍 [Header] Backend profile response:', userProfile);
           
           // Check different possible locations for user data
           const userData = userProfile.data?.user || userProfile.data || userProfile;
           const location = userData?.location;
           
           if (location) {
-            console.log('📍 [Header] Backend location data:', location);
             
             // Extract address and city from fullAddress or address
             const fullAddress = location.fullAddress || location.address || '';
@@ -88,6 +86,15 @@ const Header = () => {
     }
   };
 
+  const handleChangeLocation = () => {
+    navigate('/location', { 
+      state: { 
+        fromPage: 'header',
+        step: 'header'
+      } 
+    });
+  };
+
   return (
     <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm overflow-hidden" >
       <div className="relative z-10 max-w-7xl mx-auto lg:rounded-b-2xl overflow-hidden">
@@ -111,6 +118,10 @@ const Header = () => {
             <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 truncate">
               {userLocation.city || 'City not set'}
             </div>
+          </div>
+
+          <div onClick={handleChangeLocation} className="text-xs sm:text-sm md:text-base font-medium text-[#1F6FEB]"> 
+            Change
           </div>
         </div>
 
