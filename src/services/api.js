@@ -745,8 +745,9 @@ export const userAPI = {
       } else if (error.message.includes('413')) {
         console.error('💥 [uploadDocuments] File too large error (413)');
         console.error('  - Server rejected the request due to file size');
-        console.error('  - Check server upload limits');
-        console.error('  - Consider compressing files');
+        console.error('  - Backend limit: 50MB per file, 500MB total');
+        console.error('  - Check if files exceed these limits');
+        console.error('  - Consider compressing files if needed');
       }
       
       if (error.response) {

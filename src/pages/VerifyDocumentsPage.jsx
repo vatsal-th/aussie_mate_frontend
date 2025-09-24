@@ -72,14 +72,14 @@
         lastModifiedDate: new Date(file.lastModified).toISOString()
       });
 
-      // Validate file size (2MB limit to avoid 413 errors)
-      const maxSize = 2 * 1024 * 1024; // 2MB in bytes (reduced to avoid 413 errors)
+      // Validate file size (50MB limit to match backend)
+      const maxSize = 50 * 1024 * 1024; // 50MB in bytes (matching backend limit)
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      console.log(`📄 [VerifyDocuments] File size validation: ${fileSizeMB}MB / 2MB (${file.size} / ${maxSize} bytes)`);
+      console.log(`📄 [VerifyDocuments] File size validation: ${fileSizeMB}MB / 50MB (${file.size} / ${maxSize} bytes)`);
       
       if (file.size > maxSize) {
-        console.error(`❌ [VerifyDocuments] File too large: ${fileSizeMB}MB > 2MB`);
-        setError('File size must be less than 2MB to avoid server errors. Please compress your file or use a smaller file.');
+        console.error(`❌ [VerifyDocuments] File too large: ${fileSizeMB}MB > 50MB`);
+        setError('File size must be less than 50MB. Please compress your file or use a smaller file.');
         return;
       }
 
@@ -248,11 +248,11 @@
           tfnNumber: formData.tfnNumber || 'not provided'
         });
 
-        // Additional validation for total upload size
-        const maxTotalSize = 5 * 1024 * 1024; // 5MB total limit
+        // Additional validation for total upload size (500MB total limit for up to 10 files)
+        const maxTotalSize = 500 * 1024 * 1024; // 500MB total limit (10 files × 50MB each)
         if (totalUploadSize > maxTotalSize) {
-          console.error(`❌ [VerifyDocuments] Total upload size too large: ${totalSizeMB}MB > 5MB`);
-          setError(`Total upload size (${totalSizeMB}MB) exceeds the 5MB limit. Please reduce file sizes or upload fewer files.`);
+          console.error(`❌ [VerifyDocuments] Total upload size too large: ${totalSizeMB}MB > 500MB`);
+          setError(`Total upload size (${totalSizeMB}MB) exceeds the 500MB limit. Please reduce file sizes or upload fewer files.`);
           setIsLoading(false);
           return;
         }
@@ -295,7 +295,7 @@
         if (error.message === 'Failed to fetch') {
           setError('Network error: Unable to connect to server. This might be due to CORS policy or server being down. Please check your internet connection and try again.');
         } else if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
-          setError('File too large: The server rejected the upload because the files are too large. Please reduce file sizes and try again.');
+          setError('File too large: The server rejected the upload because the files are too large. Please ensure each file is under 50MB and total upload is under 500MB.');
         } else if (error.message.includes('CORS')) {
           setError('CORS error: The server is not configured to accept requests from this domain. Please contact support.');
         } else {
