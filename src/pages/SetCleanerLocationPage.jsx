@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
-import Header from '../components/Header';
 import CurrentLocationIcon from '../assets/currentLocation.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import { userAPI } from '../services/api';
@@ -254,8 +253,6 @@ const SetCleanerLocationPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-xl mx-auto px-4 py-6">
         {/* Google Map Section */}
         <div className="h-80 rounded-t-2xl overflow-hidden border">

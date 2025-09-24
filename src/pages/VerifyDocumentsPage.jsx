@@ -1,6 +1,5 @@
   import React, { useState, useEffect } from 'react';
   import { useNavigate, useLocation } from 'react-router-dom';
-  import Header from '../components/Header';
   import UploadCloudIcon from '../assets/upload-cloud.svg';
   import { userAPI } from '../services/api';
 
@@ -199,7 +198,6 @@
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         
         <div className="max-w-3xl mx-auto px-4 py-6">
           <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom mt-5">
