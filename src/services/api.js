@@ -664,6 +664,20 @@ export const userAPI = {
     try {
       // For FormData, we need to use fetch directly instead of apiRequest
       const token = getAuthToken();
+      
+      console.log('📡 [uploadDocuments] Sending request to:', `${API_BASE_URL}/auth/documents`);
+      console.log('📡 [uploadDocuments] Token present:', !!token);
+      
+      // Log FormData contents for debugging
+      console.log('📦 [uploadDocuments] FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`📦 [uploadDocuments] FormData[${key}]: File - ${value.name} (${(value.size / 1024 / 1024).toFixed(2)}MB)`);
+        } else {
+          console.log(`📦 [uploadDocuments] FormData[${key}]:`, value);
+        }
+      }
+      
       const response = await fetch(`${API_BASE_URL}/auth/documents`, {
         method: 'POST',
         headers: {
@@ -672,15 +686,21 @@ export const userAPI = {
         body: formData, // Don't stringify FormData
       });
 
+      console.log('📡 [uploadDocuments] Response status:', response.status);
+      console.log('📡 [uploadDocuments] Response headers:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log('📡 [uploadDocuments] Response data:', data);
       
       if (!response.ok) {
+        console.error('❌ [uploadDocuments] API request failed:', data);
         const error = new Error(data.message || `API request failed with status ${response.status}`);
         error.status = response.status;
         error.response = data;
         throw error;
       }
 
+      console.log('✅ [uploadDocuments] Upload successful:', data);
       return data;
     } catch (error) {
       console.error('Document upload API error:', error);

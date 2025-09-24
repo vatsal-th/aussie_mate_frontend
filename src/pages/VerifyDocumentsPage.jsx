@@ -134,33 +134,61 @@
           formDataToSend.append('tfnNumber', formData.tfnNumber);
         }
 
+        console.log('📄 [VerifyDocuments] Form data before sending:', formData);
+
         // Add files to FormData (use original file objects)
         if (formData.policeCheck) {
+          console.log('📄 [VerifyDocuments] Adding policeCheck file:', formData.policeCheck);
           formDataToSend.append('policeCheck', formData.policeCheck.originalFile);
         }
         
         if (formData.visaWorkRights) {
+          console.log('📄 [VerifyDocuments] Adding visaWorkRights file:', formData.visaWorkRights);
           formDataToSend.append('visaWorkRights', formData.visaWorkRights.originalFile);
         }
         
         if (formData.trainingCertificates) {
+          console.log('📄 [VerifyDocuments] Adding trainingCertificates file:', formData.trainingCertificates);
           formDataToSend.append('trainingCertificates', formData.trainingCertificates.originalFile);
         }
 
+        console.log('📦 [VerifyDocuments] FormData prepared for upload');
         
         // Submit documents via API
+        console.log('📤 [VerifyDocuments] Calling uploadDocuments API...');
         const response = await userAPI.uploadDocuments(formDataToSend);
-        
+        console.log('📤 [VerifyDocuments] API response received:', response);
         
         if (response.success) {
+          console.log('✅ [VerifyDocuments] Upload successful, navigating to availability page');
           // Navigate to availability page
           navigate('/set-availability');
         } else {
+          console.error('❌ [VerifyDocuments] Upload failed:', response.message);
           setError(response.message || 'Failed to submit documents. Please try again.');
         }
       } catch (error) {
-        setError('Failed to submit documents. Please try again.');
+        console.error('💥 [VerifyDocuments] Error submitting documents:', error);
+        console.error('💥 [VerifyDocuments] Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        // Handle specific error types
+        if (error.message === 'Failed to fetch') {
+          setError('Network error: Unable to connect to server. Please check your internet connection and try again.');
+        } else if (error.message.includes('Server returned HTML instead of JSON') || error.type === 'JSON_PARSE_ERROR') {
+          setError('Server Error: The API endpoint is not working properly. This usually means the backend route is not configured correctly. Please contact support.');
+        } else if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
+          setError('File too large: The server rejected the upload. Please reduce file sizes and try again.');
+        } else if (error.message.includes('CORS')) {
+          setError('CORS error: The server is not configured to accept requests from this domain. Please contact support.');
+        } else {
+          setError(`Upload failed: ${error.message}. Please try again.`);
+        }
       } finally {
+        console.log('🏁 [VerifyDocuments] Document submission process completed');
         setIsLoading(false);
       }
     };
