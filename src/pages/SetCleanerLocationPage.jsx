@@ -82,11 +82,6 @@ const SetCleanerLocationPage = () => {
         const lng = userData.location?.coordinates?.lng;
         const addr = userData.address || userData.location?.address || userData.location?.fullAddress;
         
-        console.log('🔍 [SetCleanerLocation] Loading user data:', {
-          lat, lng, addr,
-          coordinates: userData.location?.coordinates,
-          location: userData.location
-        });
         
         // Check for valid coordinates (not null, not undefined, and not 0,0)
         const hasValidCoordinates = lat != null && lng != null && 
@@ -94,26 +89,12 @@ const SetCleanerLocationPage = () => {
                                    !isNaN(lat) && !isNaN(lng);
         
         if (hasValidCoordinates && addr) {
-          console.log('🔍 [SetCleanerLocation] Setting valid location:', { lat, lng, addr });
           setSelectedLocation({
             address: addr,
             fullAddress: addr,
             lat,
             lng,
           });
-        } else {
-          console.log('🔍 [SetCleanerLocation] Invalid coordinates or no address:', { 
-            hasValidCoordinates, 
-            lat, 
-            lng, 
-            addr 
-          });
-          
-          // If we have an address but no coordinates, try to get current location
-          if (addr && (!hasValidCoordinates)) {
-            console.log('🔍 [SetCleanerLocation] Attempting to get current location for address:', addr);
-            // Don't auto-get location, let user decide
-          }
         }
       } catch (_) {
         // ignore profile load errors; fall back to defaults
@@ -287,10 +268,6 @@ const SetCleanerLocationPage = () => {
         }
       };
       
-      console.log('🔍 [SetCleanerLocation] Saving location data:', {
-        selectedLocation,
-        locationData
-      });
       
 
       // Save location via API

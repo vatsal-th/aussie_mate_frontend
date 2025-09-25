@@ -19,6 +19,12 @@ const CleanerJobsPage = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const jobsPerPage = 10;
 
   // Filter states
   const [distance, setDistance] = useState(25);
@@ -134,22 +140,30 @@ const CleanerJobsPage = () => {
 
         const status = statusMap[activeTab];
 
-        // Fetch jobs from API
+        // Fetch jobs from API with pagination
         const response = await jobsAPI.getAllJobs({
           status: status,
-          page: 1,
-          limit: 50
+          page: currentPage,
+          limit: jobsPerPage
         });
 
         // Transform API data to match UI format
         const jobsData = response?.data?.jobs || response?.data || response || [];
+        
+        // Handle pagination data
+        const totalCount = response?.data?.total || response?.total || jobsData.length;
+        const totalPagesCount = Math.ceil(totalCount / jobsPerPage);
+        
+        
+        setTotalJobs(totalCount);
+        setTotalPages(totalPagesCount);
 
         // Get current user ID for filtering
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const currentUserId = currentUser.id || currentUser._id;
 
         const transformedJobs = jobsData.map(job => ({
-          id: job.jobId || job._id || job.id,
+          id: job._id || job.jobId || job.id, // Use _id first as it's the main identifier
           title: job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
           location: job.location?.address || job.location?.fullAddress || 'Location not specified',
           date: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
@@ -195,7 +209,7 @@ const CleanerJobsPage = () => {
     };
 
     fetchJobs();
-  }, [activeTab]);
+  }, [activeTab, currentPage]);
 
   // Helper function to calculate time ago
   const getTimeAgo = (date) => {
@@ -236,11 +250,33 @@ const CleanerJobsPage = () => {
     navigate(`/job-details/${jobId}`);
   };
 
+  // Pagination functions
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to page 1 when tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
+      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         {/* Top Navigation */}
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-3">
@@ -381,7 +417,7 @@ const CleanerJobsPage = () => {
                     {/* Job ID and Status */}
                     <div className="flex items-center justify-between mb-1">
                       <div className="text-sm text-primary-200 font-medium">
-                        {job.id || job.jobId || 'AM' + Math.random().toString(36).substr(2, 5).toUpperCase()}
+                        {job.originalJob?.jobId || job.id?.substring(0, 8) || 'AM' + Math.random().toString(36).substr(2, 5).toUpperCase()}
                       </div>
                       {activeTab === 'completed' && (
                         <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-500 text-white">
@@ -422,6 +458,77 @@ const CleanerJobsPage = () => {
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {!loading && jobs.length > 0 && (
+            <div className="px-4 pb-6">
+              <div className="flex items-center justify-between">
+                {/* Page Info */}
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * jobsPerPage) + 1} to {Math.min(currentPage * jobsPerPage, totalJobs)} of {totalJobs} jobs
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center space-x-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                    }`}
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-primary-500 text-white'
+                              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

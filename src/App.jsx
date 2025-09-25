@@ -29,6 +29,8 @@ import SetCleanerLocationPage from './pages/SetCleanerLocationPage'
 import SelectServicesPage from './pages/SelectServicesPage'
 import CleanerDashboard from './pages/CleanerDashboard'
 import CleanerJobsPage from './pages/CleanerJobsPage'
+import JobDetailsPage from './pages/JobDetailsPage'
+import CleanerChatPage from './pages/CleanerChatPage'
 import NotificationPage from './pages/NotificationPage'
 import EarningsPage from './pages/EarningsPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -158,6 +160,16 @@ function App() {
         <Route path="/cleaner-jobs" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <CleanerJobsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/job-details/:jobId" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <JobDetailsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/chat/:jobId" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <CleanerChatPage />
           </ProtectedRoute>
         } />
         <Route path="/earnings" element={

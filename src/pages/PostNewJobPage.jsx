@@ -515,9 +515,6 @@ const PostNewJobPage = () => {
         videos: []
       };
       
-      console.log('📸 Selected files before posting:', selectedFiles);
-      console.log('📸 Files object:', files);
-      console.log('📸 Photos length:', files.photos.length);
 
       // Create job
       const response = await jobsAPI.createJobWithFiles(jobData, files);

@@ -278,8 +278,8 @@ export const jobsAPI = {
     return apiRequest(`/jobs${qs ? `?${qs}` : ''}`);
   },
 
-  // Get job details with quotes
-  getJobDetails: async (jobId) => {
+  // Get job by ID (alias for getJobDetails)
+  getJobById: async (jobId) => {
     return apiRequest(`/jobs/${jobId}`);
   },
 
