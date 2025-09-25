@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import CurrentLocationIcon from '../assets/currentLocation.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
@@ -23,12 +23,15 @@ const libraries = ['places'];
 
 const SetCleanerLocationPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [searchRadius, setSearchRadius] = useState(25);
   const [customRadius, setCustomRadius] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [map, setMap] = useState(null);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
 
   // Google Maps API key
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY;
@@ -77,8 +80,13 @@ const SetCleanerLocationPage = () => {
 
         const lat = userData.location?.coordinates?.lat;
         const lng = userData.location?.coordinates?.lng;
-        const addr = userData.address || userData.location?.address;
+        const addr = userData.address || userData.location?.address || userData.location?.fullAddress;
         
+        console.log('🔍 [SetCleanerLocation] Loading user data:', {
+          lat, lng, addr,
+          coordinates: userData.location?.coordinates,
+          location: userData.location
+        });
         
         // Check for valid coordinates (not null, not undefined, and not 0,0)
         const hasValidCoordinates = lat != null && lng != null && 
@@ -86,12 +94,26 @@ const SetCleanerLocationPage = () => {
                                    !isNaN(lat) && !isNaN(lng);
         
         if (hasValidCoordinates && addr) {
+          console.log('🔍 [SetCleanerLocation] Setting valid location:', { lat, lng, addr });
           setSelectedLocation({
             address: addr,
             fullAddress: addr,
             lat,
             lng,
           });
+        } else {
+          console.log('🔍 [SetCleanerLocation] Invalid coordinates or no address:', { 
+            hasValidCoordinates, 
+            lat, 
+            lng, 
+            addr 
+          });
+          
+          // If we have an address but no coordinates, try to get current location
+          if (addr && (!hasValidCoordinates)) {
+            console.log('🔍 [SetCleanerLocation] Attempting to get current location for address:', addr);
+            // Don't auto-get location, let user decide
+          }
         }
       } catch (_) {
         // ignore profile load errors; fall back to defaults
@@ -216,6 +238,36 @@ const SetCleanerLocationPage = () => {
     }
   };
 
+  // Handle manual address input
+  const handleManualAddressSubmit = async () => {
+    if (!manualAddress.trim()) {
+      setError("Please enter an address.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Update only the address, keep the current coordinates
+      const location = {
+        address: manualAddress.trim(),
+        fullAddress: manualAddress.trim(),
+        lat: selectedLocation?.lat || null, // Keep current coordinates
+        lng: selectedLocation?.lng || null, // Keep current coordinates
+      };
+
+      setSelectedLocation(location);
+      setShowManualInput(false);
+      setManualAddress("");
+    } catch (err) {
+      console.error("Error saving manual address:", err);
+      setError("Failed to save address. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedLocation) {
       setError('Please select a location first.');
@@ -235,6 +287,11 @@ const SetCleanerLocationPage = () => {
         }
       };
       
+      console.log('🔍 [SetCleanerLocation] Saving location data:', {
+        selectedLocation,
+        locationData
+      });
+      
 
       // Save location via API
       const response = await userAPI.updateLocation(locationData);
@@ -247,7 +304,25 @@ const SetCleanerLocationPage = () => {
           // Don't fail the whole process if radius save fails
         }
         
-        navigate('/select-services');
+        // Dispatch location update event
+        window.dispatchEvent(new CustomEvent('locationUpdated', {
+          detail: {
+            address: selectedLocation.address,
+            city: selectedLocation.address?.split(',')[0] || 'Location not set',
+            coordinates: [selectedLocation.lng, selectedLocation.lat]
+          }
+        }));
+        
+        // Check if user came from Cleaner Jobs page
+        const fromCleanerJobs = location.state?.from === 'cleaner-jobs';
+        
+        if (fromCleanerJobs) {
+          // Navigate back to Cleaner Jobs page
+          navigate('/cleaner-jobs');
+        } else {
+          // Default navigation to select services
+          navigate('/select-services');
+        }
       } else {
         setError(response.message || 'Failed to save location. Please try again.');
       }
@@ -294,19 +369,67 @@ const SetCleanerLocationPage = () => {
         <div className="bg-white rounded-b-2xl p-6 space-y-6">
           {/* Address Display */}
           {selectedLocation ? (
-          <div className="flex items-start space-x-3">
-            <img src={MapPinIcon} alt="Location" className="w-5 h-5 mt-1 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-primary-500 text-sm">
-                  {selectedLocation.fullAddress || selectedLocation.address}
-              </p>
+          <div className="flex items-start justify-between space-x-3">
+            <div className="flex items-start space-x-3 flex-1">
+              <img src={MapPinIcon} alt="Location" className="w-5 h-5" />
+              <div className="flex-1">
+                <p className="font-semibold text-primary-500 text-sm">
+                    {selectedLocation.fullAddress || selectedLocation.address}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => {
+                setManualAddress(selectedLocation.fullAddress || selectedLocation.address || "");
+                setShowManualInput(true);
+              }}
+              className="text-sm text-[#1F6FEB] font-semibold hover:text-blue-700 cursor-pointer"
+            >
+              Change
+            </button>
           </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-gray-500 text-sm">
                 No location selected. Use the button below to get your current location or click on the map to select an area.
               </p>
+            </div>
+          )}
+
+          {/* Manual Address Input */}
+          {showManualInput && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-primary-500 mb-2">
+                  Enter Address Manually
+                </label>
+                <input
+                  type="text"
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="Enter your address..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none text-primary-200 font-medium "
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleManualAddressSubmit}
+                  disabled={isLoading || !manualAddress.trim()}
+                  className="flex-1 bg-[#1F6FEB] text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isLoading ? 'Saving...' : 'Save Address'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowManualInput(false);
+                    setManualAddress("");
+                    setError("");
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-primary-500 rounded-lg font-medium hover:bg-gray-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
@@ -336,7 +459,7 @@ const SetCleanerLocationPage = () => {
           <button
             onClick={handleUseCurrentLocation}
             disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2 border-2 border-primary-500 text-[#1F6FEB] py-3 px-4 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center space-x-2 border-2 border-primary-500 text-[#1F6FEB] py-3 px-4 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
@@ -396,7 +519,7 @@ const SetCleanerLocationPage = () => {
           <button
             onClick={handleSave}
             disabled={isLoading}
-            className= "bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-colors duration-200"
+            className= "bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-colors duration-200 cursor-pointer"
           >
             {isLoading ? 'Saving...' : 'Save Preferences'}
           </button>

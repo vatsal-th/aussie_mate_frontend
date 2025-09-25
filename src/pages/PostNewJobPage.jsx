@@ -35,6 +35,7 @@ const PostNewJobPage = () => {
     propertyType: '',
     bedrooms: 1,
     bathrooms: 1,
+    propertySize: '',
     addons: {
       carpetCleaning: false,
       windowCleaning: false,
@@ -747,6 +748,20 @@ const PostNewJobPage = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Property Size Section */}
+          <div className="">
+            <label className="text-sm font-medium text-primary-500 mb-2">
+              Property Size
+            </label>
+            <input
+              type="text"
+              value={formData.propertySize}
+              onChange={(e) => handleInputChange('propertySize', e.target.value)}
+              placeholder="Enter property size"
+              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+            />
           </div>
 
           {/* Add-ons Section */}

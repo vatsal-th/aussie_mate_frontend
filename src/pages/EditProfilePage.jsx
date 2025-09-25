@@ -391,7 +391,7 @@ const EditProfilePage = () => {
                   </div>
                 )}
                 {photoLoading && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                  <div className="absolute inset-0 bg-[#1F6FEB] bg-opacity-50 flex items-center justify-center rounded-full">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
