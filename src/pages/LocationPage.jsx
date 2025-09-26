@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { userAPI } from '../services/api';
-import currentLocationIcon from "../assets/currentLocation.svg";
+import CurrentLocationIcon from "../assets/currentLocation.svg";
 
 // Map container style
 const mapContainerStyle = {
@@ -310,7 +310,7 @@ const LocationPage = () => {
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
                 ) : (
                   <img
-                    src={currentLocationIcon}
+                    src={CurrentLocationIcon}
                     alt="Current location"
                     className="w-8 h-8"
                   />

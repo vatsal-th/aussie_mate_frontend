@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import { userAPI } from '../services/api';
-import currentLocationIcon from '../assets/currentLocation.svg';
+import CurrentLocationIcon from '../assets/currentLocation.svg';
 
 const ToggleSwitch = ({ isOn, onToggle, disabled = false }) => (
     <button
@@ -392,7 +392,7 @@ const AvailabilityPage = () => {
                             {loading ? (
                                 <div className="animate-spin rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-[#1F6FEB]"></div>
                             ) : (
-                                <img src={currentLocationIcon} alt="Location" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <img src={CurrentLocationIcon} alt="Location" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             )}
                             <span className="truncate">
                                 {loading ? "Getting location..." : "Use Current Location"}
