@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import FloatingLabelInput from '../components/FloatingLabelInput';
+import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import ChevronRightIcon from '../assets/chevron-right.svg';
 import ThreeDotIcon from '../assets/3dot.svg';
@@ -32,21 +34,65 @@ const WalletPage = () => {
   });
   const [bankForm, setBankForm] = useState({
     accountName: '',
+    bankName: '',
     bsb: '',
     accountNumber: '',
     setAsDefault: true
   });
   const [cardError, setCardError] = useState('');
   const [bankError, setBankError] = useState('');
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
+  const [itemType, setItemType] = useState(null);
+  const bankDropdownRef = useRef(null);
+
+  // Bank list
+  const bankList = [
+    'Commonwealth Bank of Australia',
+    'Australia and New Zealand Banking Group (ANZ)',
+    'National Australia Bank (NAB)',
+    'Westpac Banking Corporation',
+    'ING Bank (Australia) Limited',
+    'Bendigo and Adelaide Bank Limited',
+    'Bank of Queensland Limited',
+    'Macquarie Bank Limited',
+    'Bank Australia Limited',
+    'Heritage Bank',
+    'IMB Bank (IMB Ltd)',
+    'Credit Union Australia (trading as Great Southern Bank)',
+    'Australian Mutual Bank Limited',
+    'Auswide Bank Ltd',
+    'Bankwest (subsidiary of Commonwealth)',
+    'Alex Bank Pty Ltd',
+    'AMP Bank Ltd',
+    'Australian Military Bank',
+    'Australian Unity Bank Limited',
+    'Avenue Bank Limited',
+    'Bank of Us (B&E Ltd)',
+    'Beyond Bank Australia',
+    'BNK Banking Corporation Limited',
+    'Cairns Bank',
+    'Central Murray Bank (Central Murray Credit Union)',
+    'Coastline Bank (Coastline Credit Union)',
+    'Community First Bank / Credit Union (includes Easy Street Financial Services)',
+    'Credit Union SA Ltd',
+    'Defence Bank Limited',
+    'Ford Co‐operative Credit Society Ltd (trading as Geelong Bank)',
+    'Gateway Bank Ltd',
+    'Horizon Bank (Horizon Credit Union)',
+    'Hume Bank Limited',
+    'IN1Bank Ltd'
+  ];
 
   // Generate payment methods from API data
   const generatePaymentMethods = () => {
     const methods = [];
-    
+
     // Add existing cards
     cards.forEach(card => {
       const normalizedCardId = card?.id || card?._id;
-      if (!normalizedCardId) return; // skip cards without valid id
+      if (!normalizedCardId) return; 
       methods.push({
         id: `card_${normalizedCardId}`,
         type: card.cardType?.toLowerCase() || 'card',
@@ -59,23 +105,24 @@ const WalletPage = () => {
         cardData: card
       });
     });
-    
+
     // Add existing bank accounts
     bankAccounts.forEach(account => {
       const normalizedBankId = account?.id || account?._id;
-      if (!normalizedBankId) return; // skip accounts without valid id
+      if (!normalizedBankId) return; 
       methods.push({
         id: `bank_${normalizedBankId}`,
         type: 'bank',
-        name: 'Linked Bank',
+        name: `Linked Bank:- ${account.bankName}`,  
         subtitle: `BSB: ${account.bsb} •••• ${account.lastFourDigits}`,
         icon: BankIcon,
         isDefault: account.isDefault,
         isBank: true,
-        bankData: account
+        bankData: account,
+        bankName: account.bankName
       });
     });
-    
+
     // Add "Add Bank Account" if no bank accounts
     if (bankAccounts.length === 0) {
       methods.push({
@@ -88,7 +135,7 @@ const WalletPage = () => {
         isAddBank: true
       });
     }
-    
+
     // Add "Add New Card"
     methods.push({
       id: 'add-card',
@@ -99,7 +146,7 @@ const WalletPage = () => {
       isDefault: false,
       isAddCard: true
     });
-    
+
     return methods;
   };
 
@@ -175,14 +222,24 @@ const WalletPage = () => {
     }
   };
 
-  const handleRemove = async (methodId) => {
+  const handleRemove = (methodId) => {
+    setItemToRemove(methodId);
+    if (methodId.startsWith('card_')) {
+      setItemType('card');
+    } else if (methodId.startsWith('bank_')) {
+      setItemType('bank');
+    }
+    setShowConfirmationModal(true);
+    setActiveDropdown(null);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!itemToRemove) return;
+    
     try {
       setLoading(true);
-      if (!methodId) {
-        return;
-      }
-      if (methodId.startsWith('card_')) {
-        const cardId = methodId.replace('card_', '');
+      if (itemToRemove.startsWith('card_')) {
+        const cardId = itemToRemove.replace('card_', '');
         if (!cardId || cardId === 'undefined') {
           return;
         }
@@ -190,8 +247,8 @@ const WalletPage = () => {
         if (response.success) {
           await fetchWalletData(); // Refresh data
         }
-      } else if (methodId.startsWith('bank_')) {
-        const bankId = methodId.replace('bank_', '');
+      } else if (itemToRemove.startsWith('bank_')) {
+        const bankId = itemToRemove.replace('bank_', '');
         if (!bankId || bankId === 'undefined') {
           return;
         }
@@ -204,55 +261,66 @@ const WalletPage = () => {
       console.error('Error removing payment method:', error);
     } finally {
       setLoading(false);
-      setActiveDropdown(null);
+      setShowConfirmationModal(false);
+      setItemToRemove(null);
+      setItemType(null);
     }
+  };
+
+  const handleCancelRemove = () => {
+    setShowConfirmationModal(false);
+    setItemToRemove(null);
+    setItemType(null);
   };
 
   const handleClickOutside = (event) => {
     if (!event.target.closest('.dropdown-container')) {
       setActiveDropdown(null);
     }
+    if (bankDropdownRef.current && !bankDropdownRef.current.contains(event.target)) {
+      setShowBankDropdown(false);
+    }
   };
 
   const handleCardFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Handle expiry field formatting
     if (name === 'expiry') {
       // Remove any non-numeric characters
       const numericValue = value.replace(/\D/g, '');
-      
+
       // Format as MM/YY or MM/YYYY
       let formattedValue = numericValue;
       if (numericValue.length >= 2) {
         formattedValue = numericValue.substring(0, 2) + '/' + numericValue.substring(2, 6);
       }
-      
+
       setCardForm(prev => ({
         ...prev,
         [name]: formattedValue
       }));
       return;
     }
-    
+
     // Handle card number formatting
     if (name === 'cardNumber') {
       // Remove any non-numeric characters
       const numericValue = value.replace(/\D/g, '');
-      
+
       // Format as XXXX XXXX XXXX XXXX
       let formattedValue = numericValue;
       if (numericValue.length > 0) {
         formattedValue = numericValue.match(/.{1,4}/g)?.join(' ') || numericValue;
       }
-      
+
       setCardForm(prev => ({
         ...prev,
         [name]: formattedValue
       }));
       return;
     }
-    
+
     // Handle CVV formatting (only numbers, max 4 digits)
     if (name === 'cvv') {
       const numericValue = value.replace(/\D/g, '').substring(0, 4);
@@ -262,7 +330,7 @@ const WalletPage = () => {
       }));
       return;
     }
-    
+
     setCardForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -271,7 +339,7 @@ const WalletPage = () => {
 
   const handleBankFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Handle BSB formatting (only numbers, max 6 digits)
     if (name === 'bsb') {
       const numericValue = value.replace(/\D/g, '').substring(0, 6);
@@ -281,7 +349,7 @@ const WalletPage = () => {
       }));
       return;
     }
-    
+
     // Handle account number formatting (only numbers, max 10 digits)
     if (name === 'accountNumber') {
       const numericValue = value.replace(/\D/g, '').substring(0, 10);
@@ -291,11 +359,23 @@ const WalletPage = () => {
       }));
       return;
     }
-    
+
     setBankForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleBankSelect = (bankName) => {
+    setBankForm(prev => ({
+      ...prev,
+      bankName: bankName
+    }));
+    setShowBankDropdown(false);
+  };
+
+  const toggleBankDropdown = () => {
+    setShowBankDropdown(!showBankDropdown);
   };
 
   const handleAddCard = async (e) => {
@@ -321,10 +401,10 @@ const WalletPage = () => {
 
       // Parse expiry date
       const [month, year] = cardForm.expiry.split('/');
-      
+
       // Extract last four digits from card number
       const lastFourDigits = cleanCardNumber.slice(-4);
-      
+
       const cardData = {
         cardHolderName: cardForm.cardHolderName,
         cardNumber: cardForm.cardNumber,
@@ -335,7 +415,7 @@ const WalletPage = () => {
       };
 
       const response = await userAPI.addCard(cardData);
-      
+
       if (response.success) {
         await fetchWalletData(); // Refresh data
         setShowAddCardModal(false);
@@ -367,7 +447,7 @@ const WalletPage = () => {
         setLoading(false);
         return;
       }
-      
+
       // Validate account number (4-10 digits)
       if (bankForm.accountNumber.length < 4 || bankForm.accountNumber.length > 10) {
         setBankError('Account number must be between 4 and 10 digits');
@@ -377,9 +457,10 @@ const WalletPage = () => {
 
       const bankData = {
         accountName: bankForm.accountName,
+        bankName: bankForm.bankName,
         bsb: bankForm.bsb,
         accountNumber: bankForm.accountNumber,
-        setAsDefault: Boolean(bankForm.setAsDefault) // Ensure it's a boolean
+        setAsDefault: Boolean(bankForm.setAsDefault) 
       };
 
       const response = await userAPI.addBankAccount(bankData);
@@ -388,6 +469,7 @@ const WalletPage = () => {
         setShowAddBankModal(false);
         setBankForm({
           accountName: '',
+          bankName: '',
           bsb: '',
           accountNumber: '',
           setAsDefault: true
@@ -417,6 +499,7 @@ const WalletPage = () => {
     setShowAddBankModal(false);
     setBankForm({
       accountName: '',
+      bankName: '',
       bsb: '',
       accountNumber: '',
       setAsDefault: true
@@ -446,7 +529,7 @@ const WalletPage = () => {
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
@@ -479,7 +562,7 @@ const WalletPage = () => {
             <div className="absolute inset-0">
               <img src={WalletBG} alt="Wallet Background" className="w-full h-full object-cover" />
             </div>
-            
+
             {/* Content Overlay */}
             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 text-left">
@@ -510,9 +593,8 @@ const WalletPage = () => {
               .map((method, index) => (
                 <div
                   key={method.id || `method-${index}`}
-                  className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors ${
-                    method.isAddBank ? 'cursor-pointer hover:bg-gray-100' : ''
-                  }`}
+                  className={`relative flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg bg-[#F9FAFB] transition-colors ${method.isAddBank ? 'cursor-pointer hover:bg-gray-100' : ''
+                    }`}
                   onClick={method.isAddBank ? () => handlePaymentMethodAction(method) : undefined}
                 >
                   <div className="flex items-center space-x-3 sm:space-x-4">
@@ -588,7 +670,7 @@ const WalletPage = () => {
                     <button
                       onClick={() => handlePaymentMethodAction(method)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    > 
+                    >
                       <img src={ChevronRightIcon} alt="Arrow" className="w-5 h-5" />
                     </button>
                   </div>
@@ -600,7 +682,7 @@ const WalletPage = () => {
         {/* Card Carousel */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Your Cards</h3>
-          
+
           {/* Card Display */}
           <div className="relative mb-6">
             {loading ? (
@@ -613,11 +695,10 @@ const WalletPage = () => {
                   <div
                     key={card.id || card._id || `card-${index}`}
                     onClick={() => handleCardClick(index)}
-                    className={`flex-shrink-0 w-64 sm:w-72 md:w-80 h-40 sm:h-44 md:h-48 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 ${
-                      index === currentCardIndex
+                    className={`flex-shrink-0 w-64 sm:w-72 md:w-80 h-40 sm:h-44 md:h-48 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 ${index === currentCardIndex
                         ? 'bg-gradient-to-r from-blue-500 to-blue-700 scale-100'
                         : 'bg-gradient-to-r from-gray-300 to-gray-400 scale-95 opacity-70'
-                    }`}
+                      }`}
                   >
                     <div className="flex flex-col justify-between h-full text-white">
                       <div className="flex justify-between items-start">
@@ -671,11 +752,10 @@ const WalletPage = () => {
                 <button
                   key={index}
                   onClick={() => handleCardClick(index)}
-                  className={`transition-all duration-300 ${
-                    index === currentCardIndex
+                  className={`transition-all duration-300 ${index === currentCardIndex
                       ? 'bg-primary-500 w-6 h-2 sm:w-8 sm:h-2'
                       : 'bg-gray-300 w-2 h-2 sm:w-4 sm:h-2 hover:bg-gray-400 cursor-pointer'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -685,12 +765,12 @@ const WalletPage = () => {
 
       {/* Add New Card Modal */}
       {showAddCardModal && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
           onClick={closeModal}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md md:max-w-lg shadow-custom"
             onClick={(e) => e.stopPropagation()}
           >
@@ -721,52 +801,48 @@ const WalletPage = () => {
                 </div>
               )}
               {/* Card Holder Name */}
-              <div>
-                <input
-                  type="text"
-                  name="cardHolderName"
-                  value={cardForm.cardHolderName}
-                  onChange={handleCardFormChange}
-                  placeholder="Card holder name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                id="cardHolderName"
+                name="cardHolderName"
+                label="Card Holder Name"
+                type="text"
+                value={cardForm.cardHolderName}
+                onChange={handleCardFormChange}
+                required
+              />
 
               {/* Card Number */}
-              <div>
-                <input
-                  type="text"
-                  name="cardNumber"
-                  value={cardForm.cardNumber}
-                  onChange={handleCardFormChange}
-                  placeholder="Card Number"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                id="cardNumber"
+                name="cardNumber"
+                label="Card Number"
+                type="text"
+                value={cardForm.cardNumber}
+                onChange={handleCardFormChange}
+                required
+              />
 
               {/* Expiry and CVV */}
               <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                 <div className="flex-1">
-                  <input
-                    type="text"
+                  <FloatingLabelInput
+                    id="expiry"
                     name="expiry"
+                    label="MM/YY"
+                    type="text"
                     value={cardForm.expiry}
                     onChange={handleCardFormChange}
-                    placeholder="MM/YY"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
                 </div>
                 <div className="flex-1">
-                  <input
-                    type="text"
+                  <FloatingLabelInput
+                    id="cvv"
                     name="cvv"
+                    label="CVV"
+                    type="text"
                     value={cardForm.cvv}
                     onChange={handleCardFormChange}
-                    placeholder="123"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
                     required
                   />
                 </div>
@@ -803,12 +879,12 @@ const WalletPage = () => {
 
       {/* Add Bank Account Modal */}
       {showAddBankModal && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
           onClick={closeBankModal}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md md:max-w-lg shadow-custom"
             onClick={(e) => e.stopPropagation()}
           >
@@ -834,50 +910,80 @@ const WalletPage = () => {
             </div>
 
             <form onSubmit={handleAddBank} className="space-y-4">
-              {bankError && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                  {bankError}
-                </div>
-              )}
+
               {/* Account Name */}
-              <div>
-                <input
-                  type="text"
-                  name="accountName"
-                  value={bankForm.accountName}
-                  onChange={handleBankFormChange}
-                  placeholder="Account Name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
-                  required
-                />
+              <FloatingLabelInput
+                id="accountName"
+                name="accountName"
+                label="Account Name"
+                type="text"
+                value={bankForm.accountName}
+                onChange={handleBankFormChange}
+                required
+              />
+
+              {/* Bank Selection Dropdown */}
+              <div className="relative" ref={bankDropdownRef}>
+                <button
+                  type="button"
+                  onClick={toggleBankDropdown}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none text-left flex items-center justify-between bg-white"
+                >
+                  <span className={bankForm.bankName ? 'text-gray-900' : 'text-gray-500'}>
+                    {bankForm.bankName || 'Select your bank'}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${showBankDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showBankDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {bankList.map((bank, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleBankSelect(bank)}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                      >
+                        <span className="text-sm text-gray-900">{bank}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* BSB */}
-              <div>
-                  <input
-                    type="text"
-                    name="bsb"
-                    value={bankForm.bsb}
-                    onChange={handleBankFormChange}
-                    placeholder="BSB Number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
-                    required
-                  />
-              </div>
+              <FloatingLabelInput
+                id="bsb"
+                name="bsb"
+                label="BSB Number"
+                type="text"
+                value={bankForm.bsb}
+                onChange={handleBankFormChange}
+                required
+              />
 
               {/* Account Number */}
-              <div>
-                <input
-                  type="text"
-                  name="accountNumber"
-                  value={bankForm.accountNumber}
-                  onChange={handleBankFormChange}
-                  placeholder="Account Number (without spaces)"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none"
-                  required
-                />
-              </div>
-
+              <FloatingLabelInput
+                id="accountNumber"
+                name="accountNumber"
+                label="Account Number"
+                type="text"
+                value={bankForm.accountNumber}
+                onChange={handleBankFormChange}
+                required
+              />
+              {bankError && (
+                <div className="text-[#EF4444] text-sm font-medium" >
+                  {bankError}
+                </div>
+              )}
               {/* Set as Default Checkbox */}
               <div className="flex items-center">
                 <input
@@ -885,7 +991,7 @@ const WalletPage = () => {
                   name="setAsDefault"
                   checked={bankForm.setAsDefault}
                   onChange={handleBankFormChange}
-                    className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:outline-none cursor-pointer"
+                  className="w-4 h-4 text-primary-500 bg-gray-100 border-gray-300 rounded focus:outline-none cursor-pointer"
                 />
                 <label className="ml-2 text-sm font-medium text-gray-700">
                   Set as default payment
@@ -906,6 +1012,24 @@ const WalletPage = () => {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmationModal}
+        onClose={handleCancelRemove}
+        onConfirm={handleConfirmRemove}
+        title={itemType === 'card' ? "Remove Card?" : itemType === 'bank' ? "Remove Bank Account?" : "Remove Payment Method?"}
+        message={itemType === 'card' 
+          ? "Are you sure you want to remove this card? This action cannot be undone."
+          : itemType === 'bank' 
+          ? "Are you sure you want to remove this bank account? This action cannot be undone."
+          : "Are you sure you want to remove this payment method? This action cannot be undone."
+        }
+        confirmText="Remove"
+        cancelText="Cancel"
+        confirmButtonColor="bg-red-500 hover:bg-red-600"
+        isLoading={loading}
+      />
     </div>
   );
 };

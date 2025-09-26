@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
+import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import ThreeDotIcon from '../assets/3dot.svg';
 import CalendarIcon from '../assets/Calendar.svg';
@@ -20,6 +21,8 @@ const CustomerJobDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -101,11 +104,38 @@ const CustomerJobDetailsPage = () => {
 
   const handleCancelJob = () => {
     setShowDropdown(false);
-    // Handle cancel job logic
-    if (window.confirm('Are you sure you want to cancel this job?')) {
-      // Add cancel job API call here
-      console.log('Job cancelled');
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      setIsCancelling(true);
+      
+      // Call API to cancel/delete the job
+      const response = await jobsAPI.cancelJob(jobId);
+      
+      if (response.success) {
+        // Show success message briefly before navigating
+        console.log('Job cancelled successfully');
+        // Navigate back to jobs list after successful cancellation
+        navigate('/my-jobs');
+      } else {
+        console.error('Failed to cancel job:', response.message);
+        // Show error message or handle failure
+        setError('Failed to cancel job. Please try again.');
+        setShowCancelModal(false);
+      }
+    } catch (error) {
+      console.error('Error cancelling job:', error);
+      setError('Failed to cancel job. Please try again.');
+      setShowCancelModal(false);
+    } finally {
+      setIsCancelling(false);
     }
+  };
+
+  const handleCancelModalClose = () => {
+    setShowCancelModal(false);
   };
 
   // Mock cleaner quotes data
@@ -337,6 +367,19 @@ const CustomerJobDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Cancel Job Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        onClose={handleCancelModalClose}
+        onConfirm={handleConfirmCancel}
+        title="Cancel Job?"
+        message="Are you sure you want to cancel this job? This action cannot be undone and all cleaner quotes will be lost."
+        confirmText="Cancel Job"
+        cancelText="Keep Job"
+        confirmButtonColor="bg-[#EF4444] hover:bg-red-600"
+        isLoading={isCancelling}
+      />
     </div>
   );
 };
