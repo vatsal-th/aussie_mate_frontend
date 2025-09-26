@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -30,11 +31,11 @@ const LoginPage = () => {
 
     try {
       const response = await login(formData);
-      
+
       // Get user data from response
       const userData = response.data?.user || response.user;
       const userRole = userData?.role || userData?.userType;
-      
+
       // Navigate based on user role
       if (userRole === 'Customer') {
         navigate('/customer-dashboard');
@@ -62,7 +63,7 @@ const LoginPage = () => {
           <div className="flex items-center justify-center mb-6">
             <img src={logo} alt="Aussie Mate" className="h-16 w-auto" />
           </div>
-        
+
         </div>
 
         {/* Login Form */}
@@ -73,53 +74,42 @@ const LoginPage = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary-500 mb-2 text-center">Welcome Back</h2>
-          <p className="text-sm md:text-base text-primary-200 font-medium text-center">
-            Log in to continue booking and managing your cleaning services with ease.
-          </p>
-            <div>
-              <label className="block text-sm font-medium text-primary-500 mb-2">
-                Phone or email
-              </label>
-              <input
-                type="text"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 text-base"
-                placeholder="johndoe08@gmail.com"
-                required
-              />
-            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary-500 mb-2 text-center">Welcome Back</h2>
+            <p className="text-sm md:text-base text-primary-200 font-medium text-center">
+              Log in to continue booking and managing your cleaning services with ease.
+            </p>
+            <FloatingLabelInput
+              id="email"
+              name="email"
+              label="Phone or email"
+              type="text"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-primary-500 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 text-base"
-                  placeholder="JohnDoe@123"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
-                >
-                  {showPassword ? (
-                    <img src={eyeIcon} alt="Show password" className="w-5 h-5" />
-                  ) : (
-                    <img src={eyeOffIcon} alt="Hide password" className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
+            <FloatingLabelInput
+              id="password"
+              name="password"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+            >
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+              >
+                {showPassword ? (
+                  <img src={eyeIcon} alt="Show password" className="w-5 h-5" />
+                ) : (
+                  <img src={eyeOffIcon} alt="Hide password" className="w-5 h-5" />
+                )}
+              </button>
+            </FloatingLabelInput>
+            
             <div className="text-right">
               <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 font-medium cursor-pointer">
                 Forgot password?

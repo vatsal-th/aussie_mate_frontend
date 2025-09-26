@@ -267,8 +267,6 @@ const SetCleanerLocationPage = () => {
           lng: selectedLocation.lng
         }
       };
-      
-      
 
       // Save location via API
       const response = await userAPI.updateLocation(locationData);

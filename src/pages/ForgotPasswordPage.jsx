@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import logo from '../assets/logo.png';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 import ForgotSuccessIcon from '../assets/forgot success.svg';
 
 const ForgotPasswordPage = () => {
@@ -60,19 +61,19 @@ const ForgotPasswordPage = () => {
               <p className="text-sm text-gray-600 mb-6">
               We have sent a password recover instructions to your email.
               </p>
-              <div className="space-y-3">
-                <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
-                >
-                  Send Another Email
-                </button>
+              <div className="space-x-3 flex flex-col md:flex-row">
                 <Link
                   to="/"
-                  className="block w-full text-center text-primary-500 hover:text-primary-600 font-medium py-3 px-4 rounded-3xl border border-primary-500 hover:bg-primary-50 transition-colors duration-200 text-sm sm:text-base"
+                  className="block w-full text-center text-primary-500 hover:text-primary-600 font-medium py-3 px-4 rounded-3xl border border-primary-500 hover:bg-primary-50 transition-colors duration-200 text-sm sm:text-base cursor-pointer"
                 >
                   Back to Login
                 </Link>
+                <button
+                  onClick={() => setIsSubmitted(false)}
+                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base cursor-pointer"
+                >
+                  Send Another Email
+                </button>
               </div>
             </div>
           </div>
@@ -102,26 +103,20 @@ const ForgotPasswordPage = () => {
               {error}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div className="relative">
-              <input
-                type="email"
-                name="email"
-                placeholder=" "
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
-                required
-              />
-              <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Email Address
-              </label>
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4"> 
+            <FloatingLabelInput
+              label="Email Address"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
             
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
             >
               {isLoading ? 'Sending...' : 'Send Reset Link'}
             </button>
@@ -130,7 +125,7 @@ const ForgotPasswordPage = () => {
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               Remember your password?{' '}
-              <Link to="/ " className="text-primary-500 hover:text-primary-600 font-semibold">
+              <Link to="/ " className="text-primary-500 hover:text-primary-600 font-semibold cursor-pointer">
                 Sign In
               </Link>
             </p>

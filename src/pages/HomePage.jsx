@@ -79,11 +79,11 @@ const HomePage = () => {
                   <img src={logo} alt="Aussie Mate" className="h-12 w-auto" />
                 </div>
 
-                <h2 className="text-xl font-bold text-black mb-3 text-center">
+                <h2 className="text-xl font-bold text-primary-500 mb-3 text-center">
                   Find trusted cleaners & home helpers near you
                 </h2>
 
-                <p className="text-sm text-black text-opacity-80 mb-6 text-center">
+                <p className="text-sm text-primary-500 text-opacity-80 mb-6 text-center">
                   Post a job, compare quotes, book in minutes.
                 </p>
 
@@ -91,7 +91,7 @@ const HomePage = () => {
                 <div className="text-center space-y-4">
                   <Link 
                     to="/login"
-                    className="block w-full max-w-sm mx-auto bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
+                    className="block w-full max-w-sm mx-auto bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
                   >
                     Sign In
                   </Link>

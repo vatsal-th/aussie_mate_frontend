@@ -6,6 +6,7 @@ import InfoIcon from '../assets/info.svg';
 import SendIcon from '../assets/sendChat.svg';
 import { jobsAPI } from '../services/api';
 
+
 const CleanerChatPage = () => {
     const navigate = useNavigate();
     const { jobId } = useParams();
@@ -16,7 +17,8 @@ const CleanerChatPage = () => {
     const [error, setError] = useState('');
     const [quoteAmount, setQuoteAmount] = useState('');
     const [isNegotiable, setIsNegotiable] = useState(false);
-    const [showQuoteSummary, setShowQuoteSummary] = useState(false);
+    const [showBudgetModal, setShowBudgetModal] = useState(true); // Show modal on first load
+    const [sentQuote, setSentQuote] = useState(null);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -121,8 +123,14 @@ const CleanerChatPage = () => {
             };
 
             setMessages([...messages, quoteMessage]);
-            setShowQuoteSummary(false);
+            setShowBudgetModal(false);
             setQuoteAmount('');
+            setSentQuote({
+                base: quoteAmount,
+                addOns: [], // This can be updated later to include add-ons
+                total: quoteAmount,
+                isNegotiable
+            });
         }
     };
 
@@ -175,24 +183,22 @@ const CleanerChatPage = () => {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="min-h-screen bg-gray-50">
             <Header />
 
             {/* Chat Header */}
-            <div className="max-w-6xl mx-auto py-4">
-                <div className="flex items-center justify-between ">
-                    <div className="flex items-center space-x-3">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                        >
-                            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <h1 className="text-lg font-semibold text-primary-500 truncate">
-                                {getJobTitle(job)}
-                            </h1>
-                        </div>
+            <div className="max-w-6xl mx-auto py-4 px-4 sm:px-6">
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                        <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-lg font-semibold text-primary-500 truncate">
+                            {getJobTitle(job)}
+                        </h1>
                     </div>
                 </div>
             </div>
@@ -209,7 +215,7 @@ const CleanerChatPage = () => {
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+                <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 h-[50vh]">
                     <div className="space-y-4">
                         {messages.map((message) => (
                             <div
@@ -254,65 +260,81 @@ const CleanerChatPage = () => {
                         </button>
                     </div>
                 </div>
-                 {/* Toggle and Quote Summary */}
-                 <div className="bg-white px-4 py-4 sm:px-6 border-t border-gray-200">
-                     {/* Toggle Section */}
-                     <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-lg font-semibold text-primary-500">Quote Summary</h3>
-                         <div className="flex items-center space-x-2">
-                             <span className="text-sm text-primary-500 font-medium ">Is Negotiable?</span>
-                             <button
-                                 onClick={() => setIsNegotiable(!isNegotiable)}
-                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${isNegotiable ? 'bg-primary-500' : 'bg-gray-300'
-                                     }`}
-                             >
-                                 <span
-                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isNegotiable ? 'translate-x-6' : 'translate-x-1'
-                                         }`}
-                                 />
-                             </button>
-                         </div>
-                     </div>
 
-                     {/* Quote Summary - Only show when toggle is ON */}
-                     {isNegotiable && (
-                         <div className="space-y-4">
-                             <div>
-                                 <p className="text-sm text-gray-600 mb-2">Customer's Budget: <span className="font-semibold text-primary-500">${job.estimatedPrice || job.budget || 'Not specified'}</span></p>
-                                 <div className="flex items-center space-x-2">
-                                     <span className="text-sm text-gray-600">Your Quote:</span>
-                                     <input
-                                         type="number"
-                                         value={quoteAmount}
-                                         onChange={(e) => setQuoteAmount(e.target.value)}
-                                         placeholder="Enter amount"
-                                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                     />
-                                 </div>
-                             </div>
-
-                             <div className="flex space-x-3">
-                                 <button
-                                     onClick={() => {
-                                         setIsNegotiable(false);
-                                         setQuoteAmount('');
-                                     }}
-                                     className="flex-1 px-4 py-2 text-red-500 border border-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-                                 >
-                                     Cancel
-                                 </button>
-                                 <button
-                                     onClick={handleSendQuote}
-                                     disabled={!quoteAmount.trim()}
-                                     className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                                 >
-                                     Send Quote
-                                 </button>
-                             </div>
-                         </div>
-                     )}
-                 </div>
+                {/* Quote Summary inside chat */}
+                <div className="bg-white px-4 py-4 sm:px-6 border-t border-gray-100 mt-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-primary-500">Quote Summary</h3>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">Is Negotiable?</span>
+                            <button
+                                onClick={() => setIsNegotiable(!isNegotiable)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isNegotiable ? 'bg-primary-500' : 'bg-gray-300'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isNegotiable ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* Define Budget Modal */}
+            {showBudgetModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                >
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-primary-500">Define your budget</h3>
+                            </div>
+
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={quoteAmount}
+                                    onChange={(e) => setQuoteAmount(e.target.value)}
+                                    placeholder="Enter Budget"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+                                />
+                            </div>
+
+                            {quoteAmount && (
+                                <div className="flex items-start bg-primary-50 p-3 rounded-lg">
+                                    <img src={InfoIcon} alt="info" className="w-5 h-5 mr-2 mt-0.5" />
+                                    <p className="text-sm text-gray-600">
+                                        You cannot request a higher budget than the one you initially entered.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => {
+                                        setShowBudgetModal(false);
+                                        setQuoteAmount('');
+                                        setIsNegotiable(false);
+                                    }}
+                                    className="flex-1 text-center py-3 text-[#EF4444] font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSendQuote}
+                                    disabled={!quoteAmount.trim()}
+                                    className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400!"
+                                >
+                                    Post Budget
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

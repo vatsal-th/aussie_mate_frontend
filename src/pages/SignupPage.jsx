@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 import logo from '../assets/logo.png';
-import EyeIcon from '../assets/eye 1.svg';
-import EyeOffIcon from '../assets/eye-off 1.svg';
+import eyeIcon from '../assets/eye 1.svg';
+import eyeOffIcon from '../assets/eye-off 1.svg';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 
 
 const SignupPage = () => {
@@ -37,7 +39,7 @@ const SignupPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
@@ -99,7 +101,7 @@ const SignupPage = () => {
 
       // Prepare data for API
       const { agreeToTerms, ...userData } = formData;
-      
+
       // Format phone number for backend (E.164 for AU)
       const formatPhoneNumber = (phone) => {
         const cleaned = phone.replace(/[^\d+]/g, '');
@@ -142,11 +144,11 @@ const SignupPage = () => {
         userType: roleMapping[userData.role] || userData.role.toLowerCase(),
         role: userData.role, // Keep the original role for backend
       };
-      
-      
-      
+
+
+
       await register(apiData);
-      
+
       // Navigate based on user role
       if (formData.role === 'Customer') {
         navigate('/location');
@@ -155,11 +157,11 @@ const SignupPage = () => {
         navigate('/verify-documents');
       }
     } catch (error) {
-      
-      
+
+
       // Show more detailed error information
       let errorMessage = 'Registration failed. Please try again.';
-      
+
       if (error.status === 400) {
         errorMessage = 'Invalid data provided. Please check all fields and try again.';
         if (error.response && error.response.errors) {
@@ -176,7 +178,7 @@ const SignupPage = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -208,161 +210,135 @@ const SignupPage = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary-500 mb-2 text-center">Let's get started</h2>
-          <p className="text-sm sm:text-base text-primary-200 font-medium px-2 text-center">
-            Please provide the following details to set up your Aussie Mate account.
-          </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="relative">
-                <input
-                  type="text"
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary-500 mb-2 text-center">Let's get started</h2>
+            <p className="text-sm sm:text-base text-primary-200 font-medium px-2 text-center">
+              Please provide the following details to set up your Aussie Mate account.
+            </p>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FloatingLabelInput
+                  id="firstName"
                   name="firstName"
-                  placeholder=""
+                  label="First Name"
+                  type="text"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer text-base"
                   required
                 />
-                <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                  First Name
-                </label>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
+                <FloatingLabelInput
+                  id="lastName"
                   name="lastName"
-                  placeholder=""
+                  label="Last Name"
+                  type="text"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer text-base"
                   required
                 />
-                <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                  Last Name
-                </label>
               </div>
-            </div>
-            
-            <div className="relative">
-              <input
-                type="email"
+
+              <FloatingLabelInput
+                id="email"
                 name="email"
-                placeholder=""
+                label="Email Address"
+                type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
-                required  
+                required
               />
-              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Email Address
-              </label>
-            </div>
-            
-            <div className="relative">
-              <input
-                type="tel"
+              
+              <FloatingLabelInput
+                id="phone"
                 name="phone"
+                label="Phone Number"
+                type="tel"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
               />
-              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Phone Number
-              </label>
-            </div>
-            
-            {/* Role Selection */}
-            <div className="relative">
-              <div
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="w-full px-4 border border-gray-300 rounded-[36px] focus:outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
-              >
-                <span className={`${formData.role ? 'text-primary-500' : 'text-primary-500'}`}>
-                  {formData.role || 'Select your role'}
-                </span>
-              </div>
-              {/* Custom dropdown arrow */}
-              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                <svg 
-                  className={`w-5 h-5 text-primary-500 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
+
+              {/* Role Selection */}
+              <div className="relative">
+                <div
+                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                  className="w-full px-4 border border-gray-300 rounded-[36px] focus:outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-              
-              {/* Dropdown Options */}
-              {showRoleDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
-                  {roleOptions.map((role, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleRoleSelect(role)}
-                      className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl text-sm sm:text-base"
-                    >
-                      <span className="text-primary-500">{role}</span>
-                    </div>
-                  ))}
+                  <span className={`${formData.role ? 'text-primary-500' : 'text-gray-500 '}`}>
+                    {formData.role || 'Select your role'}
+                  </span>
                 </div>
-              )}
-            </div>
-            
-            
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
+                {/* Custom dropdown arrow */}
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg
+                    className={`w-5 h-5 text-primary-500 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {/* Dropdown Options */}
+                {showRoleDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
+                    {roleOptions.map((role, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleRoleSelect(role)}
+                        className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl text-sm sm:text-base"
+                      >
+                        <span className="text-primary-500">{role}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <FloatingLabelInput
+                id="password"
                 name="password"
-                placeholder=""
+                label="Password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
-              />
-              <label className="absolute left-4 top-2 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-primary-500 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
-                <img 
-                  src={showPassword ? EyeIcon :  EyeOffIcon} 
-                  alt={showPassword ? "Hide password" : "Show password"}
-                  className="w-5 h-5"
-                />
-              </button>
-            </div>
-            
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <img
+                    src={showPassword ? eyeIcon : eyeOffIcon}
+                    alt={showPassword ? "Hide password" : "Show password"}
+                    className="w-5 h-5"
+                  />
+                </button>
+              </FloatingLabelInput>
+
+              <FloatingLabelInput
+                id="confirmPassword"
                 name="confirmPassword"
-                placeholder=""
+                label="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
-              />
-              <label className="absolute left-4 top-1 text-base text-primary-500 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Confirm Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
-                <img 
-                  src={showConfirmPassword ? EyeIcon :  EyeOffIcon} 
-                  alt={showConfirmPassword ? "Hide password" : "Show password"}
-                  className="w-5 h-5"
-                />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <img
+                    src={showConfirmPassword ? eyeIcon : eyeOffIcon}
+                    alt={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="w-5 h-5"
+                  />
+                </button>
+              </FloatingLabelInput>
             </div>
-            
+
             {/* Terms & Conditions Checkbox */}
             <div className="flex items-center space-x-2 sm:space-x-3 mt-4 sm:mt-6">
               <div className="flex items-center justify-center">
@@ -371,7 +347,7 @@ const SignupPage = () => {
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                    className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:outline-none accent-primary-500 cursor-pointer"
+                  className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:outline-none accent-primary-500 cursor-pointer"
                   required
                 />
               </div>
@@ -385,22 +361,22 @@ const SignupPage = () => {
               </div>
             </div>
 
-          
-            
+
+
             <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
             >
-              {isLoading 
-                ? 'Creating Account...' 
-                : formData.role === 'Customer' 
-                  ? 'Continue & Set My Location' 
+              {isLoading
+                ? 'Creating Account...'
+                : formData.role === 'Customer'
+                  ? 'Continue & Set My Location'
                   : 'Continue For Verification'
               }
             </button>
           </form>
-          
+
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-base text-primary-200 font-medium">
               Already have an account?{' '}

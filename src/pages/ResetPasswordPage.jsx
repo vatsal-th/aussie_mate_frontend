@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import logo from '../assets/logo.png';
-import EyeIcon from '../assets/eye 1.svg';
-import EyeOffIcon from '../assets/eye-off 1.svg';
+import eyeIcon from '../assets/eye 1.svg';
+import eyeOffIcon from '../assets/eye-off 1.svg';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 
 const ResetPasswordPage = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +16,10 @@ const ResetPasswordPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [searchParams] = useSearchParams();
   const [token, setToken] = useState('');
+  const [isTokenLoading, setIsTokenLoading] = useState(true);
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');
@@ -25,6 +28,7 @@ const ResetPasswordPage = () => {
     } else {
       setError('Invalid or missing reset token. Please request a new password reset.');
     }
+    setIsTokenLoading(false);
   }, [searchParams]);
 
   const handleInputChange = (e) => {
@@ -103,6 +107,14 @@ const ResetPasswordPage = () => {
     );
   }
 
+  if (isTokenLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 sm:p-4">
       <div className="w-full max-w-md">
@@ -126,70 +138,61 @@ const ResetPasswordPage = () => {
           )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
+              <p className="text-sm md:text-base text-primary-200 font-medium mb-6 text-center">
+                Please enter a new password for your account.
+              </p>
+              <div className="space-y-3">
+              <FloatingLabelInput
+                id="password"
                 name="password"
-                placeholder=" "
+                label="New Password"
+                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
-              />
-              <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                New Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
-                <img 
-                  src={showPassword ? EyeOffIcon : EyeIcon} 
-                  alt={showPassword ? "Hide password" : "Show password"}
-                  className="w-5 h-5"
-                />
-              </button>
-            </div>
-            
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <img src={showPassword ? eyeIcon : eyeOffIcon} alt="Toggle password visibility" className="w-5 h-5" />
+                </button>
+              </FloatingLabelInput>
+
+              <FloatingLabelInput
+                id="confirmPassword"
                 name="confirmPassword"
-                placeholder=" "
+                label="Confirm New Password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl focus:outline-none transition-all duration-200 peer"
                 required
-              />
-              <label className="absolute left-4 top-2 text-base text-gray-400 transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-primary-500">
-                Confirm New Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               >
-                <img 
-                  src={showConfirmPassword ? EyeOffIcon : EyeIcon} 
-                  alt={showConfirmPassword ? "Hide password" : "Show password"}
-                  className="w-5 h-5"
-                />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <img src={showConfirmPassword ? eyeIcon : eyeOffIcon} alt="Toggle password visibility" className="w-5 h-5" />
+                </button>
+              </FloatingLabelInput>
+              </div>
             </div>
             
             <button
               type="submit"
-              disabled={isLoading || !token}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base"
+              disabled={isLoading}
+              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-6 cursor-pointer"
             >
-              {isLoading ? 'Resetting Password...' : 'Reset Password'}
+              {isLoading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
           
           <div className="text-center mt-4 sm:mt-6">
             <p className="text-xs sm:text-sm text-gray-600">
               Remember your password?{' '}
-              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold">
+              <Link to="/" className="text-primary-500 hover:text-primary-600 font-semibold cursor-pointer ">
                 Sign In
               </Link>
             </p>
