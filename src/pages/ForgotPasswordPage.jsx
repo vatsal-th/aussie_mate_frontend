@@ -106,12 +106,12 @@ const ForgotPasswordPage = () => {
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4"> 
             <FloatingLabelInput
               label="Email Address"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
             
             <button
               type="submit"

@@ -120,7 +120,7 @@ const Header = () => {
             </div>
           </div>
 
-          <div onClick={handleChangeLocation} className="text-xs sm:text-sm md:text-base font-medium text-[#1F6FEB] cursor-pointer"> 
+          <div onClick={handleChangeLocation} className="hidden sm:block text-xs sm:text-sm md:text-base font-medium text-[#1F6FEB] cursor-pointer"> 
             Change
           </div>
         </div>
