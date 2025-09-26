@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { userAPI } from '../services/api';
-import currentLocationIcon from "../assets/current location.svg";
+import currentLocationIcon from "../assets/currentLocation.svg";
 
 // Map container style
 const mapContainerStyle = {

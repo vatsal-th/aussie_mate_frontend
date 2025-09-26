@@ -263,27 +263,79 @@ const CleanerChatPage = () => {
 
                 {/* Quote Summary inside chat */}
                 <div className="bg-white px-4 py-4 sm:px-6 border-t border-gray-100 mt-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-primary-500">Quote Summary</h3>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-600">Is Negotiable?</span>
-                            <button
-                                onClick={() => setIsNegotiable(!isNegotiable)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isNegotiable ? 'bg-primary-500' : 'bg-gray-300'
-                                    }`}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isNegotiable ? 'translate-x-6' : 'translate-x-1'
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-primary-500">Define your budget</h3>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm text-primary-500 font-medium">Is Negotiable?</span>
+                                <button
+                                    onClick={() => setIsNegotiable(!isNegotiable)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${isNegotiable ? 'bg-primary-500' : 'bg-gray-300'
                                         }`}
-                                />
-                            </button>
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isNegotiable ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Budget Input - Only show when toggle is ON */}
+                        {isNegotiable && (
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    <input
+                                        type="number"
+                                        value={quoteAmount}
+                                        onChange={(e) => setQuoteAmount(e.target.value)}
+                                        placeholder="$30"
+                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+                                    />
+                                    <button
+                                        onClick={handleSendQuote}
+                                        disabled={!quoteAmount.trim()}
+                                        className="px-4 py-3 text-primary-500 font-medium hover:bg-primary-50 rounded-lg transition-colors cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        Post Budget
+                                    </button>
+                                </div>
+
+                                {quoteAmount && (
+                                    <div className="flex items-start bg-primary-50 p-3 rounded-lg">
+                                        <img src={InfoIcon} alt="info" className="w-5 h-5 mr-2 mt-0.5" />
+                                        <p className="text-sm text-gray-600">
+                                            You cannot request a higher budget than the one you initially entered.
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={() => {
+                                            setIsNegotiable(false);
+                                            setQuoteAmount('');
+                                        }}
+                                        className="flex-1 text-center py-3 text-[#EF4444] font-medium cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSendQuote}
+                                        disabled={!quoteAmount.trim()}
+                                        className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        Send Quote
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Define Budget Modal */}
-            {showBudgetModal && (
+            {showBudgetModal && !sentQuote && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center"
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                 >
@@ -319,14 +371,14 @@ const CleanerChatPage = () => {
                                         setQuoteAmount('');
                                         setIsNegotiable(false);
                                     }}
-                                    className="flex-1 text-center py-3 text-[#EF4444] font-medium"
+                                    className="flex-1 text-center py-3 text-[#EF4444] font-medium cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSendQuote}
                                     disabled={!quoteAmount.trim()}
-                                    className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400!"
+                                    className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400! disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     Post Budget
                                 </button>

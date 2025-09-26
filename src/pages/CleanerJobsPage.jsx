@@ -5,7 +5,7 @@ import ArrowLeftIcon from '../assets/arrow-left.svg';
 import DownIcon from '../assets/down2.svg';
 import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
-import CurrentLocationIcon from '../assets/currentlocation.svg';
+import CurrentLocationIcon from '../assets/currentLocation.svg';
 import UserIcon from '../assets/user.svg';
 import SearchIcon from '../assets/search.svg';
 import { jobsAPI, userAPI } from '../services/api';
