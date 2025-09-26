@@ -165,8 +165,38 @@ const SignupPage = () => {
       if (error.status === 400) {
         errorMessage = 'Invalid data provided. Please check all fields and try again.';
         if (error.response && error.response.errors) {
-          const errorDetails = Object.values(error.response.errors).join(', ');
-          errorMessage = `Validation errors: ${errorDetails}`;
+          // Handle different error formats
+          const errors = error.response.errors;
+          
+          // Handle array format with objects containing msg, path, type
+          if (Array.isArray(errors)) {
+            const errorMessages = errors.map(errorObj => {
+              if (errorObj.msg) {
+                return errorObj.msg;
+              } else if (errorObj.message) {
+                return errorObj.message;
+              } else if (typeof errorObj === 'string') {
+                return errorObj;
+              }
+              return String(errorObj);
+            });
+            errorMessage = errorMessages.join('. ');
+          } else if (typeof errors === 'object') {
+            // Extract error messages from object
+            const errorMessages = Object.entries(errors).map(([field, message]) => {
+              if (Array.isArray(message)) {
+                return `${field}: ${message.join(', ')}`;
+              } else if (typeof message === 'string') {
+                return `${field}: ${message}`;
+              } else if (typeof message === 'object' && message.message) {
+                return `${field}: ${message.message}`;
+              }
+              return `${field}: ${String(message)}`;
+            });
+            errorMessage = errorMessages.join('. ');
+          } else if (typeof errors === 'string') {
+            errorMessage = errors;
+          }
         }
       } else if (error.status === 409) {
         errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
@@ -175,6 +205,10 @@ const SignupPage = () => {
         if (error.response && error.response.message) {
           errorMessage = error.response.message;
         }
+      } else if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response && error.response.data && error.response.data.error) {
+        errorMessage = error.response.data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -204,11 +238,6 @@ const SignupPage = () => {
         </div>
         {/* Signup Form */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary-500 mb-2 text-center">Let's get started</h2>
             <p className="text-sm sm:text-base text-primary-200 font-medium px-2 text-center">
@@ -337,6 +366,11 @@ const SignupPage = () => {
                   />
                 </button>
               </FloatingLabelInput>
+              {error && (
+            <div className=" text-[#EF4444] font-medium rounded-lg text-sm leading-4 mt-0">
+              {error}
+            </div>
+          )}
             </div>
 
             {/* Terms & Conditions Checkbox */}

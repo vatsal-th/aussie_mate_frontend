@@ -5,6 +5,7 @@ import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
 import FloatingLabelInput from '../components/FloatingLabelInput';
+import errorIcon from '../assets/info.svg';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -45,7 +46,45 @@ const LoginPage = () => {
         navigate('/');
       }
     } catch (error) {
-      setError(error.message || 'Login failed. Please check your credentials.');
+      // Handle different types of login errors
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error.status === 401) {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.status === 404) {
+        errorMessage = 'No account found with this email. Please check your email or sign up for a new account.';
+      } else if (error.status === 400) {
+        errorMessage = 'Invalid email or password format. Please check your credentials.';
+      } else if (error.status === 422) {
+        errorMessage = 'Please enter a valid email and password.';
+      } else if (error.response && error.response.data) {
+        // Handle API error responses
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response.data.errors) {
+          // Handle validation errors
+          const errors = error.response.data.errors;
+          if (Array.isArray(errors)) {
+            const errorMessages = errors.map(errorObj => {
+              if (errorObj.msg) {
+                return errorObj.msg;
+              } else if (errorObj.message) {
+                return errorObj.message;
+              }
+              return String(errorObj);
+            });
+            errorMessage = errorMessages.join('. ');
+          } else if (typeof errors === 'string') {
+            errorMessage = errors;
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -68,11 +107,7 @@ const LoginPage = () => {
 
         {/* Login Form */}
         <div className="bg-white rounded-xl p-6 md:p-8 border-2 border-[#8B92A620]">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+       
           <form onSubmit={handleSubmit} className="space-y-6">
             <h2 className="text-2xl md:text-3xl font-bold text-primary-500 mb-2 text-center">Welcome Back</h2>
             <p className="text-sm md:text-base text-primary-200 font-medium text-center">
@@ -109,6 +144,11 @@ const LoginPage = () => {
                 )}
               </button>
             </FloatingLabelInput>
+            {error && (
+            <div className=" text-[#EF4444] font-medium rounded-lg text-sm leading-4 mt-0">
+              {error}
+            </div>
+          )}
             
             <div className="text-right">
               <Link to="/forgot-password" className="text-primary-500 hover:text-primary-600 font-medium cursor-pointer">

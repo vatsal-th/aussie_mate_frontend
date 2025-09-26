@@ -47,7 +47,14 @@ const ResetPasswordPage = () => {
     try {
       // Validate passwords match
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        setError('Passwords do not match. Please make sure both passwords are identical.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate password strength
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
         setIsLoading(false);
         return;
       }
@@ -61,7 +68,47 @@ const ResetPasswordPage = () => {
       await authAPI.resetPassword(token, formData.password, formData.confirmPassword);
       setIsSubmitted(true);
     } catch (error) {
-      setError(error.message || 'Failed to reset password. Please try again.');
+      // Handle different types of password reset errors
+      let errorMessage = 'Failed to reset password. Please try again.';
+      
+      if (error.status === 400) {
+        errorMessage = 'Invalid password format. Please check your password requirements.';
+        if (error.response && error.response.data && error.response.data.errors) {
+          // Handle validation errors
+          const errors = error.response.data.errors;
+          if (Array.isArray(errors)) {
+            const errorMessages = errors.map(errorObj => {
+              if (errorObj.msg) {
+                return errorObj.msg;
+              } else if (errorObj.message) {
+                return errorObj.message;
+              }
+              return String(errorObj);
+            });
+            errorMessage = errorMessages.join('. ');
+          } else if (typeof errors === 'string') {
+            errorMessage = errors;
+          }
+        }
+      } else if (error.status === 401) {
+        errorMessage = 'Invalid or expired reset token. Please request a new password reset.';
+      } else if (error.status === 422) {
+        errorMessage = 'Please check your password and try again.';
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.response && error.response.data) {
+        // Handle API error responses
+        if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -131,11 +178,7 @@ const ResetPasswordPage = () => {
 
         {/* Reset Password Form */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+          
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="relative">
               <p className="text-sm md:text-base text-primary-200 font-medium mb-6 text-center">
@@ -178,6 +221,11 @@ const ResetPasswordPage = () => {
                 </button>
               </FloatingLabelInput>
               </div>
+              {error && (
+            <div className="mb-4 text-[#EF4444] font-medium rounded-lg text-sm leading-4 mt-3">
+              {error}
+            </div>
+          )}
             </div>
             
             <button

@@ -98,11 +98,7 @@ const ForgotPasswordPage = () => {
 
         {/* Forgot Password Form */}
         <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+          
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4"> 
             <FloatingLabelInput
               label="Email Address"
@@ -111,7 +107,12 @@ const ForgotPasswordPage = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-              />
+              />  
+              {error && (
+            <div className="mb-4 text-[#EF4444] font-medium rounded-lg text-sm leading-4">
+              {error}
+            </div>
+          )}
             
             <button
               type="submit"
@@ -120,6 +121,7 @@ const ForgotPasswordPage = () => {
             >
               {isLoading ? 'Sending...' : 'Send Reset Link'}
             </button>
+            
           </form>
           
           <div className="text-center mt-4 sm:mt-6">
