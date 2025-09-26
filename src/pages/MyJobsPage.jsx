@@ -6,7 +6,8 @@ import SearchIcon from '../assets/search.svg';
 import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import UserIcon from '../assets/user.svg';
-import { jobsAPI } from '../services/api';
+import { jobsAPI, userAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const tabs = [
   { id: 'all', label: 'All' },
@@ -72,6 +73,7 @@ const getStatusChip = (statusRaw) => {
 
 const MyJobsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [jobs, setJobs] = useState([]);
@@ -81,7 +83,29 @@ const MyJobsPage = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
   const calendarRef = useRef(null);
+
+  // Get current user ID
+  useEffect(() => {
+    const getCurrentUserId = async () => {
+      try {
+        if (user?.id) {
+          setCurrentUserId(user.id);
+        } else {
+          // Fetch user profile to get ID
+          const userProfile = await userAPI.getProfile();
+          const userData = userProfile.data?.user || userProfile.data || userProfile;
+          setCurrentUserId(userData?._id || userData?.id);
+        }
+      } catch (error) {
+        console.error('Error fetching user ID:', error);
+        setError('Failed to load user information');
+      }
+    };
+
+    getCurrentUserId();
+  }, [user]);
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -94,10 +118,15 @@ const MyJobsPage = () => {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showCalendar]);
 
-  // Fetch jobs (all) with optional status filter per tab
+  // Fetch jobs posted by current user only
   useEffect(() => {
     const fetchJobs = async () => {
+      if (!currentUserId) return; // Wait for user ID
+
       try {
+        setLoading(true);
+        setError('');
+
         const statusParam = (() => {
           if (activeTab === 'ongoing') return 'in_progress';
           if (activeTab === 'completed') return 'completed';
@@ -108,8 +137,14 @@ const MyJobsPage = () => {
         const res = await jobsAPI.getAllJobs(statusParam ? { status: statusParam, page: 1, limit: 50 } : { page: 1, limit: 50 });
         const list = res?.data?.jobs || res?.data || res || [];
 
+        // Filter jobs to only show those posted by current user
+        const userJobs = list.filter((j) => {
+          const jobCustomerId = j.customerId?._id || j.customerId?.id || j.customer?._id || j.customer?.id || j.postedBy?._id || j.postedBy?.id;
+          return jobCustomerId === currentUserId;
+        });
+
         // Normalize into UI shape
-        const normalized = list.map((j) => {
+        const normalized = userJobs.map((j) => {
           const status = (j.status || '').toString();
           const address = j.location?.address || j.location?.fullAddress || '';
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
@@ -119,7 +154,7 @@ const MyJobsPage = () => {
           const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           return {
-            id: j.jobId || j._id || j.id || `job-${Math.random()}`,
+            id: j._id || j.jobId || j.id || `job-${Math.random()}`,
             title,
             status,
             dateLabel,
@@ -142,13 +177,14 @@ const MyJobsPage = () => {
         setJobs(sortedJobs);
         setAllJobs(sortedJobs); // Store original jobs
       } catch (e) {
-        setError('Failed to load jobs');
+        console.error('Error fetching jobs:', e);
+        setError('Failed to load your jobs');
       } finally {
         setLoading(false);
       }
     };
     fetchJobs();
-  }, [activeTab, navigate]);
+  }, [activeTab, currentUserId]);
 
   const filteredJobs = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -301,15 +337,28 @@ const MyJobsPage = () => {
         </div>
 
         {/* Job Cards */}
-        {loading && (
-          <div className="text-sm text-gray-500">Loading jobs...</div>
+        {!currentUserId && (
+          <div className="text-sm text-gray-500">Loading user information...</div>
+        )}
+        {currentUserId && loading && (
+          <div className="text-sm text-gray-500">Loading your jobs...</div>
         )}
         {(!loading && error) && (
           <div className="text-sm text-red-600">{error}</div>
         )}
+        {currentUserId && !loading && !error && filteredJobs.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-sm text-gray-500 mb-2">No jobs found</div>
+            <div className="text-xs text-gray-400">You haven't posted any jobs yet.</div>
+          </div>
+        )}
         <div className="space-y-3">
           {filteredJobs.map((job) => (
-            <div key={job.id} className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4">
+            <div 
+              key={job.id} 
+              onClick={() => navigate(`/customer-job-details/${job.id}`)}
+              className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            >
               <div className="flex items-start justify-between">
                 <div className="text-[15px] text-primary-200 font-medium">{job.id}</div>
                 {(() => { const chip = getStatusChip(job.status); return (

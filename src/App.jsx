@@ -31,6 +31,7 @@ import CleanerDashboard from './pages/CleanerDashboard'
 import CleanerJobsPage from './pages/CleanerJobsPage'
 import JobDetailsPage from './pages/JobDetailsPage'
 import CleanerChatPage from './pages/CleanerChatPage'
+import CustomerJobDetailsPage from './pages/CustomerJobDetailsPage'
 import NotificationPage from './pages/NotificationPage'
 import EarningsPage from './pages/EarningsPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -115,6 +116,11 @@ function App() {
         <Route path="/live-chat" element={
           <ProtectedRoute>
             <LiveChatPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-job-details/:jobId" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <CustomerJobDetailsPage />
           </ProtectedRoute>
         } />
         <Route path="/verify-documents" element={
