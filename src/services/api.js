@@ -520,8 +520,11 @@ export const userAPI = {
   },
 
   setDefaultCard: async (cardId) => {
-    return apiRequest(`/payments/cards/${cardId}/default`, {
+    return apiRequest(`/payments/cards/${cardId}`, {
       method: 'PUT',
+      body: JSON.stringify({
+        setAsDefault: true
+      }),
     });
   },
 
@@ -593,8 +596,11 @@ export const userAPI = {
   },
 
   setDefaultBankAccount: async (bankId) => {
-    return apiRequest(`/payments/bank-accounts/${bankId}/default`, {
+    return apiRequest(`/payments/bank-accounts/${bankId}`, {
       method: 'PUT',
+      body: JSON.stringify({
+        setAsDefault: true
+      }),
     });
   },
 
