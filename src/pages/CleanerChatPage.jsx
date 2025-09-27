@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import InfoIcon from '../assets/info.svg';
 import SendIcon from '../assets/sendChat.svg';
@@ -262,7 +263,7 @@ const CleanerChatPage = () => {
                 </div>
 
                 {/* Quote Summary inside chat */}
-                <div className="bg-white px-4 py-4 sm:px-6 border-t border-gray-100 mt-4">
+                <div className="bg-white border-t border-gray-100 mt-4">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold text-primary-500">Define your budget</h3>
@@ -281,104 +282,102 @@ const CleanerChatPage = () => {
                             </div>
                         </div>
 
-                        {/* Budget Input - Only show when toggle is ON */}
-                        {isNegotiable && (
-                            <div className="space-y-4">
-                                <div className="flex items-center space-x-3">
-                                    <input
+                        {/* Budget Input - Always visible */}
+                        <div className="space-y-3 sm:space-y-4">
+                            <div className="flex items-center space-x-1 sm:space-x-1">
+                                <div className="flex-1">
+                                    <FloatingLabelInput
+                                        id="quoteAmount"
+                                        name="quoteAmount"
+                                        label="Budget Amount"
                                         type="number"
-                                        value={quoteAmount}
+                                        value={isNegotiable ? quoteAmount : ''}
                                         onChange={(e) => setQuoteAmount(e.target.value)}
-                                        placeholder="$30"
-                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+                                        placeholder=""
+                                        maxLength={10}
                                     />
-                                    <button
-                                        onClick={handleSendQuote}
-                                        disabled={!quoteAmount.trim()}
-                                        className="px-4 py-3 text-primary-500 font-medium hover:bg-primary-50 rounded-lg transition-colors cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed"
-                                    >
-                                        Post Budget
-                                    </button>
                                 </div>
-
-                                {quoteAmount && (
-                                    <div className="flex items-start bg-primary-50 p-3 rounded-lg">
-                                        <img src={InfoIcon} alt="info" className="w-5 h-5 mr-2 mt-0.5" />
-                                        <p className="text-sm text-gray-600">
-                                            You cannot request a higher budget than the one you initially entered.
-                                        </p>
-                                    </div>
-                                )}
-
-                                <div className="flex space-x-3">
-                                    <button
-                                        onClick={() => {
-                                            setIsNegotiable(false);
-                                            setQuoteAmount('');
-                                        }}
-                                        className="flex-1 text-center py-3 text-[#EF4444] font-medium cursor-pointer"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSendQuote}
-                                        disabled={!quoteAmount.trim()}
-                                        className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
-                                    >
-                                        Send Quote
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Define Budget Modal */}
-            {showBudgetModal && !sentQuote && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-                >
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold text-primary-500">Define your budget</h3>
+                                <button
+                                    onClick={handleSendQuote}
+                                    disabled={!quoteAmount.trim()}
+                                    className="px-3 sm:px-4 py-2.5 sm:py-3 text-primary-500 font-medium hover:bg-primary-50 rounded-lg transition-colors cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed text-xs sm:text-sm"
+                                >
+                                    Post Budget
+                                </button>
                             </div>
 
-                            <div className="relative">
-                                <input
-                                    type="number"
-                                    value={quoteAmount}
-                                    onChange={(e) => setQuoteAmount(e.target.value)}
-                                    placeholder="Enter Budget"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
-                                />
-                            </div>
-
-                            {quoteAmount && (
-                                <div className="flex items-start bg-primary-50 p-3 rounded-lg">
-                                    <img src={InfoIcon} alt="info" className="w-5 h-5 mr-2 mt-0.5" />
-                                    <p className="text-sm text-gray-600">
-                                        You cannot request a higher budget than the one you initially entered.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="flex items-center gap-4">
+                            <div className="flex space-x-3">
                                 <button
                                     onClick={() => {
-                                        setShowBudgetModal(false);
-                                        setQuoteAmount('');
                                         setIsNegotiable(false);
+                                        setQuoteAmount('');
                                     }}
-                                    className="flex-1 text-center py-3 text-[#EF4444] font-medium cursor-pointer"
+                                    className="flex-1 text-center py-2.5 sm:py-3 text-[#EF4444] font-medium cursor-pointer text-xs sm:text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSendQuote}
                                     disabled={!quoteAmount.trim()}
-                                    className="flex-1 bg-primary-500 text-white py-3 rounded-lg font-medium disabled:bg-gray-400! disabled:cursor-not-allowed cursor-pointer"
+                                    className="flex-1 bg-primary-500 text-white py-2.5 sm:py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm"
+                                >
+                                    Send Quote
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Define Budget Modal */}
+            {showBudgetModal && !sentQuote && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                >
+                    <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-xs sm:max-w-sm mx-auto">
+                        <div className="space-y-3 sm:space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-primary-500">Define your budget</h3>
+                            </div>
+
+                            <div className="relative">
+                                <FloatingLabelInput
+                                    id="modalQuoteAmount"
+                                    name="modalQuoteAmount"
+                                    label="Budget Amount"
+                                    type="number"
+                                    value={isNegotiable ? quoteAmount : ''}
+                                    onChange={(e) => setQuoteAmount(e.target.value)}
+                                    placeholder=""
+                                    maxLength={10}
+                                />
+                            </div>
+                            
+
+                            {quoteAmount && (
+                                <div className="flex items-start bg-primary-50 p-2 sm:p-2.5 md:p-3 rounded-lg">
+                                    <img src={InfoIcon} alt="info" className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2 mt-0.5 flex-shrink-0" />
+                                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                                        You cannot request a higher budget than the one you initially entered.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 md:gap-4">
+                                <button
+                                    onClick={() => {
+                                        setShowBudgetModal(false);
+                                        setQuoteAmount('');
+                                        setIsNegotiable(false);
+                                    }}
+                                    className="w-full sm:flex-1 text-center py-2 sm:py-2.5 md:py-3 text-[#EF4444] font-medium cursor-pointer text-xs sm:text-sm md:text-base"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSendQuote}
+                                    disabled={!quoteAmount.trim()}
+                                    className="w-full sm:flex-1 bg-primary-500 text-white py-2 sm:py-2.5 md:py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm md:text-base"
                                 >
                                     Post Budget
                                 </button>

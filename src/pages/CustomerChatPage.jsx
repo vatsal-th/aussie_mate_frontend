@@ -104,14 +104,14 @@ const CustomerChatPage = () => {
   };
   
   return (
-    <div className="min-h-screen! bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       
       {/* Chat Header */}
-      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3 px-3 sm:px-4 flex items-center">
+      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3 flex items-center">
         <button
           onClick={() => navigate(-1)}
-          className="mr-2 sm:mr-3 p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="mr-2 sm:mr-3 hover:bg-gray-100 rounded-lg transition-colors p-1 cursor-pointer"
         >
           <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
@@ -122,7 +122,7 @@ const CustomerChatPage = () => {
       
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl bg-white rounded-xl shadow-custom pt-1 overflow-x-hidden">
       {/* Safety Banner */}
-      <div className="bg-[#F9FAFB] px-3 sm:px-4 py-2 sm:py-3 mx-3 sm:mx-4 mt-3 sm:mt-4 rounded-2xl shadow-custom border border-[#E5E7EB]">
+      <div className="bg-[#F9FAFB] px-3 sm:px-4 py-2 sm:py-3 mt-3 sm:mt-4 rounded-2xl shadow-custom border border-[#E5E7EB] max-w-lg mx-auto">
         <div className="flex items-start space-x-2 sm:space-x-3">
           <img src={InfoIcon} alt="Info" className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
           <p className="text-xs sm:text-sm text-primary-200 font-medium leading-relaxed">
@@ -187,7 +187,7 @@ const CustomerChatPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Message..."
-            className="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 shadow-custom bg-[#F9FAFB]"
+            className="flex-1 px-3 py-3 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 shadow-custom bg-[#F9FAFB]"
           />
           <button
             onClick={handleSendMessage}
