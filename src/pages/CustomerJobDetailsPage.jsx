@@ -10,7 +10,6 @@ import UserIcon from '../assets/user.svg';
 import RatingIcon from '../assets/rating.svg';
 import SilverBadgeIcon from '../assets/silverBadge.svg';
 import MessageIcon from '../assets/message2.svg';
-import EditIcon from '../assets/edit.svg';
 import CloseIcon from '../assets/close.svg';
 import { jobsAPI } from '../services/api';
 
@@ -241,15 +240,6 @@ const CustomerJobDetailsPage = () => {
             {showDropdown && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
                 <div className="py-2">
-                  {/* Edit Job Option */}
-                  <button
-                    onClick={handleEditJob}
-                    className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <img src={EditIcon} alt="Edit" className="w-6 h-6" />
-                    <span className="text-sm font-medium text-gray-700">Edit Job</span>
-                  </button>
-                  
                   {/* Cancel Job Option */}
                   <button
                     onClick={handleCancelJob}
