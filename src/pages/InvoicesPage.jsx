@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import SearchIcon from '../assets/search.svg';
 import CalendarIcon from '../assets/Calendar.svg';
@@ -16,7 +17,11 @@ const InvoicesPage = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const calendarRef = useRef(null);
+    const dropdownRef = useRef(null);
 
     // Sample invoice data
     const invoices = [
@@ -99,13 +104,14 @@ const InvoicesPage = () => {
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleOutside = (e) => {
-            if (showDropdown) {
-                setShowDropdown(null);
-            }
+          if (showDropdown && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+            setShowDropdown(null);
+          }
         };
         document.addEventListener('mousedown', handleOutside);
         return () => document.removeEventListener('mousedown', handleOutside);
-    }, [showDropdown]);
+      }, [showDropdown]);
+      
 
 
     // Filter invoices based on search query and date range
@@ -145,8 +151,38 @@ const InvoicesPage = () => {
     };
 
     const handleInvoiceAction = (action, invoiceId) => {
-        console.log(`${action} for invoice ${invoiceId}`);
-        setShowDropdown(null);
+        if (action === 'download') {
+            console.log(`Download invoice ${invoiceId}`);
+            setShowDropdown(null);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            setIsDeleting(true);
+            
+            // Here you would call the API to delete the invoice
+            // const response = await invoicesAPI.deleteInvoice(invoiceToDelete);
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            setShowDeleteModal(false);
+            setInvoiceToDelete(null);
+            
+            // You might want to refresh the invoices list here
+            // fetchInvoices();
+            
+        } catch (error) {
+            console.error('Error deleting invoice:', error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteModal(false);
+        setInvoiceToDelete(null);
     };
 
     return (
@@ -255,24 +291,34 @@ const InvoicesPage = () => {
                                  <div className="relative">
                                      <button
                                          onClick={() => toggleDropdown(invoice.id)}
-                                         className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                         className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                                      >
                                          <img src={ThreeDotIcon} alt="More options" className="w-5 h-5" />
                                      </button>
                                      
                                      {/* Three Dot Menu Dropdown */}
                                      {showDropdown === invoice.id && (
-                                         <div className="absolute right-0 top-full w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                         <div 
+                                             className="invoice-dropdown absolute right-0 top-full w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-40"
+                                             onClick={(e) => e.stopPropagation()}
+                                         >
                                              <div className="py-1">
                                                  <button
-                                                     onClick={() => handleInvoiceAction('download', invoice.id)}
+                                                     onClick={(e) => {
+                                                         e.stopPropagation();
+                                                         handleInvoiceAction('download', invoice.id);
+                                                     }}
                                                      className="w-full px-4 py-3 text-left text-sm text-primary-200 font-medium hover:bg-gray-100 transition-colors flex items-center gap-3 cursor-pointer"
                                                  >
                                                      <img src={DownloadIcon} alt="Download" className="w-4 h-4" />
                                                      Download PDF
                                                  </button>
                                                  <button
-                                                     onClick={() => handleInvoiceAction('delete', invoice.id)}
+                                                     onClick={() => {
+                                                         setInvoiceToDelete(invoice.id);
+                                                         setShowDeleteModal(true);
+                                                         setShowDropdown(null);
+                                                     }}
                                                      className="w-full px-4 py-3 text-left text-sm text-[#EF4444] font-medium hover:bg-red-50 transition-colors flex items-center gap-3 cursor-pointer"
                                                  >
                                                      <img src={TrashRedIcon} alt="Delete" className="w-4 h-4" />
@@ -311,6 +357,19 @@ const InvoicesPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Delete Invoice Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Delete Invoice?"
+                message={`Are you sure you want to delete invoice ${invoiceToDelete}? This action cannot be undone.`}
+                confirmText="Delete Invoice"
+                cancelText="Cancel"
+                confirmButtonColor="bg-[#EF4444] hover:bg-red-600"
+                isLoading={isDeleting}
+            />
         </div>
     );
 };

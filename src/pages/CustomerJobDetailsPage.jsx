@@ -355,7 +355,7 @@ const CustomerJobDetailsPage = () => {
 
                   {/* Action button */}
                   <button
-                    onClick={() => navigate(`/chat/${jobId}?cleaner=${cleaner.id}`)}
+                    onClick={() => navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`)}
                     className="text-[#1F6FEB] px-3 sm:px-4 py-2 rounded-xl! flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer w-full sm:w-auto mt-2 sm:mt-0 sm:ml-4 border border-[#9CC0F6] shadow-custom cursor-pointer" 
                   >
                     <img src={MessageIcon} alt="Message" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

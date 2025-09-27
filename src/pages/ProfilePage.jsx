@@ -57,44 +57,30 @@ const ProfilePage = () => {
     const fetchJobStats = async () => {
       try {
         if (user) {
-          // Try different API endpoints to get jobs
-          let jobsResponse;
+          const currentUserId = user.id || user._id;
           let jobs = [];
           
           try {
-            // First try getCustomerJobs
-            jobsResponse = await jobsAPI.getCustomerJobs(user.id || user._id);
+            // Try to get all jobs first
+            const jobsResponse = await jobsAPI.getAllJobs();
             if (jobsResponse.success) {
               jobs = jobsResponse.data.jobs || jobsResponse.data || [];
             }
           } catch (e) {
-            // getCustomerJobs failed, will try getAllJobs
+            console.error('Error fetching jobs:', e);
           }
           
-          // If no jobs from getCustomerJobs, try getAllJobs with completed filter
-          if (jobs.length === 0) {
-            try {
-              jobsResponse = await jobsAPI.getAllJobs({ status: 'completed' });
-              if (jobsResponse.success) {
-                jobs = jobsResponse.data.jobs || jobsResponse.data || [];
-              }
-            } catch (e) {
-              // getAllJobs with completed filter failed, trying all jobs
-              jobsResponse = await jobsAPI.getAllJobs();
-              if (jobsResponse.success) {
-                jobs = jobsResponse.data.jobs || jobsResponse.data || [];
-              }
-            }
-          }
+          // Filter jobs to only include those posted by current customer
+          const customerJobs = jobs.filter(job => {
+            const jobCustomerId = job.customerId?._id || job.customerId?.id || job.customer?._id || job.customer?.id || job.postedBy?._id || job.postedBy?.id;
+            return jobCustomerId === currentUserId;
+          });
           
-          // Check different possible status values
-          const completedJobs = jobs.filter(job => 
-            job.status === 'completed' || 
-            job.status === 'Completed' || 
-            job.status === 'COMPLETED' ||
-            job.jobStatus === 'completed' ||
-            job.jobStatus === 'Completed'
-          ).length;
+          // Count completed jobs with various status formats
+          const completedJobs = customerJobs.filter(job => {
+            const status = (job.status || '').toString().toLowerCase();
+            return status === 'completed' || status === 'done' || status === 'finished';
+          }).length;
           
           setJobStats(prev => ({ ...prev, completed: completedJobs }));
         }
