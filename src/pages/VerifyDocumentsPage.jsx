@@ -2,6 +2,7 @@
   import { useNavigate, useLocation } from 'react-router-dom';
   import UploadCloudIcon from '../assets/upload-cloud.svg';
   import { userAPI } from '../services/api';
+  import FloatingLabelInput from '../components/FloatingLabelInput';
 
   const VerifyDocumentsPage = () => {
     const navigate = useNavigate();
@@ -53,6 +54,31 @@
 
     const handleInputChange = (e) => {
       const { name, value } = e.target;
+
+      // Special handling for ABN Number - only allow digits and limit to 11 characters
+      if (name === 'abnNumber') {
+        const digitsOnly = value.replace(/[^\d]/g, '');
+        if (digitsOnly.length <= 11) {
+          setFormData({
+            ...formData,
+            [name]: digitsOnly
+          });
+        }
+        return;
+      }
+
+      // Special handling for TFN Number - only allow digits and limit to 9 characters
+      if (name === 'tfnNumber') {
+        const digitsOnly = value.replace(/[^\d]/g, '');
+        if (digitsOnly.length <= 9) {
+          setFormData({
+            ...formData,
+            [name]: digitsOnly
+          });
+        }
+        return;
+      }
+
       setFormData({
         ...formData,
         [name]: value
@@ -115,6 +141,20 @@
         // Validate required fields
         if (!formData.abnNumber.trim()) {
           setError('ABN Number is required.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate ABN Number - must be exactly 11 digits
+        if (formData.abnNumber.length !== 11) {
+          setError('ABN Number must be exactly 11 digits.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate TFN Number - must be exactly 9 digits if provided
+        if (formData.tfnNumber && formData.tfnNumber.length !== 9) {
+          setError('TFN Number must be exactly 9 digits.');
           setIsLoading(false);
           return;
         }
@@ -229,16 +269,15 @@
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* ABN Number */}
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-primary-500 mb-2">
-                  ABN Number
-                </label>
-                <input
-                  type="text"
+                <FloatingLabelInput
+                  id="abnNumber"
                   name="abnNumber"
+                  label="ABN Number (11-digit)"
+                  type="text"
                   value={formData.abnNumber}
                   onChange={handleInputChange}
-                  placeholder="Enter your 11-digit ABN"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 font-medium "
+                  placeholder=""
+                  maxLength={11}
                   required
                 />
                 <p className="text-sm text-primary-200 font-medium mt-1">
@@ -246,19 +285,18 @@
                 </p>
               </div>
 
-              {/* TFN Number - Only for Professional Cleaner */}
+              {/* TFN Number - Only for Student Cleaner */}
               {userRole === 'Student Cleaner' && (
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-primary-500 mb-2">
-                    TFN (Tax File Number)
-                  </label>
-                  <input
-                    type="text"
+                  <FloatingLabelInput
+                    id="tfnNumber"
                     name="tfnNumber"
+                    label="TFN (Tax File Number)"
+                    type="text"
                     value={formData.tfnNumber}
                     onChange={handleInputChange}
-                    placeholder="Enter number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 font-medium"
+                    placeholder=""
+                    maxLength={9}
                     required
                   />
                   <p className="text-sm text-primary-200 font-medium mt-1">

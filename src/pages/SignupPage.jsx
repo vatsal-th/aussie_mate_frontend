@@ -40,6 +40,25 @@ const SignupPage = () => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
 
+    // Special handling for phone number - only allow digits, ignore leading 0, limit to 9 characters
+    if (name === 'phone') {
+      let digitsOnly = value.replace(/[^\d]/g, '');
+      
+      // Remove leading 0 if present
+      if (digitsOnly.startsWith('0')) {
+        digitsOnly = digitsOnly.substring(1);
+      }
+      
+      // Limit to 9 characters maximum
+      if (digitsOnly.length <= 9) {
+        setFormData({
+          ...formData,
+          [name]: digitsOnly
+        });
+      }
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
@@ -81,12 +100,10 @@ const SignupPage = () => {
         return;
       }
 
-      // Validate Australian phone number (mobile or landline)
-      const cleanedPhoneForValidation = formData.phone.replace(/[^\d+]/g, '');
-      const auMobile = /^(?:\+?61|0)4\d{8}$/; // +61 4xxxxxxxx or 04xxxxxxxx
-      const auLandline = /^(?:\+?61|0)[2378]\d{8}$/; // +61 2/3/7/8 xxxxxxxx or 02/03/07/08 xxxxxxxx
-      if (!(auMobile.test(cleanedPhoneForValidation) || auLandline.test(cleanedPhoneForValidation))) {
-        setError('Please enter a valid Australian phone (04xx xxx xxx or +614xx xxx xxx, or +612/3/7/8 for landlines)');
+      // Validate phone number - only 9 digits allowed
+      const cleanedPhone = formData.phone.replace(/[^\d]/g, '');
+      if (cleanedPhone.length !== 9) {
+        setError('Phone number must be exactly 9 digits');
         setIsLoading(false);
         return;
       }
@@ -102,24 +119,10 @@ const SignupPage = () => {
       // Prepare data for API
       const { agreeToTerms, ...userData } = formData;
 
-      // Format phone number for backend (E.164 for AU)
+      // Format phone number for backend - just return the 9 digits
       const formatPhoneNumber = (phone) => {
-        const cleaned = phone.replace(/[^\d+]/g, '');
-        if (cleaned.startsWith('+61')) {
-          return cleaned;
-        }
-        if (cleaned.startsWith('+')) {
-          return cleaned; // already E.164 for another country
-        }
-        if (cleaned.startsWith('0')) {
-          // Convert 0XXXXXXXXX to +61XXXXXXXXX
-          return '+61' + cleaned.slice(1);
-        }
-        if (cleaned.startsWith('61')) {
-          return '+' + cleaned;
-        }
-        // Fallback: assume AU without prefix
-        return '+61' + cleaned;
+        const cleaned = phone.replace(/[^\d]/g, '');
+        return cleaned; // Return just the 9 digits
       };
 
       // Map role to userType for backend compatibility
@@ -282,6 +285,8 @@ const SignupPage = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={handleInputChange}
+                placeholder="123456789"
+                maxLength={9}
                 required
               />
 

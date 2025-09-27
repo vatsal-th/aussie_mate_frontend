@@ -100,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     // Clear user data from localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userLocation');
   };
 
   const updateUser = (userData) => {

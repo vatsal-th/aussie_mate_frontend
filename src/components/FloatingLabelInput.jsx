@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FloatingLabelInput = ({ id, name, label, type = "text", value, onChange, required = false, children, placeholder = " " }) => {
+const FloatingLabelInput = ({ id, name, label, type = "text", value, onChange, required = false, children, placeholder = " ", maxLength, ...props }) => {
   return (
     <div className="relative">
       <input
@@ -12,6 +12,8 @@ const FloatingLabelInput = ({ id, name, label, type = "text", value, onChange, r
         className="peer w-full px-4 py-4 border border-[#E5E7EB] rounded-md focus:outline-none focus:border-[#6B7280]"
         placeholder={placeholder}
         required={required}
+        maxLength={maxLength}
+        {...props}
       />
       <label
         htmlFor={id}
