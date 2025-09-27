@@ -14,7 +14,7 @@ import ArrowLeftIcon from '../assets/arrow-left.svg';
 import UploadIcon from '../assets/upload.svg';
 import MinusIcon from '../assets/minus.svg';
 import UploadCloudIcon from '../assets/upload-cloud.svg';
-import PlusIcon from '../assets/plus.svg';
+import PlusIcon from '../assets/plus.svg';  
 
 import MapPinIcon from '../assets/map-pin 1.png';
 import { jobsAPI, handleAPIError, userAPI } from '../services/api';
@@ -432,6 +432,37 @@ const PostNewJobPage = () => {
     setError('');
     setAddressError('');
 
+    // Frontend validation
+    if (!formData.serviceType) {
+      setError('Please select a service type');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.propertyType) {
+      setError('Please select a property type');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!selectedDate) {
+      setError('Please select a date for the service');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.propertySize || formData.propertySize.trim() === '') {
+      setError('Property size is required');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.propertySize.length < 1 || formData.propertySize.length > 100) {
+      setError('Property size must be between 1 and 100 characters');
+      setIsLoading(false);
+      return;
+    }
+
     // Determine effective location: prefer current selection; otherwise, fall back to saved localStorage location
     let effectiveLocation = selectedLocation;
     try {
@@ -496,6 +527,7 @@ const PostNewJobPage = () => {
       const jobData = {
         serviceType: formData.serviceType,
         propertyType: formData.propertyType,
+        propertySize: formData.propertySize,
         bedrooms: formData.bedrooms,
         bathrooms: formData.bathrooms,
         addons: formData.addons,
@@ -531,7 +563,23 @@ const PostNewJobPage = () => {
       }
     } catch (error) {
       console.error('Error posting job:', error);
-      setError(handleAPIError(error));
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to post job';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors array
+        const validationErrors = error.response.data.errors.map(err => 
+          typeof err === 'string' ? err : err.msg || err.message
+        ).join(', ');
+        errorMessage = validationErrors;
+      }
+      
+      setError(errorMessage);
     } finally {
       
       setIsLoading(false);
@@ -756,9 +804,11 @@ const PostNewJobPage = () => {
               type="text"
               value={formData.propertySize}
               onChange={(e) => handleInputChange('propertySize', e.target.value)}
-              placeholder="Enter property size"
+              placeholder="e.g., 3 bedroom house, 1200 sq ft"
               className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+              required
             />
+            <p className="text-xs text-primary-200 font-medium mt-1">Enter the size or description of your property (1-100 characters)</p>
           </div>
 
           {/* Add-ons Section */}
@@ -926,7 +976,7 @@ const PostNewJobPage = () => {
       <div className="space-y-6 bg-white rounded-2xl p-6 sm:p-8 shadow-custom">
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="text-[#EF4444] font-medium px-4 py-3 rounded">
             {error}
           </div>
         )}

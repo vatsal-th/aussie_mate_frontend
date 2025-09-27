@@ -229,13 +229,16 @@ export const jobsAPI = {
 
     // Add photo files
     if (files.photos && files.photos.length > 0) {
-        formData.append('photos', photo);
-    } else {
+        files.photos.forEach((photo, index) => {
+            formData.append(`photos`, photo);
+        });
     }
 
     // Add video files
     if (files.videos && files.videos.length > 0) {
-        formData.append('videos', video);
+        files.videos.forEach((video, index) => {
+            formData.append(`videos`, video);
+        });
     }
 
     const token = getAuthToken();
@@ -251,7 +254,17 @@ export const jobsAPI = {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to create job with files');
+        
+        // Handle validation errors specifically
+        if (response.status === 400 && errorData.errors) {
+          // Extract validation error messages
+          const validationErrors = errorData.errors.map(err => err.msg || err.message || err).join(', ');
+          throw new Error(validationErrors);
+        }
+        
+        // Handle other error types
+        const errorMessage = errorData.message || errorData.error || errorData.details || 'Failed to create job with files';
+        throw new Error(errorMessage);
       }
 
       return await response.json();
