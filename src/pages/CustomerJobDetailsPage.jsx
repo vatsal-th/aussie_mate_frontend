@@ -271,7 +271,7 @@ const CustomerJobDetailsPage = () => {
           <div className="space-y-2 sm:space-y-3">
             {/* Job ID */}
             <div className="text-xs sm:text-sm text-primary-200 font-medium">
-              {job._id || job.jobId || job.id}
+              {job.jobId}
             </div>
 
             {/* Job Title */}

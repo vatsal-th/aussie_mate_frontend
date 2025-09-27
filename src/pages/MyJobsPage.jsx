@@ -154,7 +154,8 @@ const MyJobsPage = () => {
           const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           return {
-            id: j._id || j.jobId || j.id || `job-${Math.random()}`,
+            id: j._id || j.jobId || j.id || `job-${Math.random()}`, // Use _id for navigation
+            jobId: j.jobId, // Store jobId for display
             title,
             status,
             dateLabel,
@@ -162,7 +163,7 @@ const MyJobsPage = () => {
             payment: paymentAmount,
             quotes,
             assignedTo,
-            createdAt: j.createdAt // Keep original for sorting
+            createdAt: j.createdAt
           };
         });
         
@@ -360,7 +361,7 @@ const MyJobsPage = () => {
               className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
             >
               <div className="flex items-start justify-between">
-                <div className="text-[15px] text-primary-200 font-medium">{job.id}</div>
+                <div className="text-[15px] text-primary-200 font-medium">{job.jobId}</div>
                 {(() => { const chip = getStatusChip(job.status); return (
                   <span className={`text-[11px] px-2 py-1 rounded-full font-medium ${chip.className}`}>
                     {chip.label}
