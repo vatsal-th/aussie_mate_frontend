@@ -14,7 +14,7 @@ import ArrowLeftIcon from '../assets/arrow-left.svg';
 import UploadIcon from '../assets/upload.svg';
 import MinusIcon from '../assets/minus.svg';
 import UploadCloudIcon from '../assets/upload-cloud.svg';
-import PlusIcon from '../assets/plus.svg';  
+import PlusIcon from '../assets/plus.svg';
 
 import MapPinIcon from '../assets/map-pin 1.png';
 import { jobsAPI, handleAPIError, userAPI } from '../services/api';

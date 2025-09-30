@@ -11,7 +11,8 @@ import RatingIcon from '../assets/rating.svg';
 import SilverBadgeIcon from '../assets/silverBadge.svg';
 import MessageIcon from '../assets/message2.svg';
 import CloseIcon from '../assets/close.svg';
-import { jobsAPI } from '../services/api';
+import { jobsAPI, quotesAPI } from '../services/api';
+import { chatAPI } from '../services/chatAPI';
 
 const CustomerJobDetailsPage = () => {
   const navigate = useNavigate();
@@ -22,6 +23,14 @@ const CustomerJobDetailsPage = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [quoteToAccept, setQuoteToAccept] = useState(null);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [quoteToDecline, setQuoteToDecline] = useState(null);
+  const [cleanerQuotes, setCleanerQuotes] = useState([]);
+  const [chatRooms, setChatRooms] = useState([]);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -30,23 +39,44 @@ const CustomerJobDetailsPage = () => {
         setLoading(true);
         setError('');
 
+        // Fetch job details
         const response = await jobsAPI.getJobById(jobId);
 
         if (response.success && response.data) {
           setJob(response.data);
+          
+          // Extract quotes from job data
+          if (response.data.quotes && response.data.quotes.length > 0) {
+            setCleanerQuotes(response.data.quotes);
+          }
         } else {
           setError('Job not found');
         }
       } catch (err) {
-        console.error('Error fetching job details:', err);
         setError('Failed to load job details');
       } finally {
         setLoading(false);
       }
     };
 
+    const fetchChatRooms = async () => {
+      try {
+        const chatResponse = await chatAPI.getChatRooms();
+        if (chatResponse.success) {
+          // Filter chat rooms for this specific job
+          const jobChatRooms = chatResponse.data.filter(room => 
+            room.jobId._id === jobId || room.jobId === jobId
+          );
+          setChatRooms(jobChatRooms);
+        }
+      } catch (err) {
+        // Don't show error for chat rooms, just continue without them
+      }
+    };
+
     if (jobId) {
       fetchJobDetails();
+      fetchChatRooms();
     }
   }, [jobId]);
 
@@ -106,26 +136,105 @@ const CustomerJobDetailsPage = () => {
     setShowCancelModal(true);
   };
 
+  const handleAcceptQuote = (quoteId) => {
+    // Find the quote to get cleaner details
+    const quote = cleanerQuotes.find(q => q._id === quoteId);
+    if (quote) {
+      setQuoteToAccept(quote);
+      setShowAcceptModal(true);
+    }
+  };
+
+  const handleDeclineQuote = (quoteId) => {
+    // Find the quote to get cleaner details
+    const quote = cleanerQuotes.find(q => q._id === quoteId);
+    if (quote) {
+      setQuoteToDecline(quote);
+      setShowDeclineModal(true);
+    }
+  };
+
+  const handleConfirmAcceptQuote = async () => {
+    if (!quoteToAccept) return;
+    
+    try {
+      setIsAccepting(true);
+      
+      const response = await quotesAPI.acceptQuote(jobId, quoteToAccept._id);
+
+      if (response.success) {
+        // Refresh job data to get updated quotes
+        const jobResponse = await jobsAPI.getJobById(jobId);
+        if (jobResponse.success) {
+          setJob(jobResponse.data);
+          if (jobResponse.data.quotes) {
+            setCleanerQuotes(jobResponse.data.quotes);
+          }
+        }
+        
+        // Close modal
+        setShowAcceptModal(false);
+        setQuoteToAccept(null);
+      } else {
+        setError(response.error || 'Failed to accept quote');
+        setShowAcceptModal(false);
+      }
+    } catch (err) {
+      setError('Failed to accept quote. Please try again.');
+      setShowAcceptModal(false);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  const handleCancelAcceptQuote = () => {
+    setShowAcceptModal(false);
+    setQuoteToAccept(null);
+  };
+
+  const handleConfirmDeclineQuote = async () => {
+    if (!quoteToDecline) return;
+    
+    try {
+      setIsDeclining(true);
+      
+      // Update the quote status locally
+      const updatedQuotes = cleanerQuotes.map(quote => 
+        quote._id === quoteToDecline._id 
+          ? { ...quote, status: 'rejected' }
+          : quote
+      );
+      setCleanerQuotes(updatedQuotes);
+      
+      // Close modal
+      setShowDeclineModal(false);
+      setQuoteToDecline(null);
+    } catch (err) {
+      setError('Failed to decline quote. Please try again.');
+      setShowDeclineModal(false);
+    } finally {
+      setIsDeclining(false);
+    }
+  };
+
+  const handleCancelDeclineQuote = () => {
+    setShowDeclineModal(false);
+    setQuoteToDecline(null);
+  };
+
   const handleConfirmCancel = async () => {
     try {
       setIsCancelling(true);
       
-      // Call API to cancel/delete the job
       const response = await jobsAPI.cancelJob(jobId);
       
       if (response.success) {
-        // Show success message briefly before navigating
-        console.log('Job cancelled successfully');
-        // Navigate back to jobs list after successful cancellation
         navigate('/my-jobs');
       } else {
-        console.error('Failed to cancel job:', response.message);
-        // Show error message or handle failure
         setError('Failed to cancel job. Please try again.');
         setShowCancelModal(false);
       }
     } catch (error) {
-      console.error('Error cancelling job:', error);
       setError('Failed to cancel job. Please try again.');
       setShowCancelModal(false);
     } finally {
@@ -137,39 +246,75 @@ const CustomerJobDetailsPage = () => {
     setShowCancelModal(false);
   };
 
-  // Mock cleaner quotes data
-  const cleanerQuotes = [
-    {
-      id: '1047',
-      name: 'Cleaner #1047',
-      rating: 4.8,
-      reviews: 120,
-      tier: 'Silver Tier',
-      quoteAmount: 160,
-      distance: '3.2 km away',
-      isVerified: true
-    },
-    {
-      id: '1049',
-      name: 'Cleaner #1049',
-      rating: 4.8,
-      reviews: 95,
-      tier: 'Silver Tier',
-      quoteAmount: 160,
-      distance: '3.2 km away',
-      isVerified: true
-    },
-    {
-      id: '1051',
-      name: 'Cleaner #1051',
-      rating: 4.8,
-      reviews: 87,
-      tier: 'Silver Tier',
-      quoteAmount: 160,
-      distance: '3.2 km away',
-      isVerified: true
+  // Helper function to check if customer has chatted with a cleaner
+  const getChatRoomForCleaner = (cleanerId) => {
+    return chatRooms.find(room => 
+      room.cleanerId._id === cleanerId || room.cleanerId === cleanerId
+    );
+  };
+
+  // Helper function to get chat status for a cleaner
+  const getChatStatus = (cleanerId) => {
+    const chatRoom = getChatRoomForCleaner(cleanerId);
+    if (chatRoom) {
+      if (chatRoom.lastMessageAt) {
+        const lastMessageDate = new Date(chatRoom.lastMessageAt);
+        const timeAgo = getTimeAgo(lastMessageDate);
+        return {
+          hasChat: true,
+          lastMessage: timeAgo,
+          unreadCount: chatRoom.unreadCount || 0
+        };
+      }
+      return { hasChat: true, lastMessage: 'No messages yet', unreadCount: 0 };
     }
-  ];
+    return { hasChat: false, lastMessage: null, unreadCount: 0 };
+  };
+
+  // Helper function to format time ago
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  // Helper function to format cleaner data from quotes
+  const formatCleanerData = (quote) => {
+    const cleaner = quote.cleanerId || quote.cleaner;
+    const cleanerId = cleaner?._id || cleaner?.id || quote.cleanerId || quote._id || quote.id;
+    
+    return {
+      id: cleanerId,
+      quoteId: quote._id || quote.id,
+      name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() || `Cleaner #${cleanerId?.slice(-4)}` : 'Cleaner',
+      rating: cleaner?.rating || 4.5,
+      reviews: cleaner?.reviewCount || 0,
+      tier: cleaner?.tier || 'Standard',
+      quoteAmount: quote.price || quote.amount || 0,
+      distance: quote.distance || cleaner?.distance || 'Distance unknown',
+      isVerified: cleaner?.isVerified || false,
+      estimatedDuration: quote.estimatedDuration || '2 hours',
+      status: quote.status || 'pending'
+    };
+  };
+
+  // Helper function to check if there's an accepted quote
+  const getAcceptedQuote = () => {
+    return cleanerQuotes.find(quote => quote.status === 'accepted');
+  };
+
+  // Helper function to get accepted cleaner data
+  const getAcceptedCleaner = () => {
+    const acceptedQuote = getAcceptedQuote();
+    if (acceptedQuote) {
+      return formatCleanerData(acceptedQuote);
+    }
+    return null;
+  };
 
   if (loading) {
     return (
@@ -201,7 +346,7 @@ const CustomerJobDetailsPage = () => {
               <div className="text-red-500 text-lg font-medium">{error || 'Job not found'}</div>
               <button
                 onClick={() => navigate(-1)}
-                className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg! hover:bg-primary-600 cursor-pointer"
               >
                 Go Back
               </button>
@@ -294,6 +439,7 @@ const CustomerJobDetailsPage = () => {
           </div>
         </div>
 
+
         {/* Cleaner Quotes Section */}
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
           <div className="mb-3 sm:mb-4">
@@ -301,60 +447,135 @@ const CustomerJobDetailsPage = () => {
               Cleaner Quotes ({cleanerQuotes.length})
             </h3>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">
-              Cleaners nearby have sent their offers. Review and chat before choosing.
+              {cleanerQuotes.length > 0 
+                ? "Cleaners nearby have sent their offers. Review and chat before choosing."
+                : "No quotes yet. Cleaners will send quotes soon."
+              }
             </p>
           </div>
 
-          <div className="space-y-2 sm:space-y-3">
-            {cleanerQuotes.map((cleaner, index) => (
-              <div key={cleaner.id} className="border border-[#E5E7EB] shadow-custom rounded-xl p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
-                  <div className="flex-1">
-                    {/* Top row: Cleaner ID, Badge, Rating */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
-                      <div className="flex items-center space-x-1">
-                        <img src={UserIcon} alt="User" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-xs sm:text-sm font-medium text-primary-500">
-                          {cleaner.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-1 bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] border-[#E5E7EB]">
-                        <img src={SilverBadgeIcon} alt="Silver Badge" className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="text-xs text-primary-500 font-medium">
-                          {cleaner.tier}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-1 bg-[#FFF2DE] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                        <img src={RatingIcon} alt="Rating" className="w-3 h-3" />
-                        <span className="text-xs font-medium text-primary-500">
-                          {cleaner.rating}
-                        </span>
-                      </div>
-                    </div>
+          {cleanerQuotes.length > 0 && (
+            <div className="space-y-2 sm:space-y-3">
+              {cleanerQuotes.map((quote, index) => {
+                const cleaner = formatCleanerData(quote);
+                const chatStatus = getChatStatus(cleaner.id);
+                
+                return (
+                  <div key={quote._id || quote.id || `quote-${index}`} className="border border-[#E5E7EB] shadow-custom rounded-xl p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                      <div className="flex-1">
+                        {/* Top row: Cleaner ID, Badge, Rating */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
+                          <div className="flex items-center space-x-1">
+                            <img src={UserIcon} alt="User" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium text-primary-500">
+                              {cleaner.name}
+                            </span>
+                          </div>
+                          {cleaner.tier && (
+                            <div className="flex items-center space-x-1 bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] border-[#E5E7EB]">
+                              <img src={SilverBadgeIcon} alt="Badge" className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span className="text-xs text-primary-500 font-medium">
+                                {cleaner.tier}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center space-x-1 bg-[#FFF2DE] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                            <img src={RatingIcon} alt="Rating" className="w-3 h-3" />
+                            <span className="text-xs font-medium text-primary-500">
+                              {cleaner.rating}
+                            </span>
+                          </div>
+                        </div>
 
-                    {/* Quote details */}
-                    <div className="space-y-1">
-                      <div className="text-xs sm:text-sm text-[#374151] font-medium">
-                        Quote Amount: <span className="font-bold text-[#1F6FEB]">${cleaner.quoteAmount}</span>
+                        {/* Quote details */}
+                        <div className="space-y-1">
+                          <div className="text-xs sm:text-sm text-[#374151] font-medium">
+                            Quote Amount: <span className="font-bold text-[#1F6FEB]">${cleaner.quoteAmount}</span>
+                            {cleaner.estimatedDuration && (
+                              <span className="text-xs text-gray-500 ml-2">({cleaner.estimatedDuration})</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-primary-500 font-medium">
+                            {cleaner.distance}
+                          </div>
+                          
+                          {/* Chat Status */}
+                          {chatStatus.hasChat && (
+                            <div className="flex items-center space-x-2 mt-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-green-600 font-medium">
+                                {chatStatus.lastMessage}
+                              </span>
+                              {chatStatus.unreadCount > 0 && (
+                                <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                  {chatStatus.unreadCount}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-xs text-primary-500 font-medium">
-                        {cleaner.distance}
+
+                      {/* Action buttons */}
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto mt-2 sm:mt-0 sm:ml-4">
+                        {/* For pending quotes - show Accept and Decline buttons */}
+                        {quote.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleAcceptQuote(quote._id)}
+                              className="bg-[#E4FBED] text-[#1EB154] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer border border-[#DBF9E7] hover:bg-[#1EB154] hover:text-white"
+                            >
+                              <span className="text-xs sm:text-sm font-medium">Accept</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeclineQuote(quote._id)}
+                              className="bg-[#FFE4E4] text-[#EF4444] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer border border-[#FFDDDD] hover:bg-[#EF4444] hover:text-white"
+                            >
+                              <span className="text-xs sm:text-sm font-medium">Decline</span>
+                            </button>
+                          </>
+                        )}
+                        
+                        {/* For accepted quotes - show Start Chat button */}
+                        {quote.status === 'accepted' && (
+                          <button
+                            onClick={() => {
+                              if (cleaner.id && cleaner.id !== 'undefined' && cleaner.id !== 'null') {
+                                navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`);
+                              } else {
+                                setError('Unable to start chat - cleaner information not available. Please try refreshing the page.');
+                              }
+                            }}
+                            className="shadow-custom text-[#1F6FEB] border border-[#9CC0F6] px-3 sm:px-4 py-2 rounded-xl! flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer"
+                          >
+                            <img src={MessageIcon} alt="Message" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm font-medium">Start Chat</span>
+                          </button>
+                        )}
+                        
+                        {/* Quote Status for rejected quotes */}
+                        {quote.status === 'rejected' && (
+                          <div className="bg-[#FFE4E4] text-[#EF4444] border border-[#FFDDDD] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center shadow-custom">
+                            <span className="text-xs sm:text-sm font-medium">Rejected</span>
+                          </div>
+                        )}
+
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                  {/* Action button */}
-                  <button
-                    onClick={() => navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`)}
-                    className="text-[#1F6FEB] px-3 sm:px-4 py-2 rounded-xl! flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer w-full sm:w-auto mt-2 sm:mt-0 sm:ml-4 border border-[#9CC0F6] shadow-custom cursor-pointer" 
-                  >
-                    <img src={MessageIcon} alt="Message" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-xs sm:text-sm font-medium">View & Chat</span>
-                  </button>
-                </div>
+          {cleanerQuotes.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-gray-500 text-sm">
+                Waiting for cleaners to send quotes...
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -369,6 +590,40 @@ const CustomerJobDetailsPage = () => {
         cancelText="Keep Job"
         confirmButtonColor="bg-[#EF4444] hover:bg-red-600"
         isLoading={isCancelling}
+      />
+
+      {/* Accept Quote Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showAcceptModal}
+        onClose={handleCancelAcceptQuote}
+        onConfirm={handleConfirmAcceptQuote}
+        title="Accept Quote?"
+        message={
+          quoteToAccept ? 
+            `Are you sure you want to accept this quote for $${quoteToAccept.price}? This will reject all other quotes and confirm this cleaner for your job.` :
+            "Are you sure you want to accept this quote?"
+        }
+        confirmText="Accept Quote"
+        cancelText="Cancel"
+        confirmButtonColor="bg-[#E4FBED] hover:bg-green-600 text-[#1EB154]! hover:text-white! border border-[#DBF9E7]"
+        isLoading={isAccepting}
+      />
+
+      {/* Decline Quote Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeclineModal}
+        onClose={handleCancelDeclineQuote}
+        onConfirm={handleConfirmDeclineQuote}
+        title="Decline Quote?"
+        message={
+          quoteToDecline ? 
+            `Are you sure you want to decline this quote for $${quoteToDecline.price}? This action cannot be undone.` :
+            "Are you sure you want to decline this quote?"
+        }
+        confirmText="Decline Quote"
+        cancelText="Cancel"
+        confirmButtonColor="bg-[#FFE4E4] hover:bg-[#EF4444] text-[#EF4444]! hover:text-white! border border-[#FFDDDD]"
+        isLoading={isDeclining}
       />
     </div>
   );

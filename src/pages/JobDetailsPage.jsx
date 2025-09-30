@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
+import ChatIcon from '../assets/message2.svg';
 import { jobsAPI } from '../services/api';
 
 const JobDetailsPage = () => {
@@ -233,8 +234,9 @@ const JobDetailsPage = () => {
           <div className="flex justify-end">
             <button
               onClick={handleChatWithCustomer}
-              className="bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 cursor-pointer"
+              className="bg-primary-500  text-white  cursor-pointer shadow-custom border border-[#EBF2FD] font-medium py-2 px-3 sm:py-3 sm:px-4 rounded-xl transition-colors duration-200 flex items-center gap-2 "
             >
+            <img src={ChatIcon} alt="Chat" className="w-5 h-5 brightness-0 invert" />
               Chat with Customer
             </button>
           </div>

@@ -60,7 +60,7 @@ const CleanerJobsPage = () => {
           return;
         }
       } catch (error) {
-        console.error('Error fetching location from backend:', error);
+        // Silently handle error and fallback to localStorage
       }
 
       // Fallback to localStorage
@@ -74,7 +74,7 @@ const CleanerJobsPage = () => {
             coordinates: location.coordinates || null
           });
         } catch (error) {
-          console.error('Error parsing stored location:', error);
+          // Silently handle parsing error
         }
       }
     };
@@ -140,46 +140,138 @@ const CleanerJobsPage = () => {
 
         const status = statusMap[activeTab];
 
-        // Fetch jobs from API with pagination
-        const response = await jobsAPI.getAllJobs({
-          status: status,
-          page: currentPage,
-          limit: jobsPerPage
-        });
+        let response;
+        
+        // Special handling for "My Bids" tab
+        if (activeTab === 'my-bids') {
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          const currentUserId = currentUser.id || currentUser._id;
+          
+          // Get all jobs with quoted status
+          const allJobsResponse = await jobsAPI.getAllJobs({
+            status: 'quoted',
+            page: 1,
+            limit: 100 
+          });
+          
+          const allQuotedJobs = allJobsResponse?.data?.jobs || allJobsResponse?.data || [];
+          
+          // Filter jobs where current cleaner has submitted a quote
+          const jobsWithMyBids = allQuotedJobs.filter(job => {
+            if (job.quotes && job.quotes.length > 0) {
+              return job.quotes.some(quote => 
+                (quote.cleanerId === currentUserId || quote.cleanerId?._id === currentUserId) && 
+                quote.status === 'pending'
+              );
+            }
+            return false;
+          });
+          
+          // Apply pagination to filtered results
+          const startIndex = (currentPage - 1) * jobsPerPage;
+          const endIndex = startIndex + jobsPerPage;
+          const paginatedJobs = jobsWithMyBids.slice(startIndex, endIndex);
+          
+          response = {
+            success: true,
+            data: {
+              jobs: paginatedJobs,
+              total: jobsWithMyBids.length,
+              page: currentPage,
+              limit: jobsPerPage,
+              totalPages: Math.ceil(jobsWithMyBids.length / jobsPerPage)
+            }
+          };
+        } else if (activeTab === 'live-jobs') {
+          // For Live Jobs, fetch both posted and quoted jobs
+          const [postedJobsResponse, quotedJobsResponse] = await Promise.all([
+            jobsAPI.getAllJobs({ status: 'posted', page: 1, limit: 50 }),
+            jobsAPI.getAllJobs({ status: 'quoted', page: 1, limit: 50 })
+          ]);
+          
+          // Combine both job arrays
+          const postedJobs = postedJobsResponse?.data?.jobs || postedJobsResponse?.data || [];
+          const quotedJobs = quotedJobsResponse?.data?.jobs || quotedJobsResponse?.data || [];
+          const allLiveJobs = [...postedJobs, ...quotedJobs];
+          
+          // Apply pagination to combined results
+          const startIndex = (currentPage - 1) * jobsPerPage;
+          const endIndex = startIndex + jobsPerPage;
+          const paginatedJobs = allLiveJobs.slice(startIndex, endIndex);
+          
+          response = {
+            success: true,
+            data: {
+              jobs: paginatedJobs,
+              total: allLiveJobs.length,
+              page: currentPage,
+              limit: jobsPerPage,
+              totalPages: Math.ceil(allLiveJobs.length / jobsPerPage)
+            }
+          };
+        } else {
+          // Fetch jobs from API with pagination for other tabs
+          response = await jobsAPI.getAllJobs({
+            status: status,
+            page: currentPage,
+            limit: jobsPerPage
+          });
+        }
 
         // Transform API data to match UI format
-        const jobsData = response?.data?.jobs || response?.data || response || [];
+        let jobsData = response?.data?.jobs || response?.data || response || [];
+        
+        // Apply client-side pagination if API returns more jobs than requested
+        if (jobsData.length > jobsPerPage) {
+          const startIndex = (currentPage - 1) * jobsPerPage;
+          const endIndex = startIndex + jobsPerPage;
+          jobsData = jobsData.slice(startIndex, endIndex);
+        }
         
         // Handle pagination data
-        const totalCount = response?.data?.total || response?.total || jobsData.length;
+        const originalTotalCount = response?.data?.total || response?.total || (response?.data?.jobs?.length || response?.data?.length || 0);
+        const totalCount = originalTotalCount; // Use original total for pagination calculation
         const totalPagesCount = Math.ceil(totalCount / jobsPerPage);
-        
         
         setTotalJobs(totalCount);
         setTotalPages(totalPagesCount);
 
-        // Get current user ID for filtering
+        // Get current user ID for filtering (only once)
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const currentUserId = currentUser.id || currentUser._id;
 
-        const transformedJobs = jobsData.map(job => ({
-          id: job._id || job.jobId || job.id, // Use _id first as it's the main identifier
-          title: job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
-          location: job.location?.address || job.location?.fullAddress || 'Location not specified',
-          date: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) : 'Date not specified',
-          price: job.estimatedPrice ? `$${job.estimatedPrice}` : job.budget ? `$${job.budget}` : 'Price not specified',
-          customerName: job.customerId?.firstName || job.customerId?.lastName || job.customer?.firstName || job.customer?.name || job.customerName || job.postedBy || 'Customer',
-          status: job.status || 'posted',
-          timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently posted',
-          type: job.serviceType || 'general',
-          // Add original job data for filtering
-          originalJob: job
-        }));
+        const transformedJobs = jobsData.map(job => {
+          
+          // Find my quote for this job (for My Bids tab)
+          let myQuote = null;
+          if (activeTab === 'my-bids' && job.quotes && job.quotes.length > 0) {
+            myQuote = job.quotes.find(quote => 
+              (quote.cleanerId === currentUserId || quote.cleanerId?._id === currentUserId) && 
+              quote.status === 'pending'
+            );
+          }
+          
+          return {
+            id: job._id || job.jobId || job.id, // Use _id first as it's the main identifier
+            title: job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
+            location: job.location?.address || job.location?.fullAddress || 'Location not specified',
+            date: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) : 'Date not specified',
+            price: myQuote ? `$${myQuote.price}` : (job.estimatedPrice ? `$${job.estimatedPrice}` : job.budget ? `$${job.budget}` : 'Price not specified'),
+            customerName: job.customerId?.firstName || job.customerId?.lastName || job.customer?.firstName || job.customer?.name || job.customerName || job.postedBy || 'Customer',
+            status: job.status || 'posted',
+            timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently posted',
+            type: job.serviceType || 'general',
+            // Add original job data for filtering
+            originalJob: job,
+            // Add my quote data for My Bids tab
+            myQuote: myQuote
+          };
+        });
 
         // Filter jobs based on active tab
         let filteredJobs = transformedJobs;
@@ -199,7 +291,6 @@ const CleanerJobsPage = () => {
 
         setJobs(filteredJobs);
       } catch (err) {
-        console.error('Error fetching jobs:', err);
         setError('Failed to load jobs');
         // Don't fallback to mock data - show empty state instead
         setJobs([]);
@@ -424,6 +515,11 @@ const CleanerJobsPage = () => {
                           Completed
                         </span>
                       )}
+                      {activeTab === 'my-bids' && job.myQuote && (
+                        <span className="text-xs font-bold px-2 py-1 rounded-full bg-yellow-500 text-white">
+                          Pending
+                        </span>
+                      )}
                     </div>
 
                     {/* Job Title */}
@@ -452,6 +548,15 @@ const CleanerJobsPage = () => {
                         <img src={UserIcon} alt="Job Poster" className="w-4 h-4 mr-3" />
                         <span className="text-sm text-primary-200 font-medium">{job.customerName}</span>
                       </div>
+                      
+                      {/* My Quote Amount for My Bids tab */}
+                      {activeTab === 'my-bids' && job.myQuote && (
+                        <div className="flex items-center">
+                          <span className="text-sm font-bold text-green-600">
+                            My Quote: ${job.myQuote.price}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -474,7 +579,7 @@ const CleanerJobsPage = () => {
                   <button
                     onClick={handlePreviousPage}
                     disabled={currentPage === 1}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
@@ -501,9 +606,9 @@ const CleanerJobsPage = () => {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                             currentPage === pageNum
-                              ? 'bg-primary-500 text-white'
+                              ? 'bg-primary-500 text-white '
                               : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                           }`}
                         >
@@ -517,7 +622,7 @@ const CleanerJobsPage = () => {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       currentPage === totalPages
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'

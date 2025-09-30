@@ -63,8 +63,16 @@ const getStatusChip = (statusRaw) => {
   if (s === 'completed') {
     return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
   }
-  // Upcoming states (posted/pending/quoted) should show as "Pending Quotes"
-  if (['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) {
+  // Show "Accepted" for accepted jobs
+  if (s === 'accepted') {
+    return { label: 'Accepted', className: 'bg-[#D1FAE5] text-[#059669] border border-[#D1FAE5]' };
+  }
+  // Show "Quoted" for jobs with quotes
+  if (s === 'quoted') {
+    return { label: 'Quoted', className: 'bg-[#E0F2FE] text-[#0369A1] border border-[#E0F2FE]' };
+  }
+  // Upcoming states (posted/pending) should show as "Pending Quotes"
+  if (['posted', 'pending', 'pending_quotes'].includes(s)) {
     return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
   }
   // Fallback
@@ -121,21 +129,34 @@ const MyJobsPage = () => {
   // Fetch jobs posted by current user only
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!currentUserId) return; // Wait for user ID
+      if (!currentUserId) return; 
 
       try {
         setLoading(true);
         setError('');
 
-        const statusParam = (() => {
-          if (activeTab === 'ongoing') return 'in_progress';
-          if (activeTab === 'completed') return 'completed';
-          if (activeTab === 'upcoming') return undefined; // fetch all, client-side filter to include posted/pending/quoted
-          return undefined; // all
-        })();
-
-        const res = await jobsAPI.getAllJobs(statusParam ? { status: statusParam, page: 1, limit: 50 } : { page: 1, limit: 50 });
-        const list = res?.data?.jobs || res?.data || res || [];
+        let list = [];
+        
+        if (activeTab === 'upcoming') {
+          // For upcoming tab, fetch both quoted and accepted jobs
+          const [quotedRes, acceptedRes] = await Promise.all([
+            jobsAPI.getAllJobs({ status: 'quoted', page: 1, limit: 50 }),
+            jobsAPI.getAllJobs({ status: 'accepted', page: 1, limit: 50 })
+          ]);
+          
+          const quotedJobs = quotedRes?.data?.jobs || quotedRes?.data || [];
+          const acceptedJobs = acceptedRes?.data?.jobs || acceptedRes?.data || [];
+          list = [...quotedJobs, ...acceptedJobs];
+        } else {
+          const statusParam = (() => {
+            if (activeTab === 'ongoing') return 'in_progress';
+            if (activeTab === 'completed') return 'completed';
+            return undefined;
+          })();
+          
+          const res = await jobsAPI.getAllJobs(statusParam ? { status: statusParam, page: 1, limit: 50 } : { page: 1, limit: 50 });
+          list = res?.data?.jobs || res?.data || res || [];
+        }
 
         // Filter jobs to only show those posted by current user
         const userJobs = list.filter((j) => {
@@ -153,12 +174,13 @@ const MyJobsPage = () => {
           const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
           const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
-          return {
-            id: j._id || j.jobId || j.id || `job-${Math.random()}`, // Use _id for navigation
+          const statusChip = getStatusChip(status);
+            return {
+            id: j._id || j.jobId || j.id || `job-${Math.random()}`,    // Use _id for navigation
+            status: statusChip.label,
             jobId: j.jobId, // Store jobId for display
             title,
-            status,
-            dateLabel,
+            dateLabel,  
             address,
             payment: paymentAmount,
             quotes,
@@ -191,10 +213,10 @@ const MyJobsPage = () => {
     const q = query.trim().toLowerCase();
     const mapTab = (status) => {
       const s = (status || '').toLowerCase();
-      if (['in_progress', 'accepted', 'assigned'].includes(s)) return 'ongoing';
+      if (['in_progress', 'assigned'].includes(s)) return 'ongoing';
       if (['completed', 'done'].includes(s)) return 'completed';
-      // treat others as upcoming/pending (including unknown/empty)
-      if (!s || ['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) return 'upcoming';
+      if (['quoted', 'accepted', 'posted', 'pending', 'pending_quotes'].includes(s)) return 'upcoming';
+      if (!s) return 'upcoming';
       return 'upcoming';
     };
     
