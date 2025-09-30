@@ -12,22 +12,32 @@ class SocketService {
   connect(token) {
     if (this.socket) this.disconnect();
 
+    // Check if token exists in localStorage
+    const authToken = token || localStorage.getItem("token");
+    if (!authToken) {
+      console.error('❌ No JWT token found in localStorage. Cannot connect to Socket.IO server.');
+      return;
+    }
+
     // Get backend URL without /api for WebSocket connection
     const backendURL = API_CONFIG.BASE_URL.replace('/api', '');
 
     this.socket = io(backendURL, {
-      auth: { token },
+      auth: { token: authToken },
+      transports: ["websocket"],
       timeout: 5000,
       forceNew: true
     });
 
     this.socket.on('connect', () => {
       this.isConnected = true;
+      console.log('✅ Socket connected successfully to:', backendURL);
       this.notifyListeners('connectionStatus', true);
     });
 
     this.socket.on('disconnect', () => {
       this.isConnected = false;
+      console.log('❌ Socket disconnected from:', backendURL);
       this.notifyListeners('connectionStatus', false);
     });
 
@@ -71,6 +81,7 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error);
       this.notifyListeners('error', { 
         message: 'Failed to connect to chat server. Please check if the backend is running.' 
       });
@@ -82,7 +93,7 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
-    }
+    } 
   }
 
   // Event listeners
