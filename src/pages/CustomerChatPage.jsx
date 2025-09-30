@@ -76,13 +76,15 @@ const CustomerChatPage = () => {
        setLoading(false);
      });
      socketService.on('newMessage', (message) => {
+       // Create a unique identifier for this message
+       const messageId = message._id || message.id || `${message.content}-${message.senderId?._id}-${message.createdAt}`;
+       
        setMessages(prev => {
          // Check if message already exists to prevent duplicates
-         const messageExists = prev.some(msg => 
-           (msg._id && msg._id === message._id) || 
-           (msg.id && msg.id === message.id) ||
-           (msg.content === message.content && msg.timestamp === message.timestamp)
-         );
+         const messageExists = prev.some(msg => {
+           const existingId = msg._id || msg.id || `${msg.content}-${msg.senderId?._id}-${msg.createdAt}`;
+           return existingId === messageId;
+         });
          
          if (messageExists) {
            return prev;
@@ -202,6 +204,29 @@ const CustomerChatPage = () => {
     }
   }, [jobId, cleanerId, isConnected]);
 
+  // Load chat history via REST API as fallback
+  useEffect(() => {
+    const loadChatHistoryFallback = async () => {
+      if (jobId && cleanerId) {
+        try {
+          // Try to get chat history via REST API
+          const response = await chatAPI.getChatHistory(jobId, cleanerId);
+          
+          if (response.success && response.data?.messages) {
+            setMessages(response.data.messages);
+          }
+        } catch (error) {
+          // Silently handle error
+        }
+      }
+    };
+
+    // Try to load chat history immediately and also after a delay
+    loadChatHistoryFallback();
+    const timeoutId = setTimeout(loadChatHistoryFallback, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [jobId, cleanerId]);
+
   // Mark messages as read when chat is viewed
   useEffect(() => {
     if (currentChatRoom?.chatRoomId) {
@@ -219,23 +244,27 @@ const CustomerChatPage = () => {
   
   const handleSendMessage = () => {
     if (newMessage.trim()) {
+      
       if (currentChatRoom?.chatRoomId && isConnected) {
         socketService.sendMessage(currentChatRoom.chatRoomId, newMessage.trim());
-       } else {
-         // Fallback to static messages when not connected
-         const message = {
-           id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-           sender: 'user',
-           message: newMessage.trim(),
-           timestamp: new Date().toLocaleTimeString('en-US', {
-             hour: 'numeric',
-             minute: '2-digit',
-             hour12: true
-           })
-         };
-         setMessages(prev => [...prev, message]);
-       }
-      setNewMessage('');
+        setNewMessage('');
+      } else {
+        // Fallback to static messages when not connected
+        const message = {
+          id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          sender: 'user',
+          message: newMessage.trim(),
+          timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          })
+        };
+        setMessages(prev => {
+          return [...prev, message];
+        });
+        setNewMessage('');
+      }
     }
   };
   
@@ -252,18 +281,30 @@ const CustomerChatPage = () => {
   const handleConfirmReject = async () => {
     setIsRejecting(true);
     try {
-      // TODO: Call API to reject quote
-      // await quotesAPI.rejectQuote(quoteId);
+      const quoteId = cleanerId;
       
-      // For now, just navigate back
-      setTimeout(() => {
+      if (!quoteId) {
+        setError('Quote ID not found');
         setIsRejecting(false);
         setShowRejectModal(false);
+        return;
+      }
+      
+      // Call API to reject quote
+      const response = await quotesAPI.rejectQuote(jobId, quoteId);
+      
+      if (response.success) {
+        // Navigate back to job details
         navigate(`/customer-job-details/${jobId}`);
-      }, 500);
+      } else {
+        setError(response.error || 'Failed to reject quote');
+        setIsRejecting(false);
+        setShowRejectModal(false);
+      }
     } catch (error) {
-      setIsRejecting(false);
       setError('Failed to reject quote. Please try again.');
+      setIsRejecting(false);
+      setShowRejectModal(false);
     }
   };
   
@@ -272,7 +313,6 @@ const CustomerChatPage = () => {
   };
   
   const handleAcceptQuote = () => {
-    // Handle quote acceptance and booking
     navigate(`/booking-confirmation/${jobId}`);
   };
   

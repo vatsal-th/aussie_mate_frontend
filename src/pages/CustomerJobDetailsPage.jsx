@@ -198,17 +198,25 @@ const CustomerJobDetailsPage = () => {
     try {
       setIsDeclining(true);
       
-      // Update the quote status locally
-      const updatedQuotes = cleanerQuotes.map(quote => 
-        quote._id === quoteToDecline._id 
-          ? { ...quote, status: 'rejected' }
-          : quote
-      );
-      setCleanerQuotes(updatedQuotes);
+      // Call API to reject quote
+      const response = await quotesAPI.rejectQuote(jobId, quoteToDecline._id);
       
-      // Close modal
-      setShowDeclineModal(false);
-      setQuoteToDecline(null);
+      if (response.success) {
+        // Update the quote status locally
+        const updatedQuotes = cleanerQuotes.map(quote => 
+          quote._id === quoteToDecline._id 
+            ? { ...quote, status: 'rejected' }
+            : quote
+        );
+        setCleanerQuotes(updatedQuotes);
+        
+        // Close modal
+        setShowDeclineModal(false);
+        setQuoteToDecline(null);
+      } else {
+        setError(response.error || 'Failed to decline quote');
+        setShowDeclineModal(false);
+      }
     } catch (err) {
       setError('Failed to decline quote. Please try again.');
       setShowDeclineModal(false);

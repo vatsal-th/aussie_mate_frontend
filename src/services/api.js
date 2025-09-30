@@ -321,11 +321,24 @@ export const quotesAPI = {
       body: JSON.stringify(quoteData),
     });
   },
+  // Reject quote
+  rejectQuote: async (jobId, quoteId) => {
+    return apiRequest(`/jobs/${jobId}/quotes/${quoteId}/reject`, {
+      method: 'POST',
+    });
+  },
 
   // Accept quote
   acceptQuote: async (jobId, quoteId) => {
     return apiRequest(`/jobs/${jobId}/quotes/${quoteId}/accept`, {
       method: 'POST',
+    });
+  },
+
+  // Withdraw quote
+  withdrawQuote: async (quoteId) => {
+    return apiRequest(`/jobs/quotes/${quoteId}`, {
+      method: 'DELETE',
     });
   },
 
@@ -342,14 +355,7 @@ export const quotesAPI = {
       body: JSON.stringify(quoteData),
     });
   },
-
-  // Withdraw quote
-  withdrawQuote: async (quoteId) => {
-    return apiRequest(`/jobs/quotes/${quoteId}`, {
-      method: 'DELETE',
-    });
-  },
-};
+};  
 
 // Location API
 export const locationAPI = {

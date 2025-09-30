@@ -51,5 +51,44 @@ export const chatAPI = {
       headers: getAuthHeaders()
     });
     return response.json();
+  },
+
+  // Get chat history for a specific job and cleaner
+  async getChatHistory(jobId, cleanerId) {
+    try {
+      // First, get all chat rooms
+      const roomsResponse = await fetch(`${API_BASE}/chat/rooms`, {
+        headers: getAuthHeaders()
+      });
+      const roomsData = await roomsResponse.json();
+      
+      if (!roomsData.success) {
+        return { success: false, error: 'Failed to get chat rooms' };
+      }
+      
+      // Find the chat room for this job and cleaner
+      const chatRoom = roomsData.data.find(room => 
+        room.jobId?._id === jobId || room.jobId?.id === jobId
+      );
+      
+      if (!chatRoom) {
+        return { success: true, data: { messages: [] } };
+      }
+      
+      // Get messages for this chat room
+      const messagesResponse = await fetch(
+        `${API_BASE}/chat/rooms/${chatRoom._id}/messages?page=1&limit=100`,
+        { headers: getAuthHeaders() }
+      );
+      const messagesData = await messagesResponse.json();
+      
+      if (messagesData.success) {
+        return { success: true, data: { messages: messagesData.data.messages || [] } };
+      } else {
+        return { success: false, error: 'Failed to get messages' };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 };

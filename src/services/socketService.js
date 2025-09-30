@@ -32,21 +32,21 @@ class SocketService {
     });
 
     // Chat events
-    this.socket.on('chat_joined', (data) => 
-      this.notifyListeners('chatJoined', data)
-    );
+    this.socket.on('chat_joined', (data) => {
+      this.notifyListeners('chatJoined', data);
+    });
     
-    this.socket.on('chat_history', (messages) => 
-      this.notifyListeners('chatHistory', messages)
-    );
+    this.socket.on('chat_history', (messages) => {
+      this.notifyListeners('chatHistory', messages);
+    });
     
-    this.socket.on('new_message', (message) => 
-      this.notifyListeners('newMessage', message)
-    );
+    this.socket.on('new_message', (message) => {
+      this.notifyListeners('newMessage', message);
+    });
     
-    this.socket.on('chat_notification', (notification) => 
-      this.notifyListeners('chatNotification', notification)
-    );
+    this.socket.on('chat_notification', (notification) => {
+      this.notifyListeners('chatNotification', notification);
+    });
 
     this.socket.on('messages_marked_read', (data) => 
       this.notifyListeners('messagesMarkedRead', data)

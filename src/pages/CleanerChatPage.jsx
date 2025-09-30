@@ -11,6 +11,7 @@ import { jobsAPI, quotesAPI } from '../services/api';
 import { chatAPI } from '../services/chatAPI';
 import { socketService } from '../services/socketService';
 import WithdrawIcon from '../assets/trash-red.svg';
+import UserIcon from '../assets/user.svg';
 
 
 const CleanerChatPage = () => {
@@ -27,6 +28,7 @@ const CleanerChatPage = () => {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    
     const [quoteAmount, setQuoteAmount] = useState('');
     const [isNegotiable, setIsNegotiable] = useState(false);
     const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -38,7 +40,9 @@ const CleanerChatPage = () => {
     const [currentChatRoom, setCurrentChatRoom] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     const [effectiveCleanerId, setEffectiveCleanerId] = useState(null);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const messagesEndRef = useRef(null);
+    const lastMessageRef = useRef(null);
 
     // Initialize Socket Connection and User Data
     useEffect(() => {
@@ -62,11 +66,14 @@ const CleanerChatPage = () => {
         socketService.connect(token);
 
         // Socket event listeners
-        socketService.on('connectionStatus', setIsConnected);
+        socketService.on('connectionStatus', (status) => {
+            setIsConnected(status);
+        });
         socketService.on('chatJoined', (data) => {
             setCurrentChatRoom(data);
         });
         socketService.on('chatHistory', (historyMessages) => {
+            setIsLoadingMessages(false);
             if (historyMessages && historyMessages.length > 0) {
                 // Remove duplicates from chat history
                 const uniqueMessages = historyMessages.filter((msg, index, self) => 
@@ -84,6 +91,7 @@ const CleanerChatPage = () => {
                         id: 1,
                         senderId: { _id: 'cleaner_demo' },
                         content: "Hi! I'm ready to help with your cleaning job.",
+                        message: "Hi! I'm ready to help with your cleaning job.",
                         messageType: 'text',
                         createdAt: new Date(Date.now() - 3600000).toISOString(),
                         time: '9:00 am'
@@ -92,18 +100,26 @@ const CleanerChatPage = () => {
             }
         });
         socketService.on('newMessage', (message) => {
+            // Create a unique identifier for this message
+            const messageId = message._id || message.id || `${message.content || message.message}-${message.senderId?._id}-${message.createdAt}`;
+            
+            // Check if this exact message was just processed
+            if (lastMessageRef.current === messageId) {
+                return;
+            }
+            
             setMessages(prev => {
-                // Check if message already exists to prevent duplicates
-                const messageExists = prev.some(msg => 
-                    (msg._id && msg._id === message._id) || 
-                    (msg.id && msg.id === message.id) ||
-                    (msg.content === message.content && msg.timestamp === message.timestamp)
-                );
+                // Check if message already exists in state
+                const messageExists = prev.some(msg => {
+                    const existingId = msg._id || msg.id || `${msg.content || msg.message}-${msg.senderId?._id}-${msg.createdAt}`;
+                    return existingId === messageId;
+                });
                 
                 if (messageExists) {
                     return prev;
                 }
                 
+                lastMessageRef.current = messageId;
                 return [...prev, message];
             });
             scrollToBottom();
@@ -131,6 +147,8 @@ const CleanerChatPage = () => {
                 // Silently handle quote requirement message
             } else if (error.message === 'Access denied. Please check your login status or contact support.') {
                 setError('You do not have permission to access this chat. Please contact support if this is an error.');
+            } else if (error.message === 'Failed to send quote') {
+                // Ignore this error - it's a backend bug that sends error even when quote is successful
             } else {
                 setError(error.message);
             }
@@ -240,6 +258,37 @@ const CleanerChatPage = () => {
         checkExistingQuote();
     }, [jobId, effectiveCleanerId]);
 
+    // Load chat history via REST API as fallback
+    useEffect(() => {
+        const loadChatHistoryFallback = async () => {
+            if (jobId && effectiveCleanerId) {
+                try {
+                    // Try to get chat history via REST API
+                    const response = await chatAPI.getChatHistory(jobId, effectiveCleanerId);
+                    
+                    if (response.success && response.data?.messages) {
+                        setMessages(response.data.messages);
+                        setIsLoadingMessages(false);
+                    }
+                } catch (error) {
+                    // Silently handle error
+                    setIsLoadingMessages(false);
+                }
+            }
+        };
+
+        // Try to load chat history immediately and also after a delay
+        loadChatHistoryFallback();
+        const timeoutId = setTimeout(loadChatHistoryFallback, 2000);
+        const timeoutId2 = setTimeout(loadChatHistoryFallback, 5000);
+        const loadingTimeout = setTimeout(() => setIsLoadingMessages(false), 10000);
+        return () => {
+            clearTimeout(timeoutId);
+            clearTimeout(timeoutId2);
+            clearTimeout(loadingTimeout);
+        };
+    }, [jobId, effectiveCleanerId]);
+
     // Join Chat Room - Only after quote is submitted and accepted
     useEffect(() => {
         if (jobId && effectiveCleanerId && isConnected) {
@@ -291,6 +340,32 @@ const CleanerChatPage = () => {
                 
                 if (!hasSystemMessage) {
                     setMessages(prev => [...prev, systemMessage]);
+                }
+            } else if (hasSubmittedQuote && quoteStatus === 'rejected') {
+                // Show message that quote was rejected
+                const rejectedMessage = {
+                    _id: 'quote_rejected_system',
+                    id: 'quote_rejected_system',
+                    senderId: { _id: 'system' },
+                    content: " Your quote has been rejected by the customer. You can submit a new quote if the job is still available.",
+                    message: "Your quote has been rejected by the customer. You can submit a new quote if the job is still available.",
+                    messageType: 'system',
+                    createdAt: new Date().toISOString(),
+                    time: new Date().toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    }).toLowerCase()
+                };
+                
+                // Check if rejected message already exists
+                const hasRejectedMessage = messages.some(msg => 
+                    msg.messageType === 'system' && 
+                    msg.content.includes('quote has been rejected')
+                );
+                
+                if (!hasRejectedMessage) {
+                    setMessages(prev => [...prev, rejectedMessage]);
                 }
             }
         } else if (!effectiveCleanerId) {
@@ -406,12 +481,15 @@ const CleanerChatPage = () => {
                 }
 
                 if (response.success) {
+                    // Check if this is an update or new submission
+                    const isUpdate = hasSubmittedQuote && myQuote?._id && (quoteStatus === 'pending' || quoteStatus === 'accepted');
+                    
                     setHasSubmittedQuote(true);
                     setQuoteStatus(response.data.status || 'pending');
                     setMyQuote(response.data);
                     
                     // Add quote message to chat
-                    const messageText = hasSubmittedQuote && myQuote?._id 
+                    const messageText = isUpdate 
                         ? `Quote updated: $${price}${isNegotiable ? ' (negotiable)' : ''}`
                         : `Quote submitted: $${price}${isNegotiable ? ' (negotiable)' : ''}`;
                     
@@ -422,6 +500,9 @@ const CleanerChatPage = () => {
                             price,
                             messageText
                         );
+                        
+                        // Also send a regular text message to ensure it appears in chat
+                        socketService.sendMessage(currentChatRoom.chatRoomId, messageText);
                     } else {
                         const quoteMessage = {
                             _id: `quote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -440,6 +521,23 @@ const CleanerChatPage = () => {
                             }).toLowerCase()
                         };
                         setMessages(prev => [...prev, quoteMessage]);
+                        
+                        // Also add a regular text message to ensure it appears
+                        const textMessage = {
+                            _id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            senderId: { _id: currentUser?.id || currentUser?._id },
+                            content: messageText,
+                            messageType: 'text',
+                            createdAt: new Date().toISOString(),
+                            time: new Date().toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                            }).toLowerCase()
+                        };
+                        
+                        setMessages(prev => [...prev, textMessage]);
                     }
 
                     setSentQuote({
@@ -601,6 +699,11 @@ const CleanerChatPage = () => {
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 h-[50vh]">
                     <div className="space-y-4">
+                        {isLoadingMessages && (
+                            <div className="flex justify-center py-4">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
+                            </div>
+                        )}
                         {messages.map((message, index) => {
                             const isSentByCurrentUser = message.senderId?._id === currentUser?.id || message.senderId?._id === currentUser?._id;
                             const messageTime = message.createdAt ? 
@@ -614,15 +717,27 @@ const CleanerChatPage = () => {
                             // Create unique key combining multiple identifiers
                             const uniqueKey = message._id || message.id || `msg-${index}-${message.content?.slice(0, 10) || 'empty'}`;
                             
-                            // System messages (centered) - Hide when quote is accepted/rejected
+                            // System messages (centered) - Show based on quote status
                             if (message.messageType === 'system') {
-                                if (quoteStatus !== 'pending') {
+                                // Show pending messages only when quote is pending
+                                if (message.content.includes('Quote submitted successfully') && quoteStatus !== 'pending') {
                                     return null;
                                 }
                                 
+                                // Show rejected messages only when quote is rejected
+                                if (message.content.includes('quote has been rejected') && quoteStatus !== 'rejected') {
+                                    return null;
+                                }
+                                
+                                // Determine message styling based on content
+                                const isRejectedMessage = message.content.includes('quote has been rejected');
+                                const bgColor = isRejectedMessage ? 'bg-[#FFE4E4]' : 'bg-[#E4FBED]';
+                                const borderColor = isRejectedMessage ? 'border-[#FFDDDD]' : 'border-[#DBF9E7]';
+                                const textColor = isRejectedMessage ? 'text-[#EF4444]' : 'text-[#1EB154]';
+                                
                                 return (
                                     <div key={uniqueKey} className="flex justify-center my-4">
-                                        <div className="bg-[#E4FBED] border border-[#DBF9E7] text-[#1EB154] px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-center max-w-md">
+                                        <div className={`${bgColor} border ${borderColor} ${textColor} px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-center max-w-md`}>
                                             {message.content || message.message}
                                         </div>
                                     </div>
@@ -634,7 +749,16 @@ const CleanerChatPage = () => {
                                     key={uniqueKey}
                                     className={`flex ${isSentByCurrentUser ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className="max-w-xs sm:max-w-md lg:max-w-lg">
+                                    <div className={`flex items-start space-x-2 max-w-xs sm:max-w-md lg:max-w-lg ${isSentByCurrentUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                        {/* Customer Avatar (left side) */}
+                                        {!isSentByCurrentUser && (
+                                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={UserIcon} alt="Customer" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                            </div>
+                                        )}
+                                        
+                                        {/* Message Content */}
+                                        <div className="flex flex-col">
                                         {/* Quote Message */}
                                         {message.messageType === 'quote' && message.quoteData && (
                                             <div className={`px-4 py-3 rounded-2xl font-medium mb-2 ${
@@ -675,7 +799,7 @@ const CleanerChatPage = () => {
                                         )}
 
                                         {/* Regular Text Message */}
-                                        {message.content && (
+                                        {(message.content || message.message) && (
                                             <div
                                                 className={`px-4 py-3 rounded-2xl font-medium ${
                                                     isSentByCurrentUser
@@ -692,6 +816,14 @@ const CleanerChatPage = () => {
                                                         <span className="text-xs text-green-500">✓✓</span>
                                                     </div>
                                                 )}
+                                            </div>
+                                        )}
+                                        </div>
+                                        
+                                        {/* Cleaner Avatar (right side) */}
+                                        {isSentByCurrentUser && (
+                                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <img src={UserIcon} alt="You" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                             </div>
                                         )}
                                     </div>
