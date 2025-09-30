@@ -20,7 +20,25 @@ class SocketService {
     }
 
     // Get backend URL without /api for WebSocket connection
-    const backendURL = API_CONFIG.BASE_URL.replace('/api', '');
+    let backendURL = API_CONFIG.BASE_URL.replace('/api', '');
+    
+    // Ensure we have a proper WebSocket URL
+    if (backendURL.startsWith('https://')) {
+      backendURL = backendURL.replace('https://', 'wss://');
+    } else if (backendURL.startsWith('http://')) {
+      backendURL = backendURL.replace('http://', 'ws://');
+    } else if (!backendURL.startsWith('ws://') && !backendURL.startsWith('wss://')) {
+      // If no protocol, assume it's a domain and add ws:// for local development
+      backendURL = `ws://${backendURL}`;
+    }
+    
+    // Fallback to localhost if URL is malformed
+    if (backendURL === 'ws://' || backendURL === 'wss://' || backendURL.includes('undefined')) {
+      backendURL = 'ws://localhost:3000';
+      console.warn('⚠️ Malformed backend URL, using fallback:', backendURL);
+    }
+    
+    console.log('🔌 Connecting to WebSocket:', backendURL);
 
     this.socket = io(backendURL, {
       auth: { token: authToken },
