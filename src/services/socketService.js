@@ -28,7 +28,7 @@ class SocketService {
       backendURL = backendURL.replace('http://', 'ws://');
     } else if (!backendURL.startsWith('ws://') && !backendURL.startsWith('wss://')) {
       console.warn('⚠️ Unexpected backend URL format. Using localhost fallback.');
-      return; 
+      backendURL = 'ws://localhost:3000';
     }
 
     console.log('🔌 Connecting to WebSocket:', backendURL);
@@ -37,7 +37,7 @@ class SocketService {
     this.socket = io(backendURL, {
       auth: { token: authToken },
       transports: ["websocket"],
-      timeout: 5000,
+      timeout: 5000,  
       forceNew: true
     });
 
