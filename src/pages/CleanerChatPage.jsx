@@ -272,8 +272,8 @@ const CleanerChatPage = () => {
                     _id: 'quote_pending_system',
                     id: 'quote_pending_system',
                     senderId: { _id: 'system' },
-                    content: "✅ Quote submitted successfully! Customer will review your quote. You can chat after they accept it.",
-                    message: "✅ Quote submitted successfully! Customer will review your quote. You can chat after they accept it.",
+                    content: "Quote submitted successfully! Customer will review your quote. You can chat after they accept it.",
+                    message: "Quote submitted successfully! Customer will review your quote. You can chat after they accept it.",
                     messageType: 'system',
                     createdAt: new Date().toISOString(),
                     time: new Date().toLocaleTimeString('en-US', {
