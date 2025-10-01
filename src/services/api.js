@@ -220,7 +220,8 @@ export const jobsAPI = {
     Object.keys(jobPayload).forEach(key => {
       if (jobPayload[key] !== null && jobPayload[key] !== undefined) {
         if (typeof jobPayload[key] === 'object') {
-          formData.append(key, JSON.stringify(jobPayload[key]));
+          const stringified = JSON.stringify(jobPayload[key]);
+          formData.append(key, stringified);
         } else {
           formData.append(key, jobPayload[key]);
         }

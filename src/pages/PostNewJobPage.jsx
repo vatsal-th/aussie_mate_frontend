@@ -24,7 +24,7 @@ const PostNewJobPage = () => {
   const location = useLocation();
 
   // Step management
-  const [currentStep, setCurrentStep] = useState(1); // 1: Service Selection, 2: Job Details, 3: Final Details
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Service selection
   const [selectedService, setSelectedService] = useState(null);
@@ -179,43 +179,39 @@ const PostNewJobPage = () => {
     };
   }, []);
 
-  // Load user location
+  // Load user location from profile (same as Header)
   useEffect(() => {
-    const fetchUserLocation = async () => {
+    const updateLocation = async () => {
       try {
         const userProfile = await userAPI.getProfile();
-        if (userProfile.success && userProfile.data && userProfile.data.location) {
-          const location = userProfile.data.location;
+        
+        // Check different possible locations for user data (same as Header)
+        const userData = userProfile.data?.user || userProfile.data || userProfile;
+        const location = userData?.location;
+        
+        if (location) {
+          const fullAddress = location.fullAddress || location.address || '';
+          const addressParts = fullAddress.split(',');
+          const address = addressParts[0]?.trim() || 'Location not set';
+          const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : (location.city || 'Please set your location');
+          
           setSelectedLocation({
-            address: location.address?.split(',')[0] || 'Location not set',
-            city: location.city || 'Please set your location'
+            address: address,
+            city: city,
+            coordinates: location.coordinates
           });
-          return;
         }
       } catch (error) {
-        console.error('Error fetching location from backend:', error);
-      }
-
-      // Fallback to localStorage
-      const storedLocation = localStorage.getItem('userLocation');
-      if (storedLocation) {
-        try {
-          const location = JSON.parse(storedLocation);
-          setSelectedLocation({
-            address: location.address?.split(',')[0] || 'Location not set',
-            city: location.city || 'Please set your location'
-          });
-        } catch (error) {
-          console.error('Error parsing stored location:', error);
-        }
+        console.error('Error fetching location from profile:', error);
       }
     };
 
-    fetchUserLocation();
+    // Initial load
+    updateLocation();
 
     // Listen for location updates
     const handleLocationUpdate = () => {
-      fetchUserLocation();
+      updateLocation();
     };
 
     window.addEventListener('locationUpdated', handleLocationUpdate);
@@ -514,13 +510,8 @@ const PostNewJobPage = () => {
       // Convert date to ISO string
       const scheduledDate = new Date(selectedDate).toISOString();
 
-      // Prepare job data
-      // Include customerId from localStorage
       const userStr = localStorage.getItem('user');
-      const storedLocationStrForLog = localStorage.getItem('userLocation');
 
-      // Debug logs for request context
-      
       const user = userStr ? JSON.parse(userStr) : null;
       const customerId = user?.id || user?._id;
 
@@ -530,7 +521,7 @@ const PostNewJobPage = () => {
         propertySize: formData.propertySize,
         bedrooms: formData.bedrooms,
         bathrooms: formData.bathrooms,
-        addons: Object.keys(formData.addons).filter(key => formData.addons[key]),
+        addons: formData.addons,
         scheduledDate,
         instructions: finalInstructions || formData.instructions,
         isUrgent,
@@ -623,7 +614,7 @@ const PostNewJobPage = () => {
         </div>
 
         {/* Service Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
           {serviceCategories.map((service) => (
             <div
               key={service.id}
@@ -658,6 +649,62 @@ const PostNewJobPage = () => {
               <div className="relative z-10 text-xs sm:text-lg font-medium text-primary-500">{service.name}</div>
             </div>
           ))}
+        </div>
+
+        {/* Select location */}
+        <div className="mb-6">
+          <h3 className="text-primary-500 text-lg font-medium mb-2">
+            Select location you want to clean
+          </h3>
+          <p className="text-gray-400 text-sm font-medium mb-3">Your default location</p>
+
+          {/* Location Warning */}
+          {(!selectedLocation.address || selectedLocation.address === 'Location not set') && (
+            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                ⚠️ Please set your address in profile before posting jobs
+              </p>
+            </div>
+          )}
+
+          <div className={`rounded-lg py-2 flex items-center ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
+              ? 'bg-yellow-50 border border-yellow-200'
+              : 'bg-white'
+            }`}>
+            <div className={`mr-3 rounded-[8px] p-3 border ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
+                ? 'border-yellow-300 bg-yellow-100'
+                : 'border-[#E5E7EB] bg-white'
+              }`}>
+              <img
+                src={MapPinIcon}
+                alt="Location"
+                className="w-6 h-6"
+              />
+            </div>
+            <div className="flex-1">
+              <div className={`font-medium text-sm ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
+                  ? 'text-yellow-800'
+                  : 'text-gray-900'
+                }`}>
+                {selectedLocation.address}
+              </div>
+              <div className={`text-xs ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
+                  ? 'text-yellow-600'
+                  : 'text-gray-600'
+                }`}>
+                {selectedLocation.city}
+              </div>
+            </div>
+            <button
+              onClick={handleChangeLocation}
+              className={`text-sm font-medium border rounded-[8px]! px-4 py-2 cursor-pointer transition-colors ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
+                  ? 'text-yellow-700 border-yellow-300 hover:bg-yellow-100'
+                  : 'text-[#1F6FEB] border-[#E5E7EB] hover:bg-blue-50'
+                }`}
+            >
+              {(!selectedLocation.address || selectedLocation.address === 'Location not set') ? 'Set Address' : 'Change'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -885,7 +932,7 @@ const PostNewJobPage = () => {
                     type="button"
                     className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto transition-colors"
                   >
-                    <span className="text-sm sm:text-base">Upload Here</span>
+                    <span className="text-sm sm:text-base cursor-pointer">Upload Here</span>
                     <img src={UploadIcon} alt="Upload" className="w-4 h-4" />
                   </button>
                 </div>
@@ -1063,7 +1110,7 @@ const PostNewJobPage = () => {
         </div>
 
         {/* Urgency Toggle */}
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-6">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-6 mb-6">
           <span className="text-primary-500 text-sm font-medium">
             This is urgent (Extra Fee may apply)
           </span>
@@ -1077,62 +1124,6 @@ const PostNewJobPage = () => {
                 }`}
             />
           </button>
-        </div>
-
-        {/* Select location */}
-        <div className="mb-15">
-          <h3 className="text-primary-500 text-lg font-medium mb-2">
-            Select location you want to clean
-          </h3>
-          <p className="text-gray-400 text-sm font-medium">Your default location</p>
-
-          {/* Location Warning */}
-          {(!selectedLocation.address || selectedLocation.address === 'Location not set') && (
-            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">
-                ⚠️ Please set your address in profile before posting jobs
-              </p>
-            </div>
-          )}
-
-          <div className={`rounded-lg py-2 flex items-center ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-              ? 'bg-yellow-50 border border-yellow-200'
-              : 'bg-white'
-            }`}>
-            <div className={`mr-3 rounded-[8px] p-3 border ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-                ? 'border-yellow-300 bg-yellow-100'
-                : 'border-[#E5E7EB] bg-white'
-              }`}>
-              <img
-                src={MapPinIcon}
-                alt="Location"
-                className="w-6 h-6"
-              />
-            </div>
-            <div className="flex-1">
-              <div className={`font-medium text-sm ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-                  ? 'text-yellow-800'
-                  : 'text-gray-900'
-                }`}>
-                {selectedLocation.address}
-              </div>
-              <div className={`text-xs ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-                  ? 'text-yellow-600'
-                  : 'text-gray-600'
-                }`}>
-                {selectedLocation.city}
-              </div>
-            </div>
-            <button
-              onClick={handleChangeLocation}
-              className={`text-sm font-medium border rounded-[8px]! px-4 py-2 cursor-pointer transition-colors ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-                  ? 'text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                  : 'text-[#1F6FEB] border-[#E5E7EB] hover:bg-blue-50'
-                }`}
-            >
-              {(!selectedLocation.address || selectedLocation.address === 'Location not set') ? 'Set Address' : 'Change'}
-            </button>
-          </div>
         </div>
 
         {/* Post Job Button */}
