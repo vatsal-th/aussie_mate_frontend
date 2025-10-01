@@ -13,6 +13,7 @@ class SocketService {
 
     // Get backend URL without /api for WebSocket connection
     const backendURL = API_CONFIG.BASE_URL.replace('/api', '');
+    console.log("Socket connecting to:", backendURL);
 
     this.socket = io(backendURL, {
       auth: { token },
