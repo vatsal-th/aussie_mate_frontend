@@ -11,8 +11,19 @@ class SocketService {
   connect(token) {
     if (this.socket) this.disconnect();
 
-    // Get backend URL without /api for WebSocket connection
-    let backendURL = API_CONFIG.BASE_URL.replace('/api', '');
+    // Get backend URL from config
+    let backendURL = API_CONFIG.BASE_URL;
+    
+    // Remove /api suffix for WebSocket connection
+    if (backendURL && backendURL.endsWith('/api')) {
+      backendURL = backendURL.slice(0, -4);
+    }
+
+    // Handle undefined or invalid backend URL
+    if (!backendURL || backendURL.includes('undefined')) {
+      console.error('❌ VITE_BACKEND_URL environment variable is not set');
+      return;
+    }
 
     // Convert HTTP/HTTPS to WebSocket protocol
     if (backendURL.startsWith('https://')) {
