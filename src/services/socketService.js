@@ -12,22 +12,33 @@ class SocketService {
     if (this.socket) this.disconnect();
 
     // Get backend URL without /api for WebSocket connection
-    const backendURL = API_CONFIG.BASE_URL.replace('/api', '');
-    console.log("Socket connecting to:", backendURL);
+    let backendURL = API_CONFIG.BASE_URL.replace('/api', '');
+
+    // Convert HTTP/HTTPS to WebSocket protocol
+    if (backendURL.startsWith('https://')) {
+      backendURL = backendURL.replace('https://', 'wss://');
+    } else if (backendURL.startsWith('http://')) {
+      backendURL = backendURL.replace('http://', 'ws://');
+    }
+
+    console.log('🔌 Connecting to WebSocket:', backendURL);
 
     this.socket = io(backendURL, {
       auth: { token },
+      transports: ["websocket"],
       timeout: 5000,
       forceNew: true
     });
 
     this.socket.on('connect', () => {
       this.isConnected = true;
+      console.log('✅ Socket connected successfully');
       this.notifyListeners('connectionStatus', true);
     });
 
     this.socket.on('disconnect', () => {
       this.isConnected = false;
+      console.log('❌ Socket disconnected');
       this.notifyListeners('connectionStatus', false);
     });
 
@@ -71,6 +82,7 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error.message);
       this.notifyListeners('error', { 
         message: 'Failed to connect to chat server. Please check if the backend is running.' 
       });
