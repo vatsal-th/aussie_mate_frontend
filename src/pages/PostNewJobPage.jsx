@@ -530,7 +530,7 @@ const PostNewJobPage = () => {
         propertySize: formData.propertySize,
         bedrooms: formData.bedrooms,
         bathrooms: formData.bathrooms,
-        addons: formData.addons,
+        addons: Object.keys(formData.addons).filter(key => formData.addons[key]),
         scheduledDate,
         instructions: finalInstructions || formData.instructions,
         isUrgent,

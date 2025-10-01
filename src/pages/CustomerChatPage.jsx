@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
-import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import InfoIcon from '../assets/info.svg';
 import MessageIcon from '../assets/sendChat.svg';
 import UserIcon from '../assets/user.svg';
-import { jobsAPI, quotesAPI } from '../services/api';
+import { jobsAPI } from '../services/api';
 import { chatAPI } from '../services/chatAPI';
 import { socketService } from '../services/socketService';
 
@@ -30,10 +29,6 @@ const CustomerChatPage = () => {
     addons: [],
     total: 0
   });
-  
-  // Reject quote modal states
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
   
   const messagesEndRef = useRef(null);
 
@@ -274,44 +269,6 @@ const CustomerChatPage = () => {
     }
   };
   
-  const handleRejectQuote = () => {
-    setShowRejectModal(true);
-  };
-  
-  const handleConfirmReject = async () => {
-    setIsRejecting(true);
-    try {
-      const quoteId = cleanerId;
-      
-      if (!quoteId) {
-        setError('Quote ID not found');
-        setIsRejecting(false);
-        setShowRejectModal(false);
-        return;
-      }
-      
-      // Call API to reject quote
-      const response = await quotesAPI.rejectQuote(jobId, quoteId);
-      
-      if (response.success) {
-        // Navigate back to job details
-        navigate(`/customer-job-details/${jobId}`);
-      } else {
-        setError(response.error || 'Failed to reject quote');
-        setIsRejecting(false);
-        setShowRejectModal(false);
-      }
-    } catch (error) {
-      setError('Failed to reject quote. Please try again.');
-      setIsRejecting(false);
-      setShowRejectModal(false);
-    }
-  };
-  
-  const handleCancelReject = () => {
-    setShowRejectModal(false);
-  };
-  
   const handleAcceptQuote = () => {
     navigate(`/booking-confirmation/${jobId}`);
   };
@@ -509,36 +466,17 @@ const CustomerChatPage = () => {
           </div>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 mt-3 sm:mt-4">
-          <button
-            onClick={handleRejectQuote}
-            className="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-xs sm:text-sm font-medium cursor-pointer"
-          >
-            Reject Quote
-          </button>
+        {/* Accept Button Only */}
+        <div className="mt-3 sm:mt-4">
           <button
             onClick={handleAcceptQuote}
-            className="flex-1 py-2 sm:py-2.5 px-3 sm:px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium cursor-pointer"
+            className="w-full py-2 sm:py-2.5 px-3 sm:px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium cursor-pointer"
           >
             Accept Quote & Book
           </button>
         </div>
       </div>
       </div>
-      
-      {/* Reject Quote Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showRejectModal}
-        onClose={handleCancelReject}
-        onConfirm={handleConfirmReject}
-        title="Reject Quote"
-        message="Are you sure you want to reject this quote? This action cannot be undone."
-        confirmText="Reject"
-        cancelText="Cancel"
-        confirmButtonColor="bg-red-500 hover:bg-red-600"
-        isLoading={isRejecting}
-      />
     </div>
   );
 };
