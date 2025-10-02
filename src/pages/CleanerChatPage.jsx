@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import FloatingLabelInput from '../components/FloatingLabelInput';
 import ConfirmationModal from '../components/ConfirmationModal';
+import PhoneValidationAlert from '../components/PhoneValidationAlert';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import InfoIcon from '../assets/info.svg';
 import SendIcon from '../assets/sendChat.svg';
@@ -28,6 +29,8 @@ const CleanerChatPage = () => {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [phoneValidationError, setPhoneValidationError] = useState('');
+    const [showPhoneAlert, setShowPhoneAlert] = useState(false);
     
     const [quoteAmount, setQuoteAmount] = useState('');
     const [isNegotiable, setIsNegotiable] = useState(false);
@@ -125,7 +128,12 @@ const CleanerChatPage = () => {
             scrollToBottom();
         });
         socketService.on('error', (error) => {
-            if (error.message === 'Failed to join chat') {
+            // Check if it's a phone validation error
+            if (error.message && error.message.includes('Phone numbers are not allowed')) {
+                setPhoneValidationError(error.message);
+                setShowPhoneAlert(true);
+                // No auto-hide - user must manually close
+            } else if (error.message === 'Failed to join chat') {
                 // Silently handle chat room join failure
                 setMessages([
                     {
@@ -1030,6 +1038,16 @@ const CleanerChatPage = () => {
                 cancelText="Cancel"
                 confirmButtonColor="bg-red-500 hover:bg-red-600"
                 isLoading={isWithdrawing}
+            />
+
+            {/* Phone Validation Alert */}
+            <PhoneValidationAlert
+                error={phoneValidationError}
+                onClose={() => {
+                    setShowPhoneAlert(false);
+                    setPhoneValidationError('');
+                }}
+                isVisible={showPhoneAlert}
             />
         </div>
     );

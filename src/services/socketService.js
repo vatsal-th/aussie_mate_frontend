@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import { API_CONFIG } from '../config/api';
+import { validateMessageForPhoneNumbers } from '../utils/phoneValidator';
 
 class SocketService {
   constructor() {
@@ -11,21 +12,17 @@ class SocketService {
   connect(token) {
     if (this.socket) this.disconnect();
 
-    // Get backend URL from config
     let backendURL = API_CONFIG.BASE_URL;
     
-    // Remove /api suffix for WebSocket connection
     if (backendURL && backendURL.endsWith('/api')) {
       backendURL = backendURL.slice(0, -4);
     }
 
-    // Handle undefined or invalid backend URL
     if (!backendURL || backendURL.includes('undefined')) {
       console.error('❌ VITE_BACKEND_URL environment variable is not set');
       return;
     }
 
-    // Convert HTTP/HTTPS to WebSocket protocol
     if (backendURL.startsWith('https://')) {
       backendURL = backendURL.replace('https://', 'wss://');
     } else if (backendURL.startsWith('http://')) {
@@ -75,9 +72,7 @@ class SocketService {
     );
 
     this.socket.on('error', (error) => {
-      // Handle specific error types
       if (error.message === 'Failed to join chat') {
-        // Silently handle chat room not found
         return;
       } else if (error.message === 'Access denied') {
         this.notifyListeners('error', { 
@@ -133,6 +128,16 @@ class SocketService {
   }
 
   sendMessage(chatRoomId, content, messageType = 'text') {
+    // Check for phone numbers in message content
+    const validation = validateMessageForPhoneNumbers(content);
+    if (!validation.isValid) {
+      // Emit error to show alert in frontend
+      this.notifyListeners('error', { 
+        message: validation.message 
+      });
+      return;
+    }
+
     if (this.socket && this.isConnected) {
       this.socket.emit('send_message', {
         chatRoomId,
@@ -143,6 +148,16 @@ class SocketService {
   }
 
   sendQuote(chatRoomId, price, message) {
+    // Check for phone numbers in quote message
+    const validation = validateMessageForPhoneNumbers(message);
+    if (!validation.isValid) {
+      // Emit error to show alert in frontend
+      this.notifyListeners('error', { 
+        message: 'Phone numbers are not allowed in quote messages. Please contact through the platform.' 
+      });
+      return;
+    }
+
     if (this.socket && this.isConnected) {
       this.socket.emit('send_quote', {
         chatRoomId,

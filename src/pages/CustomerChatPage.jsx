@@ -5,6 +5,7 @@ import ArrowLeftIcon from '../assets/arrow-left.svg';
 import InfoIcon from '../assets/info.svg';
 import MessageIcon from '../assets/sendChat.svg';
 import UserIcon from '../assets/user.svg';
+import PhoneValidationAlert from '../components/PhoneValidationAlert';
 import { jobsAPI } from '../services/api';
 import { chatAPI } from '../services/chatAPI';
 import { socketService } from '../services/socketService';
@@ -22,6 +23,8 @@ const CustomerChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [phoneValidationError, setPhoneValidationError] = useState('');
+  const [showPhoneAlert, setShowPhoneAlert] = useState(false);
   
   const [newMessage, setNewMessage] = useState('');
   const [quoteData, setQuoteData] = useState({
@@ -90,16 +93,23 @@ const CustomerChatPage = () => {
        scrollToBottom();
      });
      socketService.on('error', (error) => {
-       // Handle specific errors more gracefully
-       if (error.message === 'Cleaner has not quoted on this job') {
-         setError('Chat system temporarily unavailable');
+       // Check if it's a phone validation error
+       if (error.message && error.message.includes('Phone numbers are not allowed')) {
+         setPhoneValidationError(error.message);
+         setShowPhoneAlert(true);
+         // No auto-hide - user must manually close
        } else {
-         setError(error.message);
+         // Handle other errors more gracefully
+         if (error.message === 'Cleaner has not quoted on this job') {
+           setError('Chat system temporarily unavailable');
+         } else {
+           setError(error.message);
+         }
+         
+         // Start with empty messages on error
+         setMessages([]);
+         setLoading(false);
        }
-       
-       // Start with empty messages on error
-       setMessages([]);
-       setLoading(false);
      });
 
     return () => {
@@ -477,6 +487,16 @@ const CustomerChatPage = () => {
         </div>
       </div>
       </div>
+
+      {/* Phone Validation Alert */}
+      <PhoneValidationAlert
+        error={phoneValidationError}
+        onClose={() => {
+          setShowPhoneAlert(false);
+          setPhoneValidationError('');
+        }}
+        isVisible={showPhoneAlert}
+      />
     </div>
   );
 };
