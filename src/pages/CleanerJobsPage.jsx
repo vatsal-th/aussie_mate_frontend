@@ -9,6 +9,7 @@ import CurrentLocationIcon from '../assets/currentLocation.svg';
 import UserIcon from '../assets/user.svg';
 import SearchIcon from '../assets/search.svg';
 import { jobsAPI, userAPI } from '../services/api';
+import ChatIcon from '../assets/message2.svg';
 
 const CleanerJobsPage = () => {
   const navigate = useNavigate();
@@ -147,25 +148,78 @@ const CleanerJobsPage = () => {
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
           const currentUserId = currentUser.id || currentUser._id;
           
-          // Get all jobs with quoted status
-          const allJobsResponse = await jobsAPI.getAllJobs({
-            status: 'quoted',
-            page: 1,
-            limit: 100 
-          });
+          console.log('Current User ID:', currentUserId);
           
-          const allQuotedJobs = allJobsResponse?.data?.jobs || allJobsResponse?.data || [];
+          // Get all jobs (both posted and quoted status) to find jobs where cleaner has submitted quotes
+          const [postedJobsResponse, quotedJobsResponse] = await Promise.all([
+            jobsAPI.getAllJobs({ status: 'posted', page: 1, limit: 100 }),
+            jobsAPI.getAllJobs({ status: 'quoted', page: 1, limit: 100 })
+          ]);
+          
+          const postedJobs = postedJobsResponse?.data?.jobs || postedJobsResponse?.data || [];
+          const quotedJobs = quotedJobsResponse?.data?.jobs || quotedJobsResponse?.data || [];
+          const allJobs = [...postedJobs, ...quotedJobs];
+          
+          console.log('All jobs fetched:', allJobs.length);
+          console.log('Posted jobs:', postedJobs.length);
+          console.log('Quoted jobs:', quotedJobs.length);
           
           // Filter jobs where current cleaner has submitted a quote
-          const jobsWithMyBids = allQuotedJobs.filter(job => {
-            if (job.quotes && job.quotes.length > 0) {
-              return job.quotes.some(quote => 
-                (quote.cleanerId === currentUserId || quote.cleanerId?._id === currentUserId) && 
-                quote.status === 'pending'
-              );
+          // Since getAllJobs doesn't include quotes, we need to fetch individual job details
+          const jobsWithMyBids = [];
+          
+          for (const job of allJobs) {
+            try {
+              console.log(`Fetching details for job: ${job.jobId || job._id}`);
+              
+              // Fetch individual job details to get quotes
+              const jobDetails = await jobsAPI.getJobById(job._id || job.jobId || job.id);
+              
+              if (jobDetails.success && jobDetails.data) {
+                const jobData = jobDetails.data;
+                console.log(`Job ${job.jobId} details:`, jobData);
+                console.log(`Job quotes:`, jobData.quotes);
+                
+                if (jobData.quotes && jobData.quotes.length > 0) {
+                  console.log(`Job ${job.jobId} has ${jobData.quotes.length} quotes`);
+                  
+                  const hasMyQuote = jobData.quotes.some((quote, index) => {
+                    const quoteCleanerId = quote.cleanerId || quote.cleanerId?._id;
+                    const isMyQuote = quoteCleanerId === currentUserId;
+                    const isPending = quote.status === 'pending';
+                    
+                    console.log(`Quote ${index + 1}:`, {
+                      cleanerId: quoteCleanerId,
+                      myId: currentUserId,
+                      isMyQuote: isMyQuote,
+                      status: quote.status,
+                      isPending: isPending,
+                      quoteData: quote
+                    });
+                    
+                    return isMyQuote && isPending;
+                  });
+                  
+                  if (hasMyQuote) {
+                    console.log(`✅ Found my quote in job: ${job.jobId}`);
+                    jobsWithMyBids.push(jobData);
+                  } else {
+                    console.log(`❌ No matching quote found in job: ${job.jobId}`);
+                  }
+                } else {
+                  console.log(`Job ${job.jobId} has no quotes`);
+                }
+              } else {
+                console.log(`Failed to fetch details for job: ${job.jobId}`);
+              }
+            } catch (error) {
+              console.error(`Error fetching job ${job.jobId}:`, error);
             }
-            return false;
-          });
+          }
+          
+          console.log('Jobs with my bids:', jobsWithMyBids.length);
+          
+          console.log('Jobs with my bids:', jobsWithMyBids.length);
           
           // Apply pagination to filtered results
           const startIndex = (currentPage - 1) * jobsPerPage;
@@ -275,6 +329,76 @@ const CleanerJobsPage = () => {
 
         // Filter jobs based on active tab
         let filteredJobs = transformedJobs;
+
+        if (activeTab === 'accepted') {
+          // For accepted jobs, fetch individual job details to get assignment and quotes data
+          console.log('Fetching accepted job details for cleaner:', currentUserId);
+          
+          const acceptedJobs = [];
+          
+          for (const job of transformedJobs) {
+            try {
+              console.log(`Fetching details for accepted job: ${job.originalJob.jobId}`);
+              
+              // Fetch individual job details to get quotes and assignment data
+              const jobDetails = await jobsAPI.getJobById(job.originalJob._id || job.originalJob.jobId || job.originalJob.id);
+              
+              if (jobDetails.success && jobDetails.data) {
+                const jobData = jobDetails.data;
+                console.log(`Job ${jobData.jobId} details:`, jobData);
+                
+                // Check if job is accepted and assigned to current cleaner
+                const isAccepted = jobData.status === 'accepted';
+                const isAssignedToCurrentCleaner = jobData.assignedCleanerId === currentUserId ||
+                  jobData.cleanerId === currentUserId ||
+                  jobData.acceptedBy === currentUserId;
+                
+                console.log('Assignment check:', {
+                  assignedCleanerId: jobData.assignedCleanerId,
+                  cleanerId: jobData.cleanerId,
+                  acceptedBy: jobData.acceptedBy,
+                  currentUserId: currentUserId,
+                  isAssignedToCurrentCleaner: isAssignedToCurrentCleaner
+                });
+                
+                // Also check if any quote from current cleaner is accepted
+                const hasAcceptedQuote = jobData.quotes && jobData.quotes.some(quote => {
+                  const quoteCleanerId = quote.cleanerId || quote.cleanerId?._id;
+                  const isMyQuote = quoteCleanerId === currentUserId;
+                  const isAccepted = quote.status === 'accepted';
+                  
+                  console.log('Quote check:', {
+                    quoteCleanerId: quoteCleanerId,
+                    currentUserId: currentUserId,
+                    isMyQuote: isMyQuote,
+                    quoteStatus: quote.status,
+                    isAccepted: isAccepted,
+                    quoteData: quote
+                  });
+                  
+                  return isMyQuote && isAccepted;
+                });
+                
+                const shouldShow = isAccepted && (isAssignedToCurrentCleaner || hasAcceptedQuote);
+                console.log(`Job ${jobData.jobId} should show: ${shouldShow}`);
+                
+                if (shouldShow) {
+                  acceptedJobs.push({
+                    ...job,
+                    originalJob: jobData
+                  });
+                }
+              } else {
+                console.log(`Failed to fetch details for job: ${job.originalJob.jobId}`);
+              }
+            } catch (error) {
+              console.error(`Error fetching job ${job.originalJob.jobId}:`, error);
+            }
+          }
+          
+          filteredJobs = acceptedJobs;
+          console.log('Filtered accepted jobs:', filteredJobs.length);
+        }
 
         if (activeTab === 'completed') {
           // For completed jobs, only show jobs completed by current cleaner
@@ -516,9 +640,11 @@ const CleanerJobsPage = () => {
                         </span>
                       )}
                       {activeTab === 'my-bids' && job.myQuote && (
-                        <span className="text-xs font-bold px-2 py-1 rounded-full bg-yellow-500 text-white">
-                          Pending
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-[#E0F2FE] text-[#0369A1] mb-1">
+                            Quotes Sent
+                          </span>
+                        </div>
                       )}
                     </div>
 
@@ -552,17 +678,33 @@ const CleanerJobsPage = () => {
                       {/* My Quote Amount for My Bids tab */}
                       {activeTab === 'my-bids' && job.myQuote && (
                         <div className="flex items-center">
-                          <span className="text-sm font-bold text-green-600">
-                            My Quote: ${job.myQuote.price}
+                          <span className="text-sm font-semibold text-primary-500">
+                            My Quote: <span className="ml-1 text-[#1F6FEB]">${job.myQuote.price}</span>
                           </span>
                         </div>
                       )}
                     </div>
+
+                    {/* Chat with Customer Button for Accepted Jobs */}
+                    {activeTab === 'accepted' && (
+                      <div className="mt-4 flex items-center justify-end cursor-pointer">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent job card click
+                            navigate(`/chat/${job.id}`);
+                          }}
+                          className="bg-[#1F6FEB] hover:bg-[#1F6FEB] text-white px-4 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <img src={ChatIcon} alt="Chat" className="w-5 h-5 brightness-0 invert" />
+                          Chat with Customer
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </div>  
 
           {/* Pagination */}
           {!loading && jobs.length > 0 && (
