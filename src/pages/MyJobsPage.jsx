@@ -6,7 +6,9 @@ import SearchIcon from '../assets/search.svg';
 import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import UserIcon from '../assets/user.svg';
+import MessageIcon from '../assets/message2.svg';
 import { jobsAPI, userAPI } from '../services/api';
+import { chatAPI } from '../services/chatAPI';
 import { useAuth } from '../contexts/AuthContext';
 
 const tabs = [
@@ -77,6 +79,40 @@ const getStatusChip = (statusRaw) => {
   }
   // Fallback
   return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+};
+
+// Helper function to get message count for a job
+const getMessageCountForJob = async (jobId) => {
+  try {
+    const response = await chatAPI.getUnreadCount();
+    
+    if (response.success && response.data) {
+      // Handle different response formats
+      let dataArray = [];
+      
+      if (Array.isArray(response.data)) {
+        dataArray = response.data;
+      } else if (response.data.messages && Array.isArray(response.data.messages)) {
+        dataArray = response.data.messages;
+      } else if (response.data.unreadCounts && Array.isArray(response.data.unreadCounts)) {
+        dataArray = response.data.unreadCounts;
+      } else if (typeof response.data === 'object') {
+        // If data is an object, try to find job-specific data
+        const jobData = response.data[jobId] || response.data[jobId?.toString()];
+        return jobData ? (jobData.unreadCount || jobData.count || 0) : 0;
+      }
+      
+      // Find messages for this specific job
+      const jobMessages = dataArray.find(item => 
+        item.jobId === jobId || item.jobId?._id === jobId || item.jobId?.id === jobId
+      );
+      return jobMessages ? (jobMessages.unreadCount || jobMessages.count || 0) : 0;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error fetching message count:', error);
+    return 0;
+  }
 };
 
 const MyJobsPage = () => {
@@ -164,18 +200,53 @@ const MyJobsPage = () => {
           return jobCustomerId === currentUserId;
         });
 
-        // Normalize into UI shape
-        const normalized = userJobs.map((j) => {
+        // Normalize into UI shape with message counts
+        const normalized = await Promise.all(userJobs.map(async (j) => {
           const status = (j.status || '').toString();
           const address = j.location?.address || j.location?.fullAddress || '';
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
           
           const dateLabel = formatDate(j.createdAt);
           const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
-          const quotes = (j.quotesReceived && j.quotesReceived > 0) ? `${j.quotesReceived} Quotes Received` : null;
+          
+          
+          // Count quotes from different possible API response formats (only pending quotes)
+          let quoteCount = 0;
+          if (j.quotesReceived && j.quotesReceived > 0) {
+            quoteCount = j.quotesReceived;
+          } else if (j.quotes && Array.isArray(j.quotes)) {
+            // Filter out rejected quotes and count only pending quotes
+            quoteCount = j.quotes.filter(quote => quote.status !== 'rejected').length;
+          } else if (j.quotes && typeof j.quotes === 'number') {
+            quoteCount = j.quotes;
+          } else if (j.quoteCount) {
+            quoteCount = j.quoteCount;
+          } else {
+            // If no quote data in job list, try to fetch individual job details
+            try {
+              const jobDetails = await jobsAPI.getJobById(j._id || j.jobId || j.id);
+              if (jobDetails.success && jobDetails.data) {
+                const jobData = jobDetails.data;
+                if (jobData.quotes && Array.isArray(jobData.quotes)) {
+                  quoteCount = jobData.quotes.filter(quote => quote.status !== 'rejected').length;
+                } else if (jobData.quotesReceived && jobData.quotesReceived > 0) {
+                  quoteCount = jobData.quotesReceived;
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching job details for quotes:', error);
+            }
+          }
+          
+          const shouldShowQuotes = quoteCount > 0 && status !== 'accepted' && status !== 'in_progress' && status !== 'completed';
+          const quotes = shouldShowQuotes ? `${quoteCount} Quotes Received` : null;
           const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           const statusChip = getStatusChip(status);
-            return {
+          
+          // Get message count for this job
+          const messageCount = await getMessageCountForJob(j._id || j.jobId || j.id);
+          
+          return {
             id: j._id || j.jobId || j.id || `job-${Math.random()}`,    // Use _id for navigation
             status: statusChip.label,
             jobId: j.jobId, // Store jobId for display
@@ -185,9 +256,10 @@ const MyJobsPage = () => {
             payment: paymentAmount,
             quotes,
             assignedTo,
-            createdAt: j.createdAt
+            createdAt: j.createdAt,
+            messageCount: messageCount
           };
-        });
+        }));
         
         // Sort by creation date (latest first)
         const sortedJobs = normalized.sort((a, b) => {
@@ -384,14 +456,29 @@ const MyJobsPage = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="text-[15px] text-primary-200 font-medium">{job.jobId}</div>
-                {(() => { const chip = getStatusChip(job.status); return (
-                  <span className={`text-[11px] px-2 py-1 rounded-full font-medium ${chip.className}`}>
-                    {chip.label}
-                  </span>
-                ); })()}
+                {(() => { 
+                  if (job.quotes) {
+                    return (
+                      <div className="flex items-center gap-1.5 bg-[#E0F2FE] px-2 py-1 rounded-full">
+                        <div className="w-2 h-2 bg-[#0369A1] rounded-full"></div>
+                        <span className="text-xs font-medium text-[#0369A1]">
+                          {job.quotes}
+                        </span>
+                      </div>
+                    );
+                  } else {
+                    const chip = getStatusChip(job.status);
+                    return (
+                      <div className={`text-[11px] px-2 py-1 rounded-full font-medium ${chip.className} text-center`}>
+                        {chip.label}
+                      </div>
+                    );
+                  }
+                })()}
               </div>
               <h3 className="text-sm sm:text-base font-semibold text-primary-500 mb-2 line-clamp-2">{job.title}</h3>
 
+             
               <div className="flex items-center text-xs text-primary-200 font-medium mb-1">
                 <img src={CalendarIcon} alt="Date" className="w-4 h-4 mr-2" />
                 {job.dateLabel}
@@ -411,22 +498,32 @@ const MyJobsPage = () => {
 
               {/* Footer Row */}
               <div className="mt-3 flex items-center justify-between">
-                {job.payment ? (() => {
-                  const match = (job.payment || '').match(/^\s*([$£€₹]?\d+(?:[.,]\d{1,2})?)/);
-                  const amount = match ? match[1] : null;
-                  const rest = amount ? job.payment.slice(match[0].length) : '';
-                  return (
-                    <div className="text-[11px] sm:text-xs text-primary-200 font-medium">
-                      Payment: {amount ? (<><span className="text-[#1F6FEB] font-semibold">{amount}</span>{rest}</>) : job.payment}
-                    </div>
-                  );
-                })() : <span />}
+                <div className="flex items-center gap-2">
+                  {job.payment ? (() => {
+                    const match = (job.payment || '').match(/^\s*([$£€₹]?\d+(?:[.,]\d{1,2})?)/);
+                    const amount = match ? match[1] : null;
+                    const rest = amount ? job.payment.slice(match[0].length) : '';
+                    return (
+                      <div className="text-[11px] sm:text-xs text-primary-200 font-medium">
+                        Payment: {amount ? (<><span className="text-[#1F6FEB] font-semibold">{amount}</span>{rest}</>) : job.payment}
+                      </div>
+                    );
+                  })() : <span />}
 
-                {job.quotes && (
-                  <span className="text-[11px] sm:text-xs font-medium bg-[#DDEFFF] text-[#0088FF] px-2 py-1 rounded-full border border-[#DDEFFF]">
-                    {job.quotes}
-                  </span>
-                )}
+                  {/* Message Count Badge */}
+                  {job.messageCount > 0 && (
+                    <div className="flex items-center gap-1">
+                      <img src={MessageIcon} alt="Messages" className="w-3 h-3" />
+                      <span className="text-[10px] sm:text-xs font-medium bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                        {job.messageCount} new
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Quotes moved to prominent position above */}
+                </div>
               </div>
             </div>
           ))}

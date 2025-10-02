@@ -452,19 +452,19 @@ const CustomerJobDetailsPage = () => {
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
           <div className="mb-3 sm:mb-4">
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1 sm:mb-2">
-              Cleaner Quotes ({cleanerQuotes.length})
+              Cleaner Quotes ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
             </h3>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">
-              {cleanerQuotes.length > 0 
+              {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0 
                 ? "Cleaners nearby have sent their offers. Review and chat before choosing."
                 : "No quotes yet. Cleaners will send quotes soon."
               }
             </p>
           </div>
 
-          {cleanerQuotes.length > 0 && (
+          {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0 && (
             <div className="space-y-2 sm:space-y-3">
-              {cleanerQuotes.map((quote, index) => {
+              {cleanerQuotes.filter(quote => quote.status !== 'rejected').map((quote, index) => {
                 const cleaner = formatCleanerData(quote);
                 const chatStatus = getChatStatus(cleaner.id);
                 
@@ -516,7 +516,7 @@ const CustomerJobDetailsPage = () => {
                                 {chatStatus.lastMessage}
                               </span>
                               {chatStatus.unreadCount > 0 && (
-                                <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                <span className="bg-[#FFE4E4] text-[#EF4444] font-medium border border-[#FFDDDD] text-xs px-1.5 py-0.5 rounded-full">
                                   {chatStatus.unreadCount}
                                 </span>
                               )}
@@ -577,7 +577,7 @@ const CustomerJobDetailsPage = () => {
             </div>
           )}
 
-          {cleanerQuotes.length === 0 && (
+          {cleanerQuotes.filter(quote => quote.status !== 'rejected').length === 0 && (
             <div className="text-center py-8">
               <div className="text-gray-500 text-sm">
                 Waiting for cleaners to send quotes...
