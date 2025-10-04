@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import InfoIcon from '../assets/info.svg';
 import MessageIcon from '../assets/sendChat.svg';
@@ -280,7 +281,7 @@ const CustomerChatPage = () => {
   };
   
   const handleAcceptQuote = () => {
-    navigate(`/booking-confirmation/${jobId}`);
+    navigate(`/confirm-cleaner/${jobId}`);
   };
   
   
@@ -290,12 +291,13 @@ const CustomerChatPage = () => {
       
       {/* Chat Header */}
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3 flex items-center">
-        <button
+        <Button
           onClick={() => navigate(-1)}
-          className="mr-2 sm:mr-3 hover:bg-gray-100 rounded-lg transition-colors p-1 cursor-pointer"
-        >
-          <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
+          variant=""
+          size="sm"
+          icon={ArrowLeftIcon}
+          className="mr-2 sm:mr-3 p-1"
+        />
         <h1 className="text-base sm:text-lg font-semibold text-gray-900">
           Cleaner #{cleanerId || '1047'}
         </h1>
@@ -307,12 +309,14 @@ const CustomerChatPage = () => {
         <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg mx-4 mb-4">
           <div className="flex items-center justify-between">
             <span>{error}</span>
-            <button
+            <Button
               onClick={() => navigate(`/customer-job-details/${jobId}`)}
-              className="ml-3 px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200 transition-colors"
+              variant="danger"
+              size="xs"
+              className="ml-3"
             >
               Go Back
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -441,13 +445,14 @@ const CustomerChatPage = () => {
             placeholder="Message..."
             className="flex-1 px-3 py-3 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 shadow-custom bg-[#F9FAFB]"
           />
-          <button
+          <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className={`cursor-pointer p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors ${!newMessage.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <img src={MessageIcon} alt="Send" className="w-8 h-8 sm:w-10 sm:h-10" />
-          </button>
+            variant="ghost"
+            size=""
+            icon={MessageIcon}
+            className="p-1 sm:p-2 [&>img]:w-8 [&>img]:h-8"
+          />
         </div>
       </div>
       
@@ -477,13 +482,14 @@ const CustomerChatPage = () => {
         </div>
         
         {/* Accept Button Only */}
-        <div className="mt-3 sm:mt-4">
-          <button
+        <div className="mt-3 sm:mt-4 flex justify-end">
+          <Button
             onClick={handleAcceptQuote}
-            className="w-full py-2 sm:py-2.5 px-3 sm:px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium cursor-pointer"
+            size="sm"
+            className="px-3 sm:px-4 py-2 sm:py-2.5"
           >
             Accept Quote & Book
-          </button>
+          </Button>
         </div>
       </div>
       </div>

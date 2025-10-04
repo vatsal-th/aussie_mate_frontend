@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import ThreeDotIcon from '../assets/3dot.svg';
@@ -163,14 +164,12 @@ const CustomerJobDetailsPage = () => {
       const response = await quotesAPI.acceptQuote(jobId, quoteToAccept._id);
 
       if (response.success) {
-        // Refresh job data to get updated quotes
-        const jobResponse = await jobsAPI.getJobById(jobId);
-        if (jobResponse.success) {
-          setJob(jobResponse.data);
-          if (jobResponse.data.quotes) {
-            setCleanerQuotes(jobResponse.data.quotes);
-          }
-        }
+        const updatedQuotes = cleanerQuotes.map(quote => 
+          quote._id === quoteToAccept._id 
+            ? { ...quote, status: 'accepted' }
+            : { ...quote, status: 'rejected' } // Reject all other quotes
+        );
+        setCleanerQuotes(updatedQuotes);
         
         // Close modal
         setShowAcceptModal(false);
@@ -352,12 +351,13 @@ const CustomerJobDetailsPage = () => {
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="text-center py-8">
               <div className="text-red-500 text-lg font-medium">{error || 'Job not found'}</div>
-              <button
+              <Button
                 onClick={() => navigate(-1)}
-                className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg! hover:bg-primary-600 cursor-pointer"
+                size="md"
+                className="mt-4"
               >
                 Go Back
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -372,35 +372,40 @@ const CustomerJobDetailsPage = () => {
       {/* Job Details Header */}
       <div className="max-w-6xl mx-auto py-3 sm:py-4 px-3 sm:px-4 md:px-6">
         <div className="flex items-center justify-between">
-          <button
+          <Button
             onClick={() => navigate(-1)}
-            className="rounded-lg transition-colors cursor-pointer flex items-center space-x-1 sm:space-x-2"
+            variant=""
+            size="sm"
+            icon={ArrowLeftIcon}
+            className="p-0"
           >
-            <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
             <h1 className="text-sm sm:text-base md:text-lg font-semibold text-primary-500 truncate">
               Job Details - {job.serviceType || 'Cleaning'}
             </h1>
-          </button>
+          </Button>
           <div className="relative" ref={dropdownRef}>
-            <button 
+            <Button 
               onClick={handleDropdownToggle}
-              className="cursor-pointer p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img src={ThreeDotIcon} alt="More options" className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+              variant=""
+              size="sm"
+              icon={ThreeDotIcon}
+              className="p-1 sm:p-2"
+            />
             
             {/* Dropdown Menu */}
             {showDropdown && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
                 <div className="py-2">
                   {/* Cancel Job Option */}
-                  <button
+                  <Button
                     onClick={handleCancelJob}
-                    className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                    variant=""
+                    size="sm"
+                    icon={CloseIcon}
+                    className="w-full justify-start px-4 py-3 text-gray-700"
                   >
-                    <img src={CloseIcon} alt="Cancel" className="w-5 h-5" />
-                    <span className="text-sm font-medium text-gray-700">Cancel Job</span>
-                  </button>
+                    Cancel Job
+                  </Button>
                 </div>
               </div>
             )}
@@ -435,13 +440,6 @@ const CustomerJobDetailsPage = () => {
               <img src={MapPinIcon} alt="Location" className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
                 {job.location?.address || job.address || 'Location not specified'}
-              </span>
-            </div>
-
-            {/* Job Status */}
-            <div className="flex justify-start">
-              <span className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs sm:text-sm font-medium">
-                Awaiting Quotes
               </span>
             </div>
           </div>
@@ -530,24 +528,28 @@ const CustomerJobDetailsPage = () => {
                         {/* For pending quotes - show Accept and Decline buttons */}
                         {quote.status === 'pending' && (
                           <>
-                            <button
+                            <Button
                               onClick={() => handleAcceptQuote(quote._id)}
-                              className="bg-[#E4FBED] text-[#1EB154] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer border border-[#DBF9E7] hover:bg-[#1EB154] hover:text-white"
+                              variant="success"
+                              size="sm"
+                              className="px-3 sm:px-4 py-2"
                             >
-                              <span className="text-xs sm:text-sm font-medium">Accept</span>
-                            </button>
-                            <button
+                              Accept
+                            </Button>
+                            <Button
                               onClick={() => handleDeclineQuote(quote._id)}
-                              className="bg-[#FFE4E4] text-[#EF4444] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer border border-[#FFDDDD] hover:bg-[#EF4444] hover:text-white"
+                              variant="danger"
+                              size="sm"
+                              className="px-3 sm:px-4 py-2"
                             >
-                              <span className="text-xs sm:text-sm font-medium">Decline</span>
-                            </button>
+                              Decline
+                            </Button>
                           </>
                         )}
                         
                         {/* For accepted quotes - show Start Chat button */}
                         {quote.status === 'accepted' && (
-                          <button
+                          <Button
                             onClick={() => {
                               if (cleaner.id && cleaner.id !== 'undefined' && cleaner.id !== 'null') {
                                 navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`);
@@ -555,11 +557,13 @@ const CustomerJobDetailsPage = () => {
                                 setError('Unable to start chat - cleaner information not available. Please try refreshing the page.');
                               }
                             }}
-                            className="shadow-custom text-[#1F6FEB] border border-[#9CC0F6] px-3 sm:px-4 py-2 rounded-xl! flex items-center justify-center space-x-1 sm:space-x-2 transition-colors cursor-pointer"
+                            variant="secondary"
+                            size="sm"
+                            icon={MessageIcon}
+                            className="px-3 sm:px-4 py-2 shadow-custom"
                           >
-                            <img src={MessageIcon} alt="Message" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="text-xs sm:text-sm font-medium">Start Chat</span>
-                          </button>
+                            Start Chat
+                          </Button>
                         )}
                         
                         {/* Quote Status for rejected quotes */}
@@ -613,7 +617,7 @@ const CustomerJobDetailsPage = () => {
         }
         confirmText="Accept Quote"
         cancelText="Cancel"
-        confirmButtonColor="bg-[#E4FBED] hover:bg-green-600 text-[#1EB154]! hover:text-white! border border-[#DBF9E7]"
+        confirmButtonColor="bg-[#E4FBED] text-[#1EB154]! hover:text-[#00832D]! border border-[#DBF9E7]"
         isLoading={isAccepting}
       />
 

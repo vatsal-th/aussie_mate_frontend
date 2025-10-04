@@ -2,8 +2,10 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { userAPI } from '../services/api';
+import Button from '../components/Button';
 import CurrentLocationIcon from "../assets/currentLocation.svg";
 
+  
 // Map container style
 const mapContainerStyle = {
   width: '100%',
@@ -168,7 +170,7 @@ const LocationPage = () => {
     if (manualAddress.trim()) {
       setSelectedLocation({
         fullAddress: manualAddress.trim(),
-        lat: -33.839, // Default coordinates (can be improved with geocoding)
+        lat: -33.839, 
         lng: 151.207,
         coordinates: "-33.839, 151.207",
       });
@@ -300,25 +302,17 @@ const LocationPage = () => {
               />
 
               {/* Get Current Location */}
-              <button
+              <Button
                 type="button"
                 onClick={handleGetCurrentLocation}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-3 py-3 px-4 border border-[#1F6FEB] rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                loading={isLoading}
+                variant="secondary"
+                size="md"
+                icon={CurrentLocationIcon}
+                fullWidth
               >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
-                ) : (
-                  <img
-                    src={CurrentLocationIcon}
-                    alt="Current location"
-                    className="w-8 h-8"
-                  />
-                )}
-                <span className="font-medium text-[#1F6FEB]">
-                  {isLoading ? "Getting location..." : "Get current location"}
-                </span>
-              </button>
+                Get current location
+              </Button>
             </form>
 
             {error && (
@@ -373,19 +367,22 @@ const LocationPage = () => {
                   rows={3}
                 />
                 <div className="flex space-x-2">
-                  <button
+                  <Button
                     type="submit"
-                    className="flex-1 bg-primary-500 text-white py-2 px-4 rounded-lg hover:bg-primary-600 transition-colors cursor-pointer font-medium"
+                    size="sm"
+                    className="flex-1"
                   >
                     Save Address
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={handleCancelManual}
-                    className="flex-1 bg-gray-200 text-primary-200 hover:text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer font-medium"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -403,23 +400,25 @@ const LocationPage = () => {
                     Coordinates: {selectedLocation.coordinates}
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={handleChangeLocation}
-                  className="text-[#1F6FEB] font-semibold text-sm hover:text-primary-600 ml-2 cursor-pointer"
+                  variant="link"
+                  size="sm"
                 >
                   Change
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {/* Confirm Button */}
-          <button
+          <Button
             onClick={handleConfirmLocation}
-            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 rounded-xl transition-colors cursor-pointer"
+            fullWidth
+            size="lg"
           >
             Confirm Location
-          </button>
+          </Button>
         </div>
       </div>
     </div>

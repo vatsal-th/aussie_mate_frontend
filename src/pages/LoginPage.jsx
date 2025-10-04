@@ -5,6 +5,7 @@ import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
 import FloatingLabelInput from '../components/FloatingLabelInput';
+import Button from '../components/Button';
 import errorIcon from '../assets/info.svg';
 
 const LoginPage = () => {
@@ -156,13 +157,14 @@ const LoginPage = () => {
               </Link>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-xl transition-colors duration-200 text-base touch-manipulation cursor-pointer"
+              loading={isLoading}
+              fullWidth
+              size="md"
             >
-              {isLoading ? 'Logging in...' : 'Login'}
-            </button>
+              Login
+            </Button>
           </form>
 
           <div className="text-center mt-6">

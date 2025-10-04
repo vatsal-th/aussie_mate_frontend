@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import FloatingLabelInput from '../components/FloatingLabelInput';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
@@ -544,12 +545,13 @@ const WalletPage = () => {
       {/* Wallet Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
-          <button
+          <Button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-          </button>
+            variant=""
+            size="sm"
+            icon={ArrowLeftIcon}
+            className="p-2"
+          />
           <h1 className="ml-4 text-xl font-semibold text-gray-900">Wallet & Payments</h1>
         </div>
       </div>
@@ -573,12 +575,13 @@ const WalletPage = () => {
                 <p className="text-sm text-[#374151] mb-4">Available to use for bookings & top-ups.</p>
               </div>
               <div className="flex justify-end w-full sm:w-auto">
-                <button
+                <Button
                   onClick={handleTopUp}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-[8px] text-sm font-medium shadow-custom cursor-pointer"
+                  size="sm"
+                  className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-[8px] text-sm font-medium shadow-custom"
                 >
                   Top Up Wallet
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -608,29 +611,34 @@ const WalletPage = () => {
                   </div>
                   {!method.isAddBank && (
                     <div className="relative dropdown-container">
-                      <button
+                      <Button
                         onClick={() => handlePaymentMethodAction(method)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <img src={ThreeDotIcon} alt="Options" className="w-5 h-5" />
-                      </button>
+                        variant="ghost"
+                        size="sm"
+                        icon={ThreeDotIcon}
+                        className="p-2"
+                      />
                       {activeDropdown === method.id && (
                         <div className="absolute right-0 top-full w-48 bg-white rounded-2xl! shadow-custom border border-gray-200 z-50">
                           <div className="py-2">
-                            <button
+                            <Button
                               onClick={() => handleMakeDefault(method.id)}
-                              className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+                              variant="ghost"
+                              size="sm"
+                              icon={CheckIcon}
+                              className="w-full justify-start px-4 py-3 text-gray-700"
                             >
-                              <img src={CheckIcon} alt="Check" className="w-5 h-5 mr-3" />
-                              <span className="text-sm font-medium text-gray-700">Make Default</span>
-                            </button>
-                            <button
+                              Make Default
+                            </Button>
+                            <Button
                               onClick={() => handleRemove(method.id)}
-                              className="w-full flex items-center px-4 py-3 text-left hover:bg-red-50 transition-colors cursor-pointer"
+                              variant="ghost"
+                              size="sm"
+                              icon={TrashRedIcon}
+                              className="w-full justify-start px-4 py-3 text-red-600 hover:bg-red-50"
                             >
-                              <img src={TrashRedIcon} alt="Trash" className="w-5 h-5 mr-3" />
-                              <span className="text-sm font-medium text-red-600">Remove</span>
-                            </button>
+                              Remove
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -640,13 +648,15 @@ const WalletPage = () => {
               ))}
 
             {bankAccounts.length > 0 && (
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowAddBankModal(true)}
-                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left cursor-pointer"
+                variant="link"
+                size="sm"
+                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left"
               >
                 Add Another Bank Account
-              </button>
+              </Button>
             )}
 
             {paymentMethods
@@ -667,12 +677,13 @@ const WalletPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button
+                    <Button
                       onClick={() => handlePaymentMethodAction(method)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <img src={ChevronRightIcon} alt="Arrow" className="w-5 h-5" />
-                    </button>
+                      variant="ghost"
+                      size="sm"
+                      icon={ChevronRightIcon}
+                      className="p-2"
+                    />
                   </div>
                 </div>
               ))}
@@ -749,12 +760,14 @@ const WalletPage = () => {
           {cards.length > 0 && (
             <div className="flex justify-center space-x-1 mt-4 sm:mt-6">
               {cards.map((_, index) => (
-                <button
+                <Button
                   key={index}
                   onClick={() => handleCardClick(index)}
-                  className={`transition-all duration-300 ${index === currentCardIndex
+                  variant="ghost"
+                  size="xs"
+                  className={`transition-all duration-300 p-0 ${index === currentCardIndex
                       ? 'bg-primary-500 w-6 h-2 sm:w-8 sm:h-2'
-                      : 'bg-gray-300 w-2 h-2 sm:w-4 sm:h-2 hover:bg-gray-400 cursor-pointer'
+                      : 'bg-gray-300 w-2 h-2 sm:w-4 sm:h-2 hover:bg-gray-400'
                     }`}
                 />
               ))}
@@ -776,22 +789,25 @@ const WalletPage = () => {
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <button
+                <Button
                   onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3 cursor-pointer"
-                >
-                  <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-                </button>
+                  variant=""
+                  size="sm"
+                  icon={ArrowLeftIcon}
+                  className="p-2 mr-3"
+                />
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Add New Card</h2>
               </div>
-              <button
+              <Button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                variant=""
+                size="sm"
+                className="text-gray-400 hover:text-gray-600 p-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleAddCard} className="space-y-4">
@@ -864,13 +880,15 @@ const WalletPage = () => {
 
               {/* Add New Card Button */}
               <div className="pt-4">
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg cursor-pointer"
+                  loading={loading}
+                  fullWidth
+                  size="md"
                 >
-                  {loading ? 'Adding...' : 'Add New Card'}
-                </button>
+                  Add New Card
+                </Button>
               </div>
             </form>
           </div>
@@ -891,22 +909,25 @@ const WalletPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <button
+                <Button
                   onClick={closeBankModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3 cursor-pointer"
-                >
-                  <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-                </button>
+                  variant=""
+                  size="sm"
+                  icon={ArrowLeftIcon}
+                  className="p-2 mr-3 [&>img]:w-6 [&>img]:h-6"
+                />
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">Add Bank Account</h2>
               </div>
-              <button
+              <Button
                 onClick={closeBankModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                variant=""
+                size="sm"
+                className="text-gray-400 hover:text-gray-600 p-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleAddBank} className="space-y-4">
@@ -1000,13 +1021,15 @@ const WalletPage = () => {
 
               {/* Add Bank Account Button */}
               <div className="pt-4">
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg cursor-pointer"
+                  loading={loading}
+                  fullWidth
+                  size="md"
                 >
-                  {loading ? 'Adding...' : 'Add Bank Account'}
-                </button>
+                  Add Bank Account
+                </Button>
               </div>
             </form>
           </div>

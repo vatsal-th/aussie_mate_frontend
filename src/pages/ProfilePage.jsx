@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userAPI, jobsAPI, matePointsAPI } from '../services/api';
+import Button from '../components/Button';
 import EditIcon from '../assets/edit.svg';
 import HelpIcon from '../assets/help.svg';
 import InvoiceIcon from '../assets/invoice.svg';
@@ -370,18 +371,21 @@ const ProfilePage = () => {
                             Are you sure you want to log out of your account?
                         </p>
                         <div className="flex space-x-3">
-                            <button
+                            <Button
                                 onClick={cancelLogout}
-                                className="flex-1 bg-[#E5E7EB] hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-xl transition-colors cursor-pointer"
+                                variant="outline"
+                                size="md"
+                                className="flex-1 bg-[#E5E7EB] hover:bg-gray-300 text-gray-800"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button 
                                 onClick={confirmLogout}
-                                className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors cursor-pointer"
+                                size="md"
+                                className="flex-1"
                             >
                                 Logout
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

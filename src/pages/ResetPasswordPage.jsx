@@ -5,6 +5,7 @@ import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
 import FloatingLabelInput from '../components/FloatingLabelInput';
+import Button from '../components/Button';
 
 const ResetPasswordPage = () => {
   const [formData, setFormData] = useState({
@@ -16,7 +17,6 @@ const ResetPasswordPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [searchParams] = useSearchParams();
   const [token, setToken] = useState('');
   const [isTokenLoading, setIsTokenLoading] = useState(true);
@@ -141,12 +141,13 @@ const ResetPasswordPage = () => {
               <p className="text-sm text-primary-200 font-medium mb-6">
                 Your password has been successfully reset. You can now log in with your new password.
               </p>
-              <Link
-                to="/"
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base inline-block"
+              <Button
+                onClick={() => window.location.href = '/'}
+                fullWidth
+                size="md"
               >
                 Continue to Login
-              </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -228,13 +229,15 @@ const ResetPasswordPage = () => {
           )}
             </div>
             
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-6 cursor-pointer"
+              loading={isLoading}
+              fullWidth
+              size="md"
+              className="mt-6"
             >
-              {isLoading ? 'Resetting...' : 'Reset Password'}
-            </button>
+              Reset Password
+            </Button>
           </form>
           
           <div className="text-center mt-4 sm:mt-6">

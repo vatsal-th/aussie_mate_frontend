@@ -7,6 +7,7 @@ import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import UserIcon from '../assets/user.svg';
 import MessageIcon from '../assets/message2.svg';
+import ChatIcon from '../assets/message2.svg';
 import { jobsAPI, userAPI } from '../services/api';
 import { chatAPI } from '../services/chatAPI';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,6 +80,26 @@ const getStatusChip = (statusRaw) => {
   }
   // Fallback
   return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+};
+
+// Helper function to format cleaner data from quotes (same as CustomerJobDetailsPage)
+const formatCleanerData = (quote) => {
+  const cleaner = quote.cleanerId || quote.cleaner;
+  const cleanerId = cleaner?._id || cleaner?.id || quote.cleanerId || quote._id || quote.id;
+  
+  return {
+    id: cleanerId,
+    quoteId: quote._id || quote.id,
+    name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() || `Cleaner #${cleanerId?.slice(-4)}` : 'Cleaner',
+    rating: cleaner?.rating || 4.5,
+    reviews: cleaner?.reviewCount || 0,
+    tier: cleaner?.tier || 'Standard',
+    quoteAmount: quote.price || quote.amount || 0,
+    distance: quote.distance || cleaner?.distance || 'Distance unknown',
+    isVerified: cleaner?.isVerified || false,
+    estimatedDuration: quote.estimatedDuration || '2 hours',
+    status: quote.status || 'pending'
+  };
 };
 
 // Helper function to get message count for a job
@@ -257,7 +278,8 @@ const MyJobsPage = () => {
             quotes,
             assignedTo,
             createdAt: j.createdAt,
-            messageCount: messageCount
+            messageCount: messageCount,
+            originalJob: j // Store original job data for chat navigation
           };
         }));
         
@@ -522,7 +544,40 @@ const MyJobsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Quotes moved to prominent position above */}
+                  {/* Chat Button for Accepted Jobs */} 
+                  {job.status === 'Accepted' && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        
+                        try {
+                          // Fetch detailed job data for accepted jobs
+                          const jobResponse = await jobsAPI.getJobById(job.id);
+                          let jobData = job.originalJob || job;
+                          
+                          if (jobResponse.success && jobResponse.data) {
+                            jobData = jobResponse.data;
+                          }
+                          
+                          const acceptedQuote = jobData.quotes?.find(quote => quote.status === 'accepted');
+                          
+                          if (acceptedQuote) {
+                            const cleanerData = formatCleanerData(acceptedQuote);
+                            
+                            if (cleanerData.id && cleanerData.id !== 'undefined' && cleanerData.id !== 'null') {
+                              navigate(`/customer-chat/${job.id}?cleaner=${cleanerData.id}`);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error fetching job details for chat:', error);
+                        }
+                      }}
+                      className="text-[#1F6FEB] px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
+                    >
+                      <img src={ChatIcon} alt="Chat" className="w-4 h-4" />
+                      Chat with Cleaner
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

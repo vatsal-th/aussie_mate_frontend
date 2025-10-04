@@ -10,6 +10,8 @@ import HousekeepingImage from '../assets/Housekeeping.png';
 import PetSittingImage from '../assets/Pet Sitting.png';
 import NDISSupportImage from '../assets/NDIS Support.png';
 import RetailAuditorImage from '../assets/Retail Auditor.png';
+import Button from '../components/Button';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import UploadIcon from '../assets/upload.svg';
 import MinusIcon from '../assets/minus.svg';
@@ -198,6 +200,7 @@ const PostNewJobPage = () => {
           setSelectedLocation({
             address: address,
             city: city,
+            fullAddress: fullAddress,
             coordinates: location.coordinates
           });
         }
@@ -686,7 +689,7 @@ const PostNewJobPage = () => {
                   ? 'text-yellow-800'
                   : 'text-gray-900'
                 }`}>
-                {selectedLocation.address}
+                {selectedLocation.fullAddress || selectedLocation.address}
               </div>
               <div className={`text-xs ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
                   ? 'text-yellow-600'
@@ -695,15 +698,14 @@ const PostNewJobPage = () => {
                 {selectedLocation.city}
               </div>
             </div>
-            <button
+            <Button
               onClick={handleChangeLocation}
-              className={`text-sm font-medium border rounded-[8px]! px-4 py-2 cursor-pointer transition-colors ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
-                  ? 'text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                  : 'text-[#1F6FEB] border-[#E5E7EB] hover:bg-blue-50'
-                }`}
+              variant={(!selectedLocation.address || selectedLocation.address === 'Location not set') ? 'warning' : 'outline'}
+              size="sm"
+              className="rounded-[8px]"
             >
               {(!selectedLocation.address || selectedLocation.address === 'Location not set') ? 'Set Address' : 'Change'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -714,9 +716,9 @@ const PostNewJobPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Header Section */}
       <div className="flex items-center mb-6">
-        <button onClick={handleBack} className="mr-4">
+        <Button onClick={handleBack} variant="ghost" size="sm" className="mr-4 p-0">
           <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-        </button>
+        </Button>
         <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
       </div>
 
@@ -759,17 +761,19 @@ const PostNewJobPage = () => {
                 {isDropdownOpen && (
                   <div className="absolute z-10 w-full mt-[1px] bg-white border border-gray-300 rounded-lg shadow-lg py-2 px-4">
                     {propertyTypes.map((type) => (
-                      <button
+                      <Button
                         key={type.value}
                         type="button"
                         onClick={() => handlePropertyTypeSelect(type.value)}
-                        className={`w-full px-4 py-3 text-left text-sm sm:text-base hover:bg-primary-200 transition-colors first:rounded-t-lg last:rounded-b-lg cursor-pointer ${formData.propertyType === type.value
-                            ? 'bg-primary-200 text-primary-500'
+                        variant=""
+                        size="sm"
+                        className={`w-full text-left! first:rounded-t-lg last:rounded-b-lg! ${formData.propertyType === type.value
+                            ? 'bg-primary-200! text-primary-500 '
                             : 'text-primary-200'
                           }`}
                       >
                         {type.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -784,13 +788,15 @@ const PostNewJobPage = () => {
                   Bedrooms
                 </label>
                 <div className="flex items-center border border-gray-300 rounded-full">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => handleNumberChange('bedrooms', 'decrement')}
-                    className="p-1 transition-colors bg-primary-200 ml-3 cursor-pointer"
+                    variant="ghost"
+                    size="xs"
+                    className="p-1 ml-3 bg-primary-200 hover:bg-primary-300"
                   >
                     <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
-                  </button>
+                  </Button>
                   <input
                     type="number"
                     value={formData.bedrooms}
@@ -799,13 +805,15 @@ const PostNewJobPage = () => {
                     min="1"
                     max="10"
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={() => handleNumberChange('bedrooms', 'increment')}
-                    className="p-1 transition-colors bg-primary-500 mr-3 cursor-pointer"
+                    variant="ghost"
+                    size="xs"
+                    className="p-1 mr-3 bg-primary-500 hover:bg-primary-600"
                   >
                     <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -815,13 +823,15 @@ const PostNewJobPage = () => {
                   Bathrooms
                 </label>
                 <div className="flex items-center border border-gray-300 rounded-full">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => handleNumberChange('bathrooms', 'decrement')}
-                    className="p-1 transition-colors bg-primary-200 ml-3 cursor-pointer"
+                    variant="ghost"
+                    size="xs"
+                    className="p-1 ml-3 bg-primary-200 hover:bg-primary-300"
                   >
                     <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
-                  </button>
+                  </Button>
                   <input
                     type="number"
                     value={formData.bathrooms}
@@ -830,13 +840,15 @@ const PostNewJobPage = () => {
                     min="1"
                     max="10"
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={() => handleNumberChange('bathrooms', 'increment')}
-                    className="p-1 transition-colors bg-primary-500 mr-3 cursor-pointer"
+                    variant="ghost"
+                    size="xs"
+                    className="p-1 mr-3 bg-primary-500 hover:bg-primary-600"
                   >
                     <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -844,15 +856,14 @@ const PostNewJobPage = () => {
 
           {/* Property Size Section */}
           <div className="">
-            <label className="text-sm font-medium text-primary-500 mb-2">
-              Property Size
-            </label>
-            <input
+            <FloatingLabelInput
+              id="propertySize"
+              name="propertySize"
+              label="Property Size"
               type="text"
               value={formData.propertySize}
               onChange={(e) => handleInputChange('propertySize', e.target.value)}
-              placeholder="e.g., 3 bedroom house, 1200 sq ft"
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+              placeholder=" "
               required
             />
             <p className="text-xs text-primary-200 font-medium mt-1">Enter the size or description of your property (1-100 characters)</p>
@@ -928,13 +939,14 @@ const PostNewJobPage = () => {
                   <p className="text-xs text-gray-500 mb-3">
                     Max 10 files, 50MB each. Supported: Images (JPEG, PNG, GIF, WebP), Videos (MP4, AVI, MOV, WMV, FLV, WebM)
                   </p>
-                  <button
+                  <Button
                     type="button"
-                    className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto transition-colors"
+                    size="sm"
+                    icon={UploadIcon}
+                    className="mx-auto"
                   >
-                    <span className="text-sm sm:text-base cursor-pointer">Upload Here</span>
-                    <img src={UploadIcon} alt="Upload" className="w-4 h-4" />
-                  </button>
+                    Upload Here
+                  </Button>
                 </div>
               </div>
             </div>
@@ -961,13 +973,15 @@ const PostNewJobPage = () => {
                           muted
                         />
                       )}
-                      <button
+                      <Button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        variant="danger"
+                        size="xs"
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         ×
-                      </button>
+                      </Button>
                       <p className="text-xs text-gray-500 mt-1 truncate" title={file.name}>
                         {file.name}
                       </p>
@@ -986,23 +1000,26 @@ const PostNewJobPage = () => {
             <h3 className="text-lg font-semibold text-primary-500 mb-4">
               Anything specific we should know? <span className="text-primary-200 font-medium"> (Optional)</span>
             </h3>
-            <textarea
-              value={formData.instructions}
-              onChange={(e) => handleInputChange('instructions', e.target.value)}
-              placeholder="Write your instructions here in any....."
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-[10px]! focus:outline-none text-sm sm:text-base resize-none"
-            />
+            <div className="relative">
+              <textarea
+                value={formData.instructions}
+                onChange={(e) => handleInputChange('instructions', e.target.value)}
+                placeholder="Write your instructions here in any..."
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-[10px] focus:outline-none text-sm sm:text-base "
+              />
+            </div>
           </div>
 
           {/* Continue Button */}
           <div className="flex justify-end">
-            <button
+            <Button
               type="submit"
-              className="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 sm:py-3 px-6 rounded-lg text-sm sm:text-base transition-colors cursor-pointer"
+              size="md"
+              className="px-6"
             >
               Continue
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -1013,9 +1030,9 @@ const PostNewJobPage = () => {
     <div className="max-w-md mx-auto px-4 py-6 sm:px-2">
       {/* Header Section */}
       <div className="flex items-center mb-6">
-        <button onClick={handleBack} className="mr-4">
+        <Button onClick={handleBack} variant="ghost" size="sm" className="mr-4 p-0">
           <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-        </button>
+        </Button>
         <h1 className="text-xl font-semibold text-primary-500">Post New Job</h1>
       </div>
 
@@ -1033,12 +1050,14 @@ const PostNewJobPage = () => {
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded">
             <div className="flex items-center justify-between">
               <span>{addressError}</span>
-              <button
+              <Button
                 onClick={handleGoToProfile}
-                className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                variant="warning"
+                size="sm"
+                className="ml-4"
               >
                 Set Address
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -1076,23 +1095,16 @@ const PostNewJobPage = () => {
 
         {/* When do you need the service? */}
         <div>
-          <label className="block text-primary-500 text-lg font-semibold mb-3">
-            When do you need the service?
-          </label>
-          <div className="relative">
-            <input
-              type="date"
-              value={selectedDate ? new Date(selectedDate).toISOString().split('T')[0] : ''}
-              onChange={handleDatePickerChange}
-                className="w-full bg-white rounded-lg px-4 py-3 pr-10 text-primary-200 placeholder-gray-500 focus:outline-none border border-gray-300 cursor-pointer"
-              min={new Date().toISOString().split('T')[0]}
-              style={{
-                colorScheme: 'light',
-                WebkitAppearance: 'none',
-                MozAppearance: 'textfield'
-              }}
-            />
-          </div>
+          <FloatingLabelInput
+            id="serviceDate"
+            name="serviceDate"
+            label="When do you need the service?"
+            type="date"
+            value={selectedDate ? new Date(selectedDate).toISOString().split('T')[0] : ''}
+            onChange={handleDatePickerChange}
+            min={new Date().toISOString().split('T')[0]}
+            required
+          />
         </div>
 
         {/* Anything specific we should know? */}
@@ -1110,7 +1122,7 @@ const PostNewJobPage = () => {
         </div>
 
         {/* Urgency Toggle */}
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-6 mb-6">
+        <div className="flex items-center justify-between pb-6 mb-6">
           <span className="text-primary-500 text-sm font-medium">
             This is urgent (Extra Fee may apply)
           </span>
@@ -1118,6 +1130,7 @@ const PostNewJobPage = () => {
             onClick={handleUrgencyToggle}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isUrgent ? 'bg-primary-500' : 'bg-gray-300'
               }`}
+            type="button"
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isUrgent ? 'translate-x-6' : 'translate-x-1'
@@ -1128,18 +1141,16 @@ const PostNewJobPage = () => {
 
         {/* Post Job Button */}
         <div className="flex justify-end">
-          <button
+          <Button
             onClick={handlePostJob}
             disabled={isLoading || (!selectedLocation.address || selectedLocation.address === 'Location not set')}
-            className={`bg-primary-500 text-white font-medium py-2 px-6 rounded-lg transition-colors focus:outline-none ${(isLoading || (!selectedLocation.address || selectedLocation.address === 'Location not set'))
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-primary-600 cursor-pointer'
-              }`}
+            loading={isLoading}
+            size="md"
+            className="px-6"
           >
-            {isLoading ? 'Posting Job...' :
-              (!selectedLocation.address || selectedLocation.address === 'Location not set')
+            {(!selectedLocation.address || selectedLocation.address === 'Location not set')
                 ? 'Set Address First' : 'Post Job'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

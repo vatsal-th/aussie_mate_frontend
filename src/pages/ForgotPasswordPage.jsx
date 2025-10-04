@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import logo from '../assets/logo.png';
 import FloatingLabelInput from '../components/FloatingLabelInput';
+import Button from '../components/Button';
 import ForgotSuccessIcon from '../assets/forgot success.svg';
 
 const ForgotPasswordPage = () => {
@@ -62,18 +63,22 @@ const ForgotPasswordPage = () => {
               We have sent a password recover instructions to your email.
               </p>
               <div className="space-x-3 flex flex-col md:flex-row">
-                <Link
-                  to="/"
-                  className="block w-full text-center text-primary-500 hover:text-primary-600 font-medium py-3 px-4 rounded-3xl border border-primary-500 hover:bg-primary-50 transition-colors duration-200 text-sm sm:text-base cursor-pointer"
+                <Button
+                  onClick={() => window.location.href = '/'}
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  className="rounded-3xl"
                 >
                   Back to Login
-                </Link>
-                <button
+                </Button>
+                <Button
                   onClick={() => setIsSubmitted(false)}
-                  className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base cursor-pointer"
+                  size="md"
+                  fullWidth
                 >
                   Send Another Email
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -114,13 +119,15 @@ const ForgotPasswordPage = () => {
             </div>
           )}
             
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
+              loading={isLoading}
+              fullWidth
+              size="md"
+              className="mt-4"
             >
-              {isLoading ? 'Sending...' : 'Send Reset Link'}
-            </button>
+              Send Reset Link
+            </Button>
             
           </form>
           

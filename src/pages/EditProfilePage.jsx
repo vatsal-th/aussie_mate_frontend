@@ -8,8 +8,9 @@ import MailIcon from '../assets/mail.svg';
 import PhoneIcon from '../assets/phone.svg';
 import HeaderLocationIcon from '../assets/headerlocation.svg';
 import InfoIcon from '../assets/info.svg';
-import ProfileIcon from '../assets/Profile.svg';
 import Header from '../components/Header';
+import FloatingLabelInput from '../components/FloatingLabelInput';
+import Button from '../components/Button';
 import ProfileBG from '../assets/CardBG7.png';
 
 const EditProfilePage = () => {
@@ -31,26 +32,9 @@ const EditProfilePage = () => {
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState('');
 
-  // Country code options
-  const countryCodes = [
-    '+61', '+1', '+44', '+91', '+86', '+81', '+49', '+33', '+39', '+34',
-    '+7', '+55', '+52', '+82', '+65', '+60', '+66', '+63', '+84', '+62'
-  ];
 
   useEffect(() => {
-    if (user) {
-      // Check if profilePhoto is missing and add it from localStorage if available
-      if (!user.profilePhoto && localStorage.getItem('user')) {
-        const storedUser = JSON.parse(localStorage.getItem('user'));
-        if (storedUser.profilePhoto) {
-          const updatedUser = { ...user, profilePhoto: storedUser.profilePhoto };
-          updateUser(updatedUser);
-        } else {
-          // Try to fetch from API
-          fetchProfilePhotoFromAPI();
-        }
-      }
-      
+    if (user) {   
       setFormData({
         firstName: user.firstName || user.name || '',
         lastName: user.lastName || '',
@@ -64,11 +48,20 @@ const EditProfilePage = () => {
     const fetchUserLocation = async () => {
       try {
         const userProfile = await userAPI.getProfile();
-        if (userProfile.success && userProfile.data && userProfile.data.location) {
-          const location = userProfile.data.location;
+        
+        const userData = userProfile.data?.user || userProfile.data || userProfile;
+        const location = userData?.location;
+        
+        if (location) {
+          const fullAddress = location.fullAddress || location.address || '';
+          const addressParts = fullAddress.split(',');
+          const address = addressParts[0]?.trim() || 'Location not set';
+          const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : (location.city || 'Please set your location');
+          
           setUserLocation({
-            address: location.address || '',
-            city: location.city || ''
+            address: address,
+            city: city,
+            fullAddress: fullAddress
           });
           return;
         }
@@ -82,8 +75,9 @@ const EditProfilePage = () => {
         try {
           const locationData = JSON.parse(savedLocation);
           setUserLocation({
-            address: locationData.address || '',
-            city: locationData.city || ''
+            address: locationData.address || 'Location not set',
+            city: locationData.city || 'Please set your location',
+            fullAddress: locationData.fullAddress || locationData.address || 'Location not set'
           });
         } catch (error) {
           console.error('Error parsing saved location:', error);
@@ -141,31 +135,6 @@ const EditProfilePage = () => {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleCountryCodeSelect = (code) => {
-    setFormData(prev => ({
-      ...prev,
-      countryCode: code
-    }));
-    setIsCountryDropdownOpen(false);
-  };
-
-  const toggleCountryDropdown = () => {
-    setIsCountryDropdownOpen(!isCountryDropdownOpen);
-  };
-
-  // Fetch profile photo from API
-  const fetchProfilePhotoFromAPI = async () => {
-    try {
-      const response = await userAPI.getProfile();
-      if (response.success && response.data?.user?.profilePhoto) {
-        const updatedUser = { ...user, profilePhoto: response.data.user.profilePhoto };
-        updateUser(updatedUser);
-      }
-    } catch (error) {
-      console.error('Error fetching profile from API:', error);
-    }
   };
 
   // Photo upload handlers
@@ -456,114 +425,60 @@ const EditProfilePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* First Name */}
             <div>
-              <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
-                First Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <img src={ProfileIcon} alt="Profile" className="w-4 h-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
-                  placeholder="Enter your first name"
-                />
-              </div>
+              <FloatingLabelInput
+                id="firstName"
+                name="firstName"
+                label="First Name"
+                type="text"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder=""
+                required
+              />
             </div>
 
             {/* Last Name */}
             <div>
-              <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
-                Last Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <img src={ProfileIcon} alt="Profile" className="w-4 h-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
-                  placeholder="Enter your last name"
-                />
-              </div>
+              <FloatingLabelInput
+                id="lastName"
+                name="lastName"
+                label="Last Name"
+                type="text"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder=""
+                required
+              />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <img src={MailIcon} alt="Email" className="w-4 h-4 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
-                  placeholder="Enter your email"
-                />
-              </div>
+              <FloatingLabelInput
+                id="email"
+                name="email"
+                label="Email address"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder=""
+                required
+              />
             </div>
 
-            {/* Phone Number */}
+            {/* Phone Number - Read Only */}
             <div>
-              <label className="block text-base font-semibold text-primary-500 font-medium mb-2">
-                Phone number
-              </label>
-              <div className="flex space-x-2">
-                <div className="relative country-dropdown">
-                  <div 
-                    className="flex items-center px-3 py-2 sm:py-3 border border-gray-300 rounded-full cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={toggleCountryDropdown}
-                  >
-                    <span className="text-sm sm:text-base text-primary-200 font-medium">{formData.countryCode}</span>
-                    <svg 
-                      className={`w-4 h-4 ml-1 text-primary-200 font-medium transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                  
-                  {/* Dropdown Menu */}
-                  {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                      {countryCodes.map((code) => (
-                        <div
-                          key={code}
-                          className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer transition-colors"
-                          onClick={() => handleCountryCodeSelect(code)}
-                        >
-                          <span className="text-sm font-medium text-primary-200 font-medium">{code}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <img src={PhoneIcon} alt="Phone" className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base text-primary-200 font-medium"
-                    placeholder="000 000 0000"
-                  />
-                </div>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={`${formData.phone}`}
+                  readOnly
+                  disabled
+                  className="w-full px-4 py-4 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                  placeholder="Phone number"
+                />
+                <label className="absolute left-3 px-1 bg-white text-gray-500 text-xs top-0 -translate-y-1/2">
+                  Phone number
+                </label>
               </div>
               <div className="flex items-center mt-2">
                 <div className="flex-shrink-0">
@@ -587,7 +502,7 @@ const EditProfilePage = () => {
               <img src={HeaderLocationIcon} alt="Location" className="w-10 h-10" />
               <div>
                 <p className="text-sm sm:text-base font-medium text-primary-200 font-medium">
-                  {userLocation.address || 'No address set'}
+                  {userLocation.fullAddress || userLocation.address || 'No address set'}
                 </p>
                 <p className="text-xs sm:text-sm text-primary-200 font-medium">
                   {userLocation.city || 'No city set'}
@@ -605,13 +520,14 @@ const EditProfilePage = () => {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <button
+          <Button
             onClick={handleSave}
-            disabled={loading}
-            className="bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white font-medium py-2 sm:py-3 px-10 rounded-xl transition-colors text-sm sm:text-base cursor-pointer"
+            loading={loading}
+            size="md"
+            className="px-10"
           >
-            {loading ? 'Saving...' : 'Save'}
-          </button>
+            Save
+          </Button>
         </div>
       </div>
     </div>

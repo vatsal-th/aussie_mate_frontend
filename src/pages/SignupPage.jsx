@@ -6,6 +6,7 @@ import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
 import FloatingLabelInput from '../components/FloatingLabelInput';
+import Button from '../components/Button';
 
 
 const SignupPage = () => {
@@ -340,7 +341,7 @@ const SignupPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                 >
                   <img
                     src={showPassword ? eyeIcon : eyeOffIcon}
@@ -362,12 +363,12 @@ const SignupPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                 >
                   <img
                     src={showConfirmPassword ? eyeIcon : eyeOffIcon}
                     alt={showConfirmPassword ? "Hide password" : "Show password"}
-                    className="w-5 h-5"
+                    className="w-5 h-5 cursor-pointer"
                   />
                 </button>
               </FloatingLabelInput>
@@ -400,20 +401,18 @@ const SignupPage = () => {
               </div>
             </div>
 
-
-
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-xl transition-colors duration-200 mt-4 text-sm sm:text-base cursor-pointer"
+              loading={isLoading}
+              fullWidth
+              size="md"
+              className="mt-4"
             >
-              {isLoading
-                ? 'Creating Account...'
-                : formData.role === 'Customer'
-                  ? 'Continue & Set My Location'
-                  : 'Continue For Verification'
+              {formData.role === 'Customer'
+                ? 'Continue & Set My Location'
+                : 'Continue For Verification'
               }
-            </button>
+            </Button>
           </form>
 
           <div className="text-center mt-4 sm:mt-6">

@@ -6,6 +6,7 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import Header from '../components/Header'
+import Button from '../components/Button'
 import UrgentIcon from '../assets/urgent.svg'
 import ScheduleIcon from '../assets/schedule.svg'
 import EquipmentIcon from '../assets/equipment.svg'
@@ -140,10 +141,14 @@ const CleanerDashboard = () => {
                 <div>
                   <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-500 mb-1 sm:mb-2">$540</div>
                   <div className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">3 jobs completed</div>
-                  <button onClick={() => navigate('/earnings')} className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer">
-                    View Earnings
-                    <span className="inline-block ml-1">→</span>
-                  </button>
+                  <Button 
+                    onClick={() => navigate('/earnings')} 
+                    variant="link" 
+                    size="sm"
+                    className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base font-semibold"
+                  >
+                    View Earnings →
+                  </Button>
                 </div>
               </div>
             </div>
@@ -164,23 +169,28 @@ const CleanerDashboard = () => {
               </div>
               <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-semibold">Live Jobs near you</span>
             </div>
-             <button 
+             <Button 
                onClick={() => navigate('/cleaner-jobs')}
-               className="text-xs sm:text-sm md:text-lg text-[#1F6FEB] font-medium flex items-center cursor-pointer"
+               variant="link"
+               size="sm"
+               className="text-xs sm:text-sm md:text-lg font-medium flex items-center"
              >
-               <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> 3 Jobs Found</button>
+               <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> 3 Jobs Found
+             </Button>
           </div>
         </div>
 
         {/* Quick actions */}
         <div className="mt-3 sm:mt-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4" >
           {quickActions.map(action => (
-            <button key={action.id} onClick={action.onClick} className="bg-white rounded-2xl! border-[F3F3F3] p-3 sm:p-4 md:p-5 text-left shadow-custom cursor-pointer">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-primary-50 flex items-center justify-center mb-1 sm:mb-2">
-                <img src={action.icon} alt="icon" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12" />
+            <Button key={action.id} onClick={action.onClick} variant="ghost" className="bg-white rounded-2xl border-[F3F3F3] p-3 sm:p-4 md:p-5 text-left shadow-custom h-auto">
+              <div className="w-full">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-primary-50 flex items-center justify-center mb-1 sm:mb-2">
+                  <img src={action.icon} alt="icon" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12" />
+                </div>
+                <div className="text-xs sm:text-sm md:text-base font-medium text-primary-500">{action.title}</div>
               </div>
-              <div className="text-xs sm:text-sm md:text-base font-medium text-primary-500">{action.title}</div>
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -191,35 +201,40 @@ const CleanerDashboard = () => {
             
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between sm:justify-end space-x-2">
-              <button 
+              <Button 
                 onClick={() => navigate('/cleaner-jobs')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm hover:text-white border border-[#1F6FEB] rounded-full px-2 sm:px-3 md:px-5 py-1 sm:py-1.5 md:py-2 flex items-center justify-center space-x-1 sm:space-x-2 cursor-pointer"
+                size="sm"
+                className="rounded-full px-2 sm:px-3 md:px-5"
               >
                 <svg width="12" height="12" className="sm:w-3 sm:h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20.2974 5.32548H16.8208V3.15311C16.8208 2.17207 16.0145 1.37402 15.0234 1.37402H8.97664C7.98556 1.37402 7.17927 2.17216 7.17927 3.15311V5.32548H3.70256C1.66097 5.32548 0 6.98645 0 9.02804V19.6015C0 21.2691 1.3567 22.6258 3.02437 22.6258H20.9756C22.6433 22.6258 24 21.2691 24 19.6015V9.02804C24 6.98645 22.339 5.32548 20.2974 5.32548ZM8.58978 3.15311C8.58978 2.94297 8.75609 2.78454 8.97664 2.78454H15.0234C15.2439 2.78454 15.4102 2.94297 15.4102 3.15311V5.32548H8.58978V3.15311ZM22.5894 19.6015C22.5894 20.4913 21.8655 21.2153 20.9756 21.2153H3.02437C2.13445 21.2153 1.41051 20.4913 1.41051 19.6015V13.0138C1.63556 13.1551 1.87812 13.2663 2.13201 13.3448C2.14551 13.3489 2.15911 13.3527 2.17279 13.356L9.35787 15.112V15.6921C9.35787 16.6027 10.0988 17.3436 11.0095 17.3436H12.9905C13.9012 17.3436 14.6421 16.6027 14.6421 15.6921V15.112L21.8272 13.356C21.8409 13.3527 21.8545 13.349 21.8679 13.3448C22.1218 13.2663 22.3644 13.1551 22.5894 13.0138V19.6015H22.5894ZM10.7684 15.6921V13.7021C10.7685 13.6382 10.7939 13.5769 10.8391 13.5317C10.8843 13.4865 10.9456 13.4611 11.0095 13.461H12.9905C13.0545 13.4611 13.1157 13.4865 13.1609 13.5317C13.2061 13.5769 13.2316 13.6382 13.2316 13.7021V15.6921C13.2315 15.756 13.2061 15.8173 13.1609 15.8624C13.1157 15.9076 13.0545 15.9331 12.9905 15.9331H11.0095C10.9456 15.933 10.8843 15.9076 10.8391 15.8624C10.7939 15.8172 10.7685 15.756 10.7684 15.6921ZM22.5895 10.4493C22.5895 11.1584 22.1405 11.7756 21.47 11.9913L14.6411 13.6602C14.6187 12.7688 13.8872 12.0504 12.9905 12.0504H11.0095C10.1129 12.0504 9.38136 12.7688 9.35895 13.6602L2.53003 11.9913C1.85957 11.7756 1.41051 11.1584 1.41051 10.4493V9.02804C1.41051 7.7642 2.43871 6.736 3.70256 6.736H20.2974C21.5612 6.736 22.5894 7.7642 22.5894 9.02804V10.4493H22.5895Z" fill="white"/>
                 </svg>
                 <span className="hidden sm:inline">View Jobs</span>
                 <span className="sm:hidden">Jobs</span>
-              </button>
+              </Button>
               
               <div className="flex space-x-1 sm:space-x-2">
-                <button 
+                <Button 
                   onClick={goToPrev}
-                  className="bg-gray-100 hover:bg-gray-200 rounded-full p-1 sm:p-1.5 md:p-2 transition-all cursor-pointer"
+                  variant="ghost"
+                  size="xs"
+                  className="rounded-full p-1 sm:p-1.5 md:p-2"
                 >
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                </button>
+                </Button>
                 
-                <button 
+                <Button 
                   onClick={goToNext}
-                  className="bg-gray-100 hover:bg-gray-200 rounded-full p-1 sm:p-1.5 md:p-2 transition-all cursor-pointer"
+                  variant="ghost"
+                  size="xs"
+                  className="rounded-full p-1 sm:p-1.5 md:p-2"
                 >
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -261,7 +276,7 @@ const CleanerDashboard = () => {
                         <div className="text-primary-500 font-semibold text-xs sm:text-sm md:text-base mb-1 sm:mb-2 line-clamp-2">{job.title}</div>
                         <div className="text-primary-500 font-bold text-xs sm:text-sm md:text-base">${job.price}<span className="text-primary-200 font-medium text-xs sm:text-sm"> ( {job.note} )</span></div>
                       </div>
-                      <button className="w-full py-1 sm:py-1.5 md:py-2 rounded-xl border text-[#1F6FEB] font-medium hover:bg-primary-50 cursor-pointer shadow-custom text-xs sm:text-sm" onClick={() => navigate('/cleaner-jobs')}>Open Job</button>
+                      <Button className="w-full py-1 sm:py-1.5 md:py-2 text-xs sm:text-sm" variant="outline" size="xs" onClick={() => navigate('/cleaner-jobs')}>Open Job</Button>
                     </div>
                   </div>
                 </SwiperSlide>

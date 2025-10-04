@@ -33,6 +33,8 @@ import JobDetailsPage from './pages/JobDetailsPage'
 import CleanerChatPage from './pages/CleanerChatPage'
 import CustomerJobDetailsPage from './pages/CustomerJobDetailsPage'
 import CustomerChatPage from './pages/CustomerChatPage'
+import ConfirmYourCleanerPage from './pages/ConfirmYourCleanerPage'
+import JobBookedSuccessfullyPage from './pages/JobBookedSuccessfullyPage'
 import NotificationPage from './pages/NotificationPage'
 import EarningsPage from './pages/EarningsPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -127,6 +129,16 @@ function App() {
         <Route path="/customer-chat/:jobId" element={
           <ProtectedRoute allowedRoles={['Customer']}>
             <CustomerChatPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/confirm-cleaner/:jobId" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <ConfirmYourCleanerPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/booking-confirmation/:jobId" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <JobBookedSuccessfullyPage />
           </ProtectedRoute>
         } />
         <Route path="/verify-documents" element={

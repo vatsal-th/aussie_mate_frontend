@@ -1,6 +1,7 @@
 import React, { useState, useEffect }  from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import JobLiveGif from '../assets/joblive.gif';
 import CardBG6 from '../assets/CardBG6.png';
@@ -8,16 +9,7 @@ import CardBG7 from '../assets/CardBG7.png';
 
 const JobSuccessPage = () => {
   const navigate = useNavigate();
-  const [gifStopped, setGifStopped] = useState(false);
-
-  useEffect(() => {
-    // Stop GIF after 3 seconds
-    const timer = setTimeout(() => {
-      setGifStopped(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Removed gifStopped state to keep animation running continuously
 
   const handleViewMyJob = () => {
     navigate('/my-jobs');
@@ -67,33 +59,34 @@ const JobSuccessPage = () => {
 
             {/* Success Animation - GIF above text (z-10) */}
             <div className="relative z-10 mb-12">
-              {!gifStopped ? (
-                <img 
+              <img 
                 src={JobLiveGif} 
                 alt="Job Live Animation" 
                 className="w-80 h-80 mx-auto object-contain"
               />    
-              ) : null}
             </div>
 
             {/* Action Buttons */}
             <div className="relative z-10 w-full space-y-4 mt-8">
               {/* View My Job Button */}
-              <button
+              <Button
                 onClick={handleViewMyJob}
-                className="w-full bg-primary-500 text-white font-medium py-3 px-6 rounded-lg hover:bg-primary-600 transition-colors focus:outline-none cursor-pointer"
+                size="lg"
+                fullWidth
               >
                 View My Job
-              </button>
+              </Button>
 
               {/* Return Home Link */}
-              <button
+              <Button
                 onClick={handleReturnHome}
-                className="flex items-center justify-center space-x-2 text-primary-500 hover:text-gray-800 transition-colors mx-auto cursor-pointer"
+                variant="link"
+                size="md"
+                icon={ArrowLeftIcon}
+                className="mx-auto"
               >
-                <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4" />
-                <span className="text-primary-500 font-medium text-md ">Return Home</span>
-              </button>
+                Return Home
+              </Button>
             </div>
           </div>
         </div>
