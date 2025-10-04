@@ -3,6 +3,7 @@
   import UploadCloudIcon from '../assets/upload-cloud.svg';
   import { userAPI } from '../services/api';
   import FloatingLabelInput from '../components/FloatingLabelInput';
+  import Button from '../components/Button';
 
   const VerifyDocumentsPage = () => {
     const navigate = useNavigate();
@@ -336,13 +337,15 @@
 
               {/* Submit Button */}
               <div className="flex justify-end">
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-2 sm:px-4 sm:py-3 rounded-xl transition-colors duration-200 text-sm sm:text-base cursor-pointer"
+                  loading={isLoading}
+                  size="md"
+                  className="px-2 sm:px-4"
                 >
-                  {isLoading ? 'Submitting Documents...' : 'Submit Documents & Set Availability'}
-                </button>
+                  Submit Documents & Set Availability
+                </Button>
               </div>
             </form>
           </div>

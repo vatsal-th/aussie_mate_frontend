@@ -4,6 +4,8 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import CurrentLocationIcon from '../assets/currentLocation.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import { userAPI } from '../services/api';
+import Button from '../components/Button';
+import FloatingLabelInput from '../components/FloatingLabelInput';
 
 // Map container style
 const mapContainerStyle = {
@@ -353,15 +355,17 @@ const SetCleanerLocationPage = () => {
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => {
                 setManualAddress(selectedLocation.fullAddress || selectedLocation.address || "");
                 setShowManualInput(true);
               }}
-              className="text-sm text-[#1F6FEB] font-semibold hover:text-blue-700 cursor-pointer"
+              variant="link"
+              size="sm"
+              className="text-sm text-[#1F6FEB] font-semibold hover:text-blue-700"
             >
               Change
-            </button>
+            </Button>
           </div>
           ) : (
             <div className="text-center py-4">
@@ -387,23 +391,27 @@ const SetCleanerLocationPage = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
                   onClick={handleManualAddressSubmit}
                   disabled={isLoading || !manualAddress.trim()}
-                  className="flex-1 bg-[#1F6FEB] text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                  loading={isLoading}
+                  size="sm"
+                  className="flex-1"
                 >
-                  {isLoading ? 'Saving...' : 'Save Address'}
-                </button>
-                <button
+                  Save Address
+                </Button>
+                <Button
                   onClick={() => {
                     setShowManualInput(false);
                     setManualAddress("");
                     setError("");
                   }}
-                  className="px-4 py-2 border border-gray-300 text-primary-500 rounded-lg font-medium hover:bg-gray-50 cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="px-4 py-2"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -418,33 +426,32 @@ const SetCleanerLocationPage = () => {
                 <br />• Select "Allow" for location access
                 <br />• Refresh the page and try again
               </div>
-              <button
+              <Button
                 onClick={() => {
                   setError("");
                   handleUseCurrentLocation();
                 }}
-                className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-medium transition-colors"
+                size="xs"
+                className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700"
               >
                 Try Again
-              </button>
+              </Button>
             </div>
           )}
 
           {/* Use Current Location Button */}
-          <button
+          <Button
             onClick={handleUseCurrentLocation}
             disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2 border-2 border-primary-500 text-[#1F6FEB] py-3 px-4 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50 cursor-pointer"
+            loading={isLoading}
+            variant="secondary"
+            size="md"
+            icon={CurrentLocationIcon}
+            fullWidth
+            className="border-2 border-primary-500 text-[#1F6FEB] hover:bg-primary-50"
           >
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
-            ) : (
-            <img src={CurrentLocationIcon} alt="Current Location" className="w-5 h-5" />
-            )}
-            <span className="font-medium">
-              {isLoading ? "Getting location..." : "Use Current Location"}
-            </span>
-          </button>
+            Use Current Location
+          </Button>
 
           {/* Alternative: Manual Location Entry */}
           <div className="text-center">
@@ -478,26 +485,29 @@ const SetCleanerLocationPage = () => {
 
           {/* Custom Value Input */}
           <div>
-            <input
+            <FloatingLabelInput
+              id="customRadius"
+              name="customRadius"
+              label="Enter Custom Value (km)"
               type="number"
-              placeholder="Enter Custom Value"
               value={customRadius}
               onChange={handleCustomRadiusChange}
               min="0"
               max="50"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200"
+              placeholder=""
             />
           </div>
 
           {/* Save Button */}
           <div className="flex justify-end mt-5">
-          <button
+          <Button
             onClick={handleSave}
             disabled={isLoading}
-            className= "bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-colors duration-200 cursor-pointer"
+            loading={isLoading}
+            size="md"
           >
-            {isLoading ? 'Saving...' : 'Save Preferences'}
-          </button>
+            Save Preferences
+          </Button>
         </div>
       </div>
       </div>

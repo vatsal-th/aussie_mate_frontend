@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import CleaningIcon from '../assets/cleaning2.svg';
 import PetSittingIcon from '../assets/petSitting2.svg';
 import HousekeepingIcon from '../assets/housekeeping2.svg';
@@ -120,7 +121,7 @@ const SelectServicesPage = () => {
               <button
                 key={service.id}
                 onClick={() => toggleService(service.id)}
-                className={`relative p-6 rounded-2xl! border-2 transition-all duration-200 ${
+                className={`relative p-6 rounded-2xl! border-2 transition-all duration-200 cursor-pointer ${
                   selectedServices.includes(service.id)
                     ? 'border-[#1F6FEB] bg-primary-50 shadow-md'
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
@@ -159,17 +160,15 @@ const SelectServicesPage = () => {
  
         {/* Next Button */}
         <div className="flex justify-end">
-        <button
+        <Button
           onClick={handleNext}
           disabled={selectedServices.length === 0 || isLoading}
-          className={` w-full py-4 px-4 sm:px-3 lg:px-3 rounded-xl font-semibold text-white transition-colors duration-200 ${
-            selectedServices.length === 0 || isLoading
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-primary-500 hover:bg-primary-600'
-          }`}
+          loading={isLoading}
+          fullWidth
+          size="lg"
         >
-            {isLoading ? 'Saving...' : 'Next'}
-          </button>
+            Next
+          </Button>
         </div>
 
         {/* Info Section */}

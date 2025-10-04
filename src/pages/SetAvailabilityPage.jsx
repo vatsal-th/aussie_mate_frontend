@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
+import Button from '../components/Button';
 
 const SetAvailabilityPage = () => {
   const navigate = useNavigate();
@@ -165,13 +166,15 @@ const SetAvailabilityPage = () => {
 
             {/* Submit Button */}
             <div className="flex justify-end mt-5">
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-xl transition-colors duration-200 text-sm sm:text-base cursor-pointer"
+                loading={isLoading}
+                size="md"
+                className="px-6"
               >
-                {isLoading ? 'Saving...' : 'Continue & Set Location'}
-              </button>
+                Continue & Set Location
+              </Button>
             </div>
           </form>
         </div>

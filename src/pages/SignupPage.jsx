@@ -7,6 +7,7 @@ import eyeIcon from '../assets/eye 1.svg';
 import eyeOffIcon from '../assets/eye-off 1.svg';
 import FloatingLabelInput from '../components/FloatingLabelInput';
 import Button from '../components/Button';
+import InfoIcon from '../assets/info.svg';
 
 
 const SignupPage = () => {
@@ -328,6 +329,18 @@ const SignupPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Student Info Message */}
+              {formData.role === 'Student Cleaner' && (
+                <div className="flex items-center gap-2">
+                  <div className=" ">
+                    <img src={InfoIcon} alt="Info" className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm text-primary-200 font-medium">
+                    A student is allowed to work only 20 hours per week.
+                  </p>
+                </div>
+              )}
 
               <FloatingLabelInput
                 id="password"
