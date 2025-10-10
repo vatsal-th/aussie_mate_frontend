@@ -64,7 +64,7 @@ const PhoneValidationAlert = ({ error, onClose, isVisible }) => {
                 <p className="text-primary-500 text-xs xs:text-sm sm:text-base leading-relaxed mb-2 xs:mb-3 sm:mb-4">
                   {error}
                 </p>
-              </div>
+              </div>    
             </div>
           </div>
 
