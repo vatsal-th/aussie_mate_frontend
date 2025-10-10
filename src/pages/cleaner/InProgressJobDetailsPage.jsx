@@ -153,23 +153,52 @@ const InProgressJobDetailsPage = () => {
         const [locationError, setLocationError] = useState(null);
 
         useEffect(() => {
-            const fetchCurrentLocation = async () => {
-                try {
-                    setLocationLoading(true);
-                    const location = await getCurrentLocation();
-                    setCleanerLocation(location);
-                } catch (error) {
-                    setLocationError(error.message);
-                    // Fallback to default location
+            let watchId = null;
+
+            const startWatchingLocation = () => {
+                if (!navigator.geolocation) {
+                    setLocationError('Geolocation not supported');
                     setCleanerLocation({ lat: -33.839, lng: 151.207 });
-                } finally {
                     setLocationLoading(false);
+                    return;
                 }
+
+                // Watch position for real-time updates
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setCleanerLocation({ lat: latitude, lng: longitude });
+                        setLocationLoading(false);
+                        setLocationError(null);
+                    },
+                    (error) => {
+                        console.error('Location error:', error);
+                        setLocationError(error.message);
+                        // Fallback to default location
+                        if (!cleanerLocation) {
+                            setCleanerLocation({ lat: -33.839, lng: 151.207 });
+                        }
+                        setLocationLoading(false);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 5000, // Update every 5 seconds
+                        distanceFilter: 10 // Update when moved 10 meters
+                    }
+                );
             };
 
             if (customerLocation) {
-                fetchCurrentLocation();
+                startWatchingLocation();
             }
+
+            // Cleanup: Stop watching location when component unmounts
+            return () => {
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+            };
         }, [customerLocation]);
 
         if (locationLoading) {
@@ -202,7 +231,7 @@ const InProgressJobDetailsPage = () => {
 
     if (loading) {
         return (
-            <div className="bg-gray-50 min-h-screen">
+            <div className="bg-gray-50">
                 <Header />
                 <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
                     <div className="bg-white rounded-2xl p-6 animate-pulse">
@@ -221,7 +250,7 @@ const InProgressJobDetailsPage = () => {
 
     if (error || !job) {
         return (
-            <div className="bg-gray-50 min-h-screen">
+            <div className="bg-gray-50">
                 <Header />
                 <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
                     <div className="bg-white rounded-2xl p-6 text-center">
@@ -314,7 +343,7 @@ const InProgressJobDetailsPage = () => {
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-gray-50">
             <Header />
 
             <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
@@ -333,7 +362,7 @@ const InProgressJobDetailsPage = () => {
                     </div>
                 </div>
 
-                <div className="px-4 pb-20">
+                <div className="px-4">
                     {/* Job Details Card */}
                     <div className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
                         <h2 className="text-xl font-bold text-primary-500 mb-2">

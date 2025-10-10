@@ -38,6 +38,7 @@ import JobBookedSuccessfullyPage from './pages/customer/JobBookedSuccessfullyPag
 import NotificationPage from './pages/profile/NotificationPage'
 import EarningsPage from './pages/cleaner/EarningsPage'
 import InProgressJobDetailsPage from './pages/cleaner/InProgressJobDetailsPage'
+import CustomerInProgressJobDetailsPage from './pages/customer/CustomerInProgressJobDetailsPage'
 import StripeSuccessPage from './pages/StripeSuccessPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -196,6 +197,11 @@ function App() {
         <Route path="/in-progress-job/:jobId" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <InProgressJobDetailsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-in-progress-job/:jobId" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <CustomerInProgressJobDetailsPage />
           </ProtectedRoute>
         } />
         <Route path="/chat/:jobId" element={

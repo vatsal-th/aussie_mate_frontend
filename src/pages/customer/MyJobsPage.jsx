@@ -480,7 +480,13 @@ const MyJobsPage = () => {
           {filteredJobs.map((job) => (
             <div 
               key={job.id} 
-              onClick={() => navigate(`/customer-job-details/${job.id}`)}
+              onClick={() => {
+                if (job.status === 'in_progress') {
+                  navigate(`/customer-in-progress-job/${job.id}`);
+                } else {
+                  navigate(`/customer-job-details/${job.id}`);
+                }
+              }}
               className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
             >
               <div className="flex items-start justify-between">
@@ -550,8 +556,8 @@ const MyJobsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Chat Button for Accepted Jobs */} 
-                  {['accepted', 'in_progress'].includes(job.status) && (
+                  {/* Chat Button for Accepted Jobs only (not in_progress) */} 
+                  {job.status === 'accepted' && (
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();
