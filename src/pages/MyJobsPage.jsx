@@ -227,7 +227,7 @@ const MyJobsPage = () => {
           const address = j.location?.address || j.location?.fullAddress || '';
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
           
-          const dateLabel = formatDate(j.createdAt);
+          const dateLabel = formatDate(j.scheduledDate || j.createdAt);
           const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
           
           
@@ -269,7 +269,9 @@ const MyJobsPage = () => {
           
           return {
             id: j._id || j.jobId || j.id || `job-${Math.random()}`,    // Use _id for navigation
-            status: statusChip.label,
+            status: status,  // Keep original status for filtering
+            statusLabel: statusChip.label,  // Display label
+            statusClass: statusChip.className,  // Display class
             jobId: j.jobId, // Store jobId for display
             title,
             dateLabel,  
@@ -277,18 +279,22 @@ const MyJobsPage = () => {
             payment: paymentAmount,
             quotes,
             assignedTo,
+            scheduledDate: j.scheduledDate,
             createdAt: j.createdAt,
             messageCount: messageCount,
             originalJob: j // Store original job data for chat navigation
           };
         }));
         
-        // Sort by creation date (latest first)
+        // Sort by scheduled date (latest first), fallback to creation date
         const sortedJobs = normalized.sort((a, b) => {
-          if (!a.createdAt && !b.createdAt) return 0;
-          if (!a.createdAt) return 1;
-          if (!b.createdAt) return -1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
+          const dateA = a.scheduledDate || a.createdAt;
+          const dateB = b.scheduledDate || b.createdAt;
+          
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+          return new Date(dateB) - new Date(dateA);
         });
         
         setJobs(sortedJobs);
@@ -323,13 +329,14 @@ const MyJobsPage = () => {
       const tab = mapTab(job.status);
       const matchesTab = activeTab === 'all' || activeTab === tab;
       
-      // Date range filtering (inclusive)
+      // Date range filtering (inclusive) - use scheduledDate if available, otherwise createdAt
       let matchesDate = true;
       if (hasRange) {
-        if (!job.createdAt) {
+        const jobDate = job.scheduledDate || job.createdAt;
+        if (!jobDate) {
           matchesDate = false;
         } else {
-          const jobTime = new Date(job.createdAt);
+          const jobTime = new Date(jobDate);
           const jobDayStart = new Date(jobTime.getFullYear(), jobTime.getMonth(), jobTime.getDate()).getTime();
           const startTs = startDate ? new Date(startDate).getTime() : null;
           const endTs = endDate ? new Date(endDate).getTime() : null;
@@ -489,10 +496,9 @@ const MyJobsPage = () => {
                       </div>
                     );
                   } else {
-                    const chip = getStatusChip(job.status);
                     return (
-                      <div className={`text-[11px] px-2 py-1 rounded-full font-medium ${chip.className} text-center`}>
-                        {chip.label}
+                      <div className={`text-[11px] px-2 py-1 rounded-full font-medium ${job.statusClass} text-center`}>
+                        {job.statusLabel}
                       </div>
                     );
                   }
@@ -511,7 +517,7 @@ const MyJobsPage = () => {
               </div>
 
               {/* Assigned cleaner */}
-              {(['In Progress', 'Completed'].includes(job.status) && job.assignedTo) && (
+              {(['in_progress', 'completed'].includes(job.status) && job.assignedTo) && (
                 <div className="mt-1 flex items-center text-xs text-primary-200 font-medium">
                   <img src={UserIcon} alt="Assigned" className="w-4 h-4 mr-2" />
                   Assigned to: {job.assignedTo}
@@ -545,7 +551,7 @@ const MyJobsPage = () => {
 
                 <div className="flex items-center gap-2">
                   {/* Chat Button for Accepted Jobs */} 
-                  {job.status === 'Accepted' && (
+                  {['accepted', 'in_progress'].includes(job.status) && (
                     <button
                       onClick={async (e) => {
                         e.stopPropagation();

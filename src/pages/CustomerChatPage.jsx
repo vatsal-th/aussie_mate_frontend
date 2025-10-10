@@ -158,9 +158,9 @@ const CustomerChatPage = () => {
               if (cleanerQuote) {
                 // Set quote data for display
                 setQuoteData({
-                  baseQuote: cleanerQuote.price || 0,
-                  addons: [],
-                  total: cleanerQuote.price || 0
+                  baseQuote: cleanerQuote.basePrice || cleanerQuote.price || 0,
+                  addons: cleanerQuote.addons || [],
+                  total: cleanerQuote.totalPrice || cleanerQuote.price || 0
                 });
                 
                 // Get the actual cleaner ID from the quote
@@ -281,7 +281,48 @@ const CustomerChatPage = () => {
   };
   
   const handleAcceptQuote = () => {
-    navigate(`/confirm-cleaner/${jobId}`);
+    // Calculate add-ons total
+    const addOnsTotal = quoteData.addons?.reduce((sum, addon) => sum + (addon.price || 0), 0) || 0;
+    const addOnsName = quoteData.addons?.map(addon => addon.name).join(', ') || 'Additional Services';
+
+    // Get the current quote data from the chat context
+    const currentQuote = {
+      _id: cleanerId, // Use cleanerId as quote ID
+      price: quoteData.total,
+      basePrice: quoteData.baseQuote,
+      addOns: addOnsTotal,
+      addOnName: addOnsName,
+      totalPrice: quoteData.total,
+      cleanerId: {
+        _id: cleanerId,
+        firstName: 'Cleaner',
+        lastName: `#${cleanerId}`,
+        rating: 4.5,
+        tier: 'Standard'
+      }
+    };
+
+    // Format cleaner data for ConfirmYourCleanerPage
+    const cleanerData = {
+      id: cleanerId,
+      name: `Cleaner #${cleanerId}`,
+      distance: 'Distance not available',
+      rating: 4.5,
+      tier: 'Standard',
+      baseQuote: quoteData.baseQuote,
+      addOns: addOnsTotal,
+      addOnName: addOnsName,
+      total: quoteData.total
+    };
+
+
+    navigate(`/confirm-cleaner/${jobId}`, {
+      state: {
+        cleanerData: cleanerData,
+        quoteData: currentQuote,
+        jobData: null // We don't have job data in chat context
+      }
+    });
   };
   
   

@@ -126,19 +126,12 @@ const CustomerJobDetailsPage = () => {
     setShowDropdown(!showDropdown);
   };
 
-  const handleEditJob = () => {
-    setShowDropdown(false);
-    // Navigate to edit job page
-    navigate(`/edit-job/${jobId}`);
-  };
-
   const handleCancelJob = () => {
     setShowDropdown(false);
     setShowCancelModal(true);
   };
 
   const handleAcceptQuote = (quoteId) => {
-    // Find the quote to get cleaner details
     const quote = cleanerQuotes.find(q => q._id === quoteId);
     if (quote) {
       setQuoteToAccept(quote);
@@ -147,7 +140,6 @@ const CustomerJobDetailsPage = () => {
   };
 
   const handleDeclineQuote = (quoteId) => {
-    // Find the quote to get cleaner details
     const quote = cleanerQuotes.find(q => q._id === quoteId);
     if (quote) {
       setQuoteToDecline(quote);

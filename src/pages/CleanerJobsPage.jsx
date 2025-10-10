@@ -6,7 +6,6 @@ import DownIcon from '../assets/down2.svg';
 import CalendarIcon from '../assets/Calendar.svg';
 import MapPinIcon from '../assets/map-pin 1.png';
 import CurrentLocationIcon from '../assets/currentLocation.svg';
-import UserIcon from '../assets/user.svg';
 import SearchIcon from '../assets/search.svg';
 import { jobsAPI, userAPI } from '../services/api';
 import ChatIcon from '../assets/message2.svg';  
@@ -231,6 +230,32 @@ const CleanerJobsPage = () => {
               totalPages: Math.ceil(allLiveJobs.length / jobsPerPage)
             }
           };
+        } else if (activeTab === 'accepted') {
+          // For Accepted tab, fetch both accepted and in_progress jobs
+          const [acceptedJobsResponse, inProgressJobsResponse] = await Promise.all([
+            jobsAPI.getAllJobs({ status: 'accepted', page: 1, limit: 100 }),
+            jobsAPI.getAllJobs({ status: 'in_progress', page: 1, limit: 100 })
+          ]);
+          
+          const acceptedJobs = acceptedJobsResponse?.data?.jobs || acceptedJobsResponse?.data || [];
+          const inProgressJobs = inProgressJobsResponse?.data?.jobs || inProgressJobsResponse?.data || [];
+          const allAcceptedJobs = [...acceptedJobs, ...inProgressJobs];
+          
+          // Apply pagination to combined results
+          const startIndex = (currentPage - 1) * jobsPerPage;
+          const endIndex = startIndex + jobsPerPage;
+          const paginatedJobs = allAcceptedJobs.slice(startIndex, endIndex);
+          
+          response = {
+            success: true,
+            data: {
+              jobs: paginatedJobs,
+              total: allAcceptedJobs.length,
+              page: currentPage,
+              limit: jobsPerPage,
+              totalPages: Math.ceil(allAcceptedJobs.length / jobsPerPage)
+            }
+          };
         } else {
           // Fetch jobs from API with pagination for other tabs
           response = await jobsAPI.getAllJobs({
@@ -284,7 +309,6 @@ const CleanerJobsPage = () => {
               minute: '2-digit'
             }) : 'Date not specified',
             price: myQuote ? `$${myQuote.price}` : (job.estimatedPrice ? `$${job.estimatedPrice}` : job.budget ? `$${job.budget}` : 'Price not specified'),
-            customerName: job.customerId?.firstName || job.customerId?.lastName || job.customer?.firstName || job.customer?.name || job.customerName || job.postedBy || 'Customer',
             status: job.status || 'posted',
             timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently posted',
             type: job.serviceType || 'general',
@@ -310,22 +334,28 @@ const CleanerJobsPage = () => {
               if (jobDetails.success && jobDetails.data) {
                 const jobData = jobDetails.data;
                 
-                // Check if job is accepted and assigned to current cleaner
-                const isAccepted = jobData.status === 'accepted';
+                
+                // Check if job is accepted or in_progress and assigned to current cleaner
+                const isAccepted = jobData.status === 'accepted' || jobData.status === 'in_progress';
                 const isAssignedToCurrentCleaner = jobData.assignedCleanerId === currentUserId ||
+                  jobData.assignedCleanerId?.toString() === currentUserId?.toString() ||
                   jobData.cleanerId === currentUserId ||
-                  jobData.acceptedBy === currentUserId;
+                  jobData.cleanerId?.toString() === currentUserId?.toString() ||
+                  jobData.acceptedBy === currentUserId ||
+                  jobData.acceptedBy?.toString() === currentUserId?.toString();
                 
                 // Also check if any quote from current cleaner is accepted
                 const hasAcceptedQuote = jobData.quotes && jobData.quotes.some(quote => {
-                  const quoteCleanerId = quote.cleanerId || quote.cleanerId?._id;
-                  const isMyQuote = quoteCleanerId === currentUserId;
+                  const quoteCleanerId = quote.cleanerId?._id || quote.cleanerId?.id || quote.cleanerId;
+                  const isMyQuote = quoteCleanerId === currentUserId || quoteCleanerId?.toString() === currentUserId?.toString();
                   const isAccepted = quote.status === 'accepted';
+                  
                   
                   return isMyQuote && isAccepted;
                 });
                 
                 const shouldShow = isAccepted && (isAssignedToCurrentCleaner || hasAcceptedQuote);
+                
                 
                 if (shouldShow) {
                   acceptedJobs.push({
@@ -402,9 +432,18 @@ const CleanerJobsPage = () => {
     return filtered;
   }, [jobs, searchQuery]);
 
-  const handleJobClick = (jobId) => {
-    // Navigate to job details page
+  const handleJobClick = (jobId, jobStatus) => {
+    // Don't navigate for in_progress jobs
+    if (jobStatus === 'in_progress') {
+      return;
+    }
+    // Navigate to job details page for other statuses
     navigate(`/job-details/${jobId}`);
+  };
+
+  const handleInProgressJobClick = (jobId) => {
+    // Navigate to in-progress job details page
+    navigate(`/in-progress-job/${jobId}`);
   };
 
   // Pagination functions
@@ -568,8 +607,10 @@ const CleanerJobsPage = () => {
                 {filteredJobs.map((job) => (
                   <div
                     key={job.id}
-                    onClick={() => handleJobClick(job.id)}
-                    className="bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                    onClick={() => handleJobClick(job.id, job.originalJob?.status)}
+                    className={`bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-sm transition-all duration-200 ${
+                      job.originalJob?.status === 'in_progress' ? 'cursor-default' : 'cursor-pointer hover:shadow-md'
+                    }`}
                   >
                     {/* Job ID and Status */}
                     <div className="flex items-center justify-between mb-1">
@@ -581,9 +622,19 @@ const CleanerJobsPage = () => {
                           Completed
                         </span>
                       )}
+                      {activeTab === 'accepted' && job.originalJob?.status === 'in_progress' && (
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FFF1D9] border border-[#FFEBCA] text-[#F59E0B]">
+                          Awaiting Payment
+                        </span>
+                      )}
+                      {activeTab === 'accepted' && job.originalJob?.status === 'accepted' && (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#D1FAE5] border border-[#D1FAE5] text-[#059669]">
+                          Accepted
+                        </span>
+                      )}
                       {activeTab === 'my-bids' && job.myQuote && (
                         <div className="flex flex-col items-end">
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-[#E0F2FE] text-[#0369A1] mb-1">
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#E0F2FE] text-[#0369A1] mb-1">
                             Quotes Sent
                           </span>
                         </div>
@@ -610,12 +661,6 @@ const CleanerJobsPage = () => {
                           {activeTab === 'completed' ? `Completed: ${job.date}` : job.date}
                         </span>
                       </div>
-
-                      {/* Job Poster Name */}
-                      <div className="flex items-center">
-                        <img src={UserIcon} alt="Job Poster" className="w-4 h-4 mr-3" />
-                        <span className="text-sm text-primary-200 font-medium">{job.customerName}</span>
-                      </div>
                       
                       {/* My Quote Amount for My Bids tab */}
                       {activeTab === 'my-bids' && job.myQuote && (
@@ -627,8 +672,8 @@ const CleanerJobsPage = () => {
                       )}
                     </div>
 
-                    {/* Chat with Customer Button for Accepted Jobs */}
-                    {activeTab === 'accepted' && (
+                    {/* Chat with Customer Button for Accepted Jobs (not in_progress) */}
+                    {activeTab === 'accepted' && job.originalJob?.status === 'accepted' && (
                       <div className="flex items-center justify-end cursor-pointer">
                         <button
                           onClick={(e) => {
@@ -639,6 +684,21 @@ const CleanerJobsPage = () => {
                         >
                           <img src={ChatIcon} alt="Chat" className="w-5 h-5 " />
                           Chat with Customer
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* View Details Button for In Progress Jobs */}
+                    {activeTab === 'accepted' && job.originalJob?.status === 'in_progress' && (
+                      <div className="flex items-center justify-end cursor-pointer mt-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent job card click
+                            handleInProgressJobClick(job.id);
+                          }}
+                          className="text-[#1F6FEB] px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
+                        >
+                          View Details
                         </button>
                       </div>
                     )}

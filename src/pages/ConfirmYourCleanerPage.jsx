@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import Button from '../components/Button';
+import { paymentService, handlePaymentError } from '../services/paymentService';
 import ArrowLeftIcon from '../assets/arrow-left.svg';
 import StarIcon from '../assets/rating.svg';
 import SilverBadgeIcon from '../assets/silverBadge.svg';
@@ -12,41 +13,104 @@ const ConfirmYourCleanerPage = () => {
   const { jobId } = useParams();
   const location = useLocation();
   
-  // Get cleaner data from location state or use default for demo
-  const cleanerData = location.state?.cleanerData || {
-    id: '1047',
-    name: 'Cleaner #1047',
-    distance: '3.2 km from your location',
-    rating: 4.8,
-    tier: 'Silver Tier',
-    baseQuote: 140,
-    addOns: 30,
-    addOnName: 'Carpet Cleaning',
-    total: 170
-  };
+  // Get data from location state
+  const cleanerData = location.state?.cleanerData;
+  const quoteData = location.state?.quoteData;
+  const jobData = location.state?.jobData;
+  
+  
+  // Extract dynamic data from quote if available, otherwise use cleanerData
+  const finalCleanerData = quoteData ? {
+    id: quoteData.cleanerId?._id || quoteData.cleanerId?.id || quoteData.cleanerId || 'Unknown',
+    name: quoteData.cleanerId ? 
+      `${quoteData.cleanerId.firstName || ''} ${quoteData.cleanerId.lastName || ''}`.trim() || 
+      `Cleaner #${(quoteData.cleanerId._id || quoteData.cleanerId.id || quoteData.cleanerId).slice(-4)}` : 
+      'Cleaner',
+    distance: 'Distance not available', // This should be calculated based on locations
+    rating: quoteData.cleanerId?.rating || 4.5,
+    tier: quoteData.cleanerId?.tier || 'Standard',
+    baseQuote: quoteData.basePrice || quoteData.price || 0,
+    addOns: quoteData.addOns || 0,
+    addOnName: quoteData.addOnName || 'Additional Services',
+    total: quoteData.totalPrice || quoteData.price || 0
+  } : (cleanerData || null);
 
-  const [selectedPayment, setSelectedPayment] = useState('cash');
-  const [showCashBreakdown, setShowCashBreakdown] = useState(true);
+  // Redirect if no data is available
+  useEffect(() => {
+    if (!finalCleanerData) {
+      navigate('/my-jobs');
+    }
+  }, [finalCleanerData, navigate]);
+
+  // Don't render if no data is available
+  if (!finalCleanerData) {
+    return null;
+  }
+
+  const [selectedPayment, setSelectedPayment] = useState('online');
+  const [showCashBreakdown, setShowCashBreakdown] = useState(false);
   const [showOnlineBreakdown, setShowOnlineBreakdown] = useState(false);
   const [useWalletBalance, setUseWalletBalance] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
-  const walletBalance = 45;
+  // Calculate amounts based on final data
+  const walletBalance = 45; // This should come from user API
   const onlinePaymentPercentage = 10;
-  const onlineNowAmount = Math.round(cleanerData.total * (onlinePaymentPercentage / 100));
-  const cashAmount = cleanerData.total - onlineNowAmount;
+  const onlineNowAmount = Math.round(finalCleanerData.total * (onlinePaymentPercentage / 100));
+  const cashAmount = finalCleanerData.total - onlineNowAmount;
 
-  const handleProceedToPay = () => {
-    // Navigate to booking confirmation page
-    navigate(`/booking-confirmation/${jobId}`, {
-      state: {
-        cleanerData,
-        paymentMethod: selectedPayment,
-        amount: selectedPayment === 'cash' ? onlineNowAmount : cleanerData.total,
-        totalAmount: cleanerData.total,
-        useWallet: useWalletBalance
+  const handleProceedToPay = async () => {
+    if (selectedPayment === 'cash') {
+      // For cash payment, create payment with cash method
+      try {
+        setProcessing(true);
+        setError(null);
+
+        const response = await paymentService.createPayment(jobId, 'cash');
+
+        if (response.success) {
+          // Navigate to success page
+          navigate('/job-success', {
+            state: {
+              jobId,
+              paymentMethod: 'cash',
+              amount: onlineNowAmount,
+              cashAmount: cashAmount,
+              totalAmount: finalCleanerData.total,
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Cash payment error:', err);
+        setError(handlePaymentError(err));
+      } finally {
+        setProcessing(false);
       }
-    });
+    } else {
+      // For online payment, redirect to Stripe Checkout
+      try {
+        setProcessing(true);
+        setError(null);
+
+        // Create payment with Stripe Checkout (useCheckout = true)
+        const response = await paymentService.createPayment(jobId, 'online', true);
+
+        if (response.success && response.data.url) {
+          // Redirect to Stripe Checkout page
+          window.location.href = response.data.url;
+        } else {
+          setError('Failed to initialize payment. Please try again.');
+          setProcessing(false);
+        }
+      } catch (err) {
+        console.error('Payment initialization error:', err);
+        setError(handlePaymentError(err));
+        setProcessing(false);
+      }
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,10 +140,10 @@ const ConfirmYourCleanerPage = () => {
             {/* Cleaner Details */}
             <div className="flex-1">
               <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-1">
-                {cleanerData.name}
+                {finalCleanerData.name}
               </h2>
               <p className="text-sm text-primary-200 font-medium mb-3">
-                {cleanerData.distance}
+                {finalCleanerData.distance}
               </p>
               
               {/* Rating and Tier Badges */}
@@ -87,14 +151,14 @@ const ConfirmYourCleanerPage = () => {
                 <div className="flex items-center bg-[#FFF2DE] px-2 py-1 rounded-full">
                   <img src={StarIcon} alt="Rating" className="w-4 h-4 mr-1" />
                   <span className="text-sm font-medium text-primary-500">
-                    {cleanerData.rating}
+                    {finalCleanerData.rating}
                   </span>
                 </div>
                 
                 <div className="flex items-center bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] px-2 py-1 rounded-full border border-[#E5E7EB]">
                   <img src={SilverBadgeIcon} alt="Tier" className="w-4 h-4 mr-1" />
                   <span className="text-sm font-medium text-primary-500">
-                    {cleanerData.tier}
+                    {finalCleanerData.tier}
                   </span>
                 </div>
               </div>
@@ -108,18 +172,18 @@ const ConfirmYourCleanerPage = () => {
           
           <div className="space-y-3">
             <div className="flex items-center">
-              <span className="text-sm text-primary-200 font-medium">Base Quote: <span className="text-sm font-semibold text-primary-500">${cleanerData.baseQuote}</span></span>
+              <span className="text-sm text-primary-200 font-medium">Base Quote: <span className="text-sm font-semibold text-primary-500">${finalCleanerData.baseQuote}</span></span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-primary-200 font-medium">
-                Add-ons: <span className="text-[#1F6FEB] font-semibold">+${cleanerData.addOns}</span> ({cleanerData.addOnName})
+                Add-ons: <span className="text-[#1F6FEB] font-semibold">+${finalCleanerData.addOns}</span> ({finalCleanerData.addOnName})
               </span>
             </div>
             
             <div className="border-t border-gray-200 pt-3">
               <div className="flex items-center">
-                <span className="text-base font-semibold text-primary-500">Total: <span className="text-lg font-bold text-primary-500"> ${cleanerData.total}</span> </span>
+                <span className="text-base font-semibold text-primary-500">Total: <span className="text-lg font-bold text-primary-500"> ${finalCleanerData.total}</span> </span>
                 
               </div>
             </div>
@@ -251,7 +315,7 @@ const ConfirmYourCleanerPage = () => {
                     <div className="mt-3 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-primary-200 font-medium">Full Amount:</span>
-                        <span className="font-semibold text-primary-500">${cleanerData.total}</span>
+                        <span className="font-semibold text-primary-500">${finalCleanerData.total}</span>
                       </div>
                     </div>
                   )}
@@ -286,14 +350,39 @@ const ConfirmYourCleanerPage = () => {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <svg 
+              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-red-800">Error</h4>
+              <p className="text-sm text-red-600 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Proceed Button */}
         <div className="flex justify-end">
           <Button
             onClick={handleProceedToPay}
             size="md"
             className="px-4 py-3 mb-6"
+            loading={processing}
+            disabled={processing}
           >
-            Proceed to Pay ${selectedPayment === 'cash' ? onlineNowAmount : cleanerData.total}
+            {selectedPayment === 'cash' 
+              ? `Proceed to Pay $${onlineNowAmount}` 
+              : `Proceed to Pay $${finalCleanerData.total}`}
           </Button>
         </div>
 

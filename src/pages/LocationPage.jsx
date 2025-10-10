@@ -99,9 +99,9 @@ const LocationPage = () => {
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        const { latitude, longitude } = position.coords;
+        
         try {
-          const { latitude, longitude } = position.coords;
-
           const response = await fetch(
             `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
           );
@@ -141,7 +141,6 @@ const LocationPage = () => {
         } catch (err) {
           console.error("Reverse geocoding failed:", err);
           
-          // Fallback: Use coordinates only if geocoding fails
           const location = {
             fullAddress: `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`,
             lat: latitude,
@@ -164,34 +163,66 @@ const LocationPage = () => {
     );
   };
 
-  // Handle manual address input
   const handleManualAddressSubmit = (e) => {
     e.preventDefault();
     if (manualAddress.trim()) {
-      setSelectedLocation({
-        fullAddress: manualAddress.trim(),
-        lat: -33.839, 
-        lng: 151.207,
-        coordinates: "-33.839, 151.207",
-      });
-      setShowManualInput(false);
-      setManualAddress("");
+      // Get current GPS coordinates even when manually entering address
+      if (!navigator.geolocation) {
+        // Fallback to default coordinates if geolocation not available
+        setSelectedLocation({
+          fullAddress: manualAddress.trim(),
+          lat: -33.839, 
+          lng: 151.207,
+          coordinates: "-33.839, 151.207",
+        });
+        setShowManualInput(false);
+        setManualAddress("");
+        return;
+      }
+
+      setIsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setSelectedLocation({
+            fullAddress: manualAddress.trim(),
+            lat: latitude,
+            lng: longitude,
+            coordinates: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          });
+          setShowManualInput(false);
+          setManualAddress("");
+          setIsLoading(false);
+        },
+        (err) => {
+          console.error("Location error:", err);
+          // Fallback to default coordinates if GPS fails
+          setSelectedLocation({
+            fullAddress: manualAddress.trim(),
+            lat: -33.839, 
+            lng: 151.207,
+            coordinates: "-33.839, 151.207",
+          });
+          setShowManualInput(false);
+          setManualAddress("");
+          setIsLoading(false);
+          setError("GPS access failed. Using default coordinates.");
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
     }
   };
 
-  // Handle change location click
   const handleChangeLocation = () => {
     setShowManualInput(true);
     setManualAddress(selectedLocation?.fullAddress || "");
   };
 
-  // Cancel manual input
   const handleCancelManual = () => {
     setShowManualInput(false);
     setManualAddress("");
   };
 
-  // Confirm location   
   const handleConfirmLocation = async () => {
     // Store selected location in backend
     if (selectedLocation) {
@@ -204,22 +235,21 @@ const LocationPage = () => {
         address: selectedLocation.address || selectedLocation.fullAddress,
         city: city,
         fullAddress: selectedLocation.fullAddress,
-        coordinates: selectedLocation.coordinates
+        lat: selectedLocation.lat,
+        lng: selectedLocation.lng,
+        coordinates: {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng
+        }
       };
-      
       try {
         // Update location in backend
-        await userAPI.updateLocation(locationData);
-        
-        // Also store in localStorage for immediate UI update
-        localStorage.setItem('userLocation', JSON.stringify(locationData));
-        
-        // Dispatch custom event to update Header
+        const response = await userAPI.updateLocation(locationData);
+
         window.dispatchEvent(new CustomEvent('locationUpdated'));
       } catch (error) {
         console.error('Error updating location in backend:', error);
-        // Still store in localStorage as fallback
-        localStorage.setItem('userLocation', JSON.stringify(locationData));
+
         window.dispatchEvent(new CustomEvent('locationUpdated'));
       }
     }

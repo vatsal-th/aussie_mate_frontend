@@ -27,13 +27,6 @@ export const getStoredUser = () => {
   return userStr ? JSON.parse(userStr) : null;
 };
 
-// Mock storage for development (when backend is not available)
-const mockStorage = {
-  cards: [],
-  bankAccounts: [],
-  walletBalance: 45.00
-};
-
 // Helper functions for mock storage
 const getMockCards = () => {
   const stored = localStorage.getItem('mock_cards');
@@ -384,6 +377,11 @@ export const userAPI = {
   // Get user profile
   getProfile: async () => {
     return apiRequest('/auth/me');
+  },
+
+  // Get user by ID
+  getUserById: async (userId) => {
+    return apiRequest(`/auth/user/${userId}`);
   },
 
   // Update user location

@@ -37,6 +37,8 @@ import ConfirmYourCleanerPage from './pages/ConfirmYourCleanerPage'
 import JobBookedSuccessfullyPage from './pages/JobBookedSuccessfullyPage'
 import NotificationPage from './pages/NotificationPage'
 import EarningsPage from './pages/EarningsPage'
+import InProgressJobDetailsPage from './pages/InProgressJobDetailsPage'
+import StripeSuccessPage from './pages/StripeSuccessPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -191,6 +193,11 @@ function App() {
             <JobDetailsPage />
           </ProtectedRoute>
         } />
+        <Route path="/in-progress-job/:jobId" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <InProgressJobDetailsPage />
+          </ProtectedRoute>
+        } />
         <Route path="/chat/:jobId" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <CleanerChatPage />
@@ -199,6 +206,11 @@ function App() {
         <Route path="/earnings" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <EarningsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cleaner/stripe/success" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <StripeSuccessPage />
           </ProtectedRoute>
         } />
         </Routes>
