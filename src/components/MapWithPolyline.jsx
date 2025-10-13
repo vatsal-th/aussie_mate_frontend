@@ -1,84 +1,140 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
   Marker,
-  DirectionsService,
   DirectionsRenderer,
 } from "@react-google-maps/api";
 import Marker1Icon from "../assets/marker1.svg";
 import Marker2Icon from "../assets/marker2.svg";
 
-const libraries = ["places"];
+// Define libraries outside component to prevent re-creation
+const GOOGLE_MAPS_LIBRARIES = ["places"];
 const containerStyle = { width: "100%", height: "100%", borderRadius: "1rem" };
 
-const MapWithRealtimeTracking = ({ customerLocation, onRouteInfo }) => {
+const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCleanerLocation, onRouteInfo }) => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [directions, setDirections] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const mapRef = useRef(null);
+  const directionsFetchedRef = useRef(false);
+  const initialCleanerLocationRef = useRef(null);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY;
 
-  const { isLoaded } = useJsApiLoader({
+  // Memoize loader options to prevent re-initialization
+  const loaderOptions = useMemo(() => ({
     googleMapsApiKey: apiKey,
-    libraries,
-  });
+    libraries: GOOGLE_MAPS_LIBRARIES,
+  }), [apiKey]);
 
-  // Track cleaner in real-time
+  const { isLoaded } = useJsApiLoader(loaderOptions);
+
+  // Use external cleaner location if provided, otherwise track internally
   useEffect(() => {
+    if (externalCleanerLocation) {
+      setCleanerLocation(externalCleanerLocation);
+      initialCleanerLocationRef.current = externalCleanerLocation; // Store external location
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
       return;
     }
 
-    const watcher = navigator.geolocation.watchPosition(
+    // Get initial location first
+    navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCleanerLocation({
+        const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+        setCleanerLocation(newLocation);
+        initialCleanerLocationRef.current = newLocation; // Store initial location
       },
-      (error) => console.error("Error getting location:", error),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      (error) => console.error("Error getting initial location:", error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+
+    // Then watch for updates with less frequent updates
+    const watcher = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setCleanerLocation(newLocation);
+      },
+      (error) => console.error("Error watching location:", error),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000, distanceFilter: 50 }
     );
 
     return () => navigator.geolocation.clearWatch(watcher);
-  }, []);
+  }, [externalCleanerLocation]);
 
-  // Reset directions when cleaner location changes to recalculate route
+  // Imperative DirectionsService - fetch directions once when customer location is available
   useEffect(() => {
-    if (cleanerLocation) {
-      setDirections(null);
+    if (!isLoaded) {
+      return;
     }
-  }, [cleanerLocation]);
 
-  // Callback for DirectionsService
-  const onDirectionsCallback = useCallback((result, status) => {
-    if (status === "OK" && result) {
-      setDirections(result);
-      
-      // Extract route information
-      const route = result.routes[0];
-      const leg = route.legs[0];
-      
-      const routeData = {
-        distance: leg.distance.text,
-        duration: leg.duration.text,
-        distanceValue: leg.distance.value, // in meters
-        durationValue: leg.duration.value, // in seconds
-      };
-      
-      setRouteInfo(routeData);
-      
-      // Pass route info to parent component
-      if (onRouteInfo) {
-        onRouteInfo(routeData);
-      }
-    } else {
-      console.warn("Directions request failed:", status);
+    if (!customerLocation) {
+      return;
     }
-  }, [onRouteInfo]);
+
+    if (directionsFetchedRef.current) {
+      return;
+    }
+
+    // Wait for initial cleaner location to be available
+    if (!initialCleanerLocationRef.current) {
+      return;
+    }
+
+    console.log('Fetching directions imperatively (ONCE)...', {
+      origin: initialCleanerLocationRef.current,
+      destination: customerLocation
+    });
+    
+    const directionsService = new window.google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: initialCleanerLocationRef.current, // Use stable initial location
+        destination: customerLocation,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          console.log('✅ Directions fetched successfully');
+          setDirections(result);
+          directionsFetchedRef.current = true; // Mark as fetched to prevent re-fetching
+          
+          // Extract route information
+          const route = result.routes[0];
+          const leg = route.legs[0];
+          
+          const routeData = {
+            distance: leg.distance.text,
+            duration: leg.duration.text,
+            distanceValue: leg.distance.value, // in meters
+            durationValue: leg.duration.value, // in seconds
+          };
+          
+          console.log('✅ Route data:', routeData);
+          setRouteInfo(routeData);
+          
+          // Pass route info to parent component
+          if (onRouteInfo) {
+            onRouteInfo(routeData);
+          }
+        } else {
+          console.error("❌ Directions request failed:", status, result);
+        }
+      }
+    );
+  }, [isLoaded, customerLocation]); // Remove cleanerLocation dependency
 
   const onMapLoad = useCallback((map) => {
     mapRef.current = map;
@@ -163,18 +219,6 @@ const MapWithRealtimeTracking = ({ customerLocation, onRouteInfo }) => {
             scaledSize: new window.google.maps.Size(58, 58),
           }}
         />
-
-        {/* Directions Service */}
-        {!directions && (
-          <DirectionsService
-            options={{
-              origin: cleanerLocation,
-              destination: customerLocation,
-              travelMode: window.google.maps.TravelMode.DRIVING,
-            }}
-            callback={onDirectionsCallback}
-          />
-        )}
 
         {/* Directions Renderer */}
         {directions && (

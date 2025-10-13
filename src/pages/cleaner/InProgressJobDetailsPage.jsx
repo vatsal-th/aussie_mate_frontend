@@ -13,6 +13,7 @@ import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 
+
 const InProgressJobDetailsPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
@@ -129,33 +130,25 @@ const InProgressJobDetailsPage = () => {
         return null;
     };
 
-    const getCurrentLocation = () => {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error('Geolocation not supported'));
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    resolve({ lat: latitude, lng: longitude });
-                },
-                (error) => {
-                    reject(error);
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-            );
-        });
-    };
-
     const handleChatWithCustomer = () => {
         navigate(`/chat/${jobId}`);
     };
 
     const handleCallCustomer = () => {
-        if (job?.customer?.phone) {
-            window.open(`tel:${job.customer.phone}`);
+        // Try multiple possible phone number locations
+        const phoneNumber = customer?.phone || 
+                          customer?.phoneNumber || 
+                          customer?.mobile || 
+                          job?.customer?.phone || 
+                          job?.customer?.phoneNumber ||
+                          job?.customer?.mobile;
+        
+        if (phoneNumber) {
+            console.log('Calling customer:', phoneNumber);
+            window.location.href = `tel:${phoneNumber}`;
+        } else {
+            console.error('Customer phone number not available');
+            alert('Customer phone number not available');
         }
     };
 
@@ -166,89 +159,6 @@ const InProgressJobDetailsPage = () => {
 
     const handleStartJob = () => {
         navigate(`/cleaner/complete-job/${jobId}`);
-    };
-
-    // Component to handle getting current location and displaying map
-    const MapWithCurrentLocation = ({ customerLocation, jobId, onRouteInfo }) => {
-        const [cleanerLocation, setCleanerLocation] = useState(null);
-        const [locationLoading, setLocationLoading] = useState(true);
-        const [locationError, setLocationError] = useState(null);
-
-        useEffect(() => {
-            let watchId = null;
-
-            const startWatchingLocation = () => {
-                if (!navigator.geolocation) {
-                    setLocationError('Geolocation not supported');
-                    setCleanerLocation({ lat: -33.839, lng: 151.207 });
-                    setLocationLoading(false);
-                    return;
-                }
-
-                // Watch position for real-time updates
-                watchId = navigator.geolocation.watchPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        setCleanerLocation({ lat: latitude, lng: longitude });
-                        setLocationLoading(false);
-                        setLocationError(null);
-                    },
-                    (error) => {
-                        console.error('Location error:', error);
-                        setLocationError(error.message);
-                        // Fallback to default location
-                        if (!cleanerLocation) {
-                            setCleanerLocation({ lat: -33.839, lng: 151.207 });
-                        }
-                        setLocationLoading(false);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 5000, // Update every 5 seconds
-                        distanceFilter: 10 // Update when moved 10 meters
-                    }
-                );
-            };
-
-            if (customerLocation) {
-                startWatchingLocation();
-            }
-
-            // Cleanup: Stop watching location when component unmounts
-            return () => {
-                if (watchId !== null) {
-                    navigator.geolocation.clearWatch(watchId);
-                }
-            };
-        }, [customerLocation]);
-
-        if (locationLoading) {
-            return (
-                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                        <p className="text-gray-600">Getting your current location...</p>
-                    </div>
-                </div>
-            );
-        }
-
-        if (!customerLocation) {
-            return (
-                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">Customer location not available</p>
-                </div>
-            );
-        }
-
-
-        return (
-            <MapWithPolyline 
-                customerLocation={customerLocation}
-                onRouteInfo={onRouteInfo}
-            />
-        );
     };
 
     if (loading) {
@@ -426,11 +336,19 @@ const InProgressJobDetailsPage = () => {
                             
                             {(() => {
                                 const originalCoords = job?.location?.coordinates;
-                                const fixedCoords = getCoordinates(originalCoords);                     
+                                const fixedCoords = getCoordinates(originalCoords);
+                                
+                                if (!fixedCoords) {
+                                    return (
+                                        <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <p className="text-gray-500">Customer location not available</p>
+                                        </div>
+                                    );
+                                }
+                                
                                 return (
-                                    <MapWithCurrentLocation 
+                                    <MapWithPolyline 
                                         customerLocation={fixedCoords}
-                                        jobId={jobId}
                                         onRouteInfo={(info) => setRouteInfo(info)}
                                     />
                                 );
@@ -463,7 +381,7 @@ const InProgressJobDetailsPage = () => {
                                         <h4 className="font-semibold text-primary-500">{customer?.firstName && customer?.lastName ? `${customer.firstName} ${customer.lastName}` : customer?.name || job.customer?.name || 'Customer'}</h4>
                                         <div className="flex items-center text-sm text-gray-500">
                                             <img src={PhoneIcon} alt="Phone" className="w-3 h-3 mr-1" />
-                                            {customer?.phone || job.customer?.phone || 'Phone not available'}
+                                            {customer?.phone || customer?.phoneNumber || customer?.mobile || job.customer?.phone || job.customer?.phoneNumber || job.customer?.mobile || 'Phone not available'}
                                         </div>
                                     </div>
                                 </div>

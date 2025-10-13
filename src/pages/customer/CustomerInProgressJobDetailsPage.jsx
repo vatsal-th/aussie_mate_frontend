@@ -138,14 +138,26 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   const handleChatWithCleaner = () => {
-    if (cleaner?._id) {
-      navigate(`/customer-chat/${jobId}?cleaner=${cleaner._id}`);
+    // Try multiple possible ID locations
+    const cleanerId = cleaner?._id || cleaner?.id;
+    
+    if (cleanerId) {
+      navigate(`/customer-chat/${jobId}?cleaner=${cleanerId}`);
+    } else {
+      console.error('Cleaner ID not available');
     }
   };
 
   const handleCallCleaner = () => {
-    if (cleaner?.phone) {
-      window.open(`tel:${cleaner.phone}`);
+    // Try multiple possible phone number locations
+    const phoneNumber = cleaner?.phone || 
+                      cleaner?.phoneNumber || 
+                      cleaner?.mobile;
+    
+    if (phoneNumber) {
+      window.location.href = `tel:${phoneNumber}`;
+    } else {
+      console.error('Cleaner phone number not available');
     }
   };
 
@@ -462,7 +474,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       <h4 className="font-semibold text-primary-500">{cleaner.firstName} {cleaner.lastName}</h4>
                       <div className="flex items-center text-sm text-primary-200 font-medium">
                       <img src={PhoneIcon2} alt="Phone" className="w-4 h-4 mr-1" />
-                        {cleaner.phone || 'Phone not available'}
+                        {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex items-center bg-[#FFF2DE] text-primary-500 font-medium px-2 py-1 rounded-full text-xs">
