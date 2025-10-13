@@ -39,6 +39,8 @@ import NotificationPage from './pages/profile/NotificationPage'
 import EarningsPage from './pages/cleaner/EarningsPage'
 import InProgressJobDetailsPage from './pages/cleaner/InProgressJobDetailsPage'
 import CustomerInProgressJobDetailsPage from './pages/customer/CustomerInProgressJobDetailsPage'
+import JobDetailsCompletedPage from './pages/customer/JobDetailsCompletedPage'
+import CompleteJobPage from './pages/cleaner/CompleteJobPage'
 import StripeSuccessPage from './pages/StripeSuccessPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -129,6 +131,11 @@ function App() {
             <CustomerJobDetailsPage />
           </ProtectedRoute>
         } />
+        <Route path="/job-completed/:jobId" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <JobDetailsCompletedPage />
+          </ProtectedRoute>
+        } />
         <Route path="/customer-chat/:jobId" element={
           <ProtectedRoute allowedRoles={['Customer']}>
             <CustomerChatPage />
@@ -197,6 +204,11 @@ function App() {
         <Route path="/in-progress-job/:jobId" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <InProgressJobDetailsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cleaner/complete-job/:jobId" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <CompleteJobPage />
           </ProtectedRoute>
         } />
         <Route path="/customer-in-progress-job/:jobId" element={

@@ -7,6 +7,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
+import JobCompleteModal from '../../components/JobCompleteModal';
 import { jobsAPI } from '../../services/api';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
@@ -29,6 +30,8 @@ const CustomerDashboard = () => {
   const [ongoingJobs, setOngoingJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showJobCompleteModal, setShowJobCompleteModal] = useState(false);
+  const [completedJobInfo, setCompletedJobInfo] = useState(null);
   const swiperRef = useRef(null);
   const navigate = useNavigate();
 
@@ -80,6 +83,45 @@ const CustomerDashboard = () => {
   const handleViewRewards = () => {
     navigate('/rewards');
   };
+
+  const handleCloseJobCompleteModal = () => {
+    setShowJobCompleteModal(false);
+    setCompletedJobInfo(null);
+  };
+
+  // Test function to show modal
+  const handleTestModal = () => {
+    setCompletedJobInfo({
+      jobId: 'test-123',
+      cleanerName: 'John',
+      jobTitle: 'House Cleaning Service',
+      completedAt: new Date().toISOString()
+    });
+    setShowJobCompleteModal(true);
+  };
+
+  // Check for completed jobs and show modal
+  useEffect(() => {
+    const checkCompletedJobs = () => {
+      // Check if there are any jobs that were just completed
+      // This would typically come from a real-time notification or API call
+      const completedJob = localStorage.getItem('recentlyCompletedJob');
+      if (completedJob) {
+        try {
+          const jobData = JSON.parse(completedJob);
+          setCompletedJobInfo(jobData);
+          setShowJobCompleteModal(true);
+          // Remove from localStorage after showing
+          localStorage.removeItem('recentlyCompletedJob');
+        } catch (error) {
+          console.error('Error parsing completed job data:', error);
+        }
+      }
+    };
+
+    checkCompletedJobs();
+  }, []);
+
   // Fetch jobs data
   useEffect(() => {
     const fetchJobs = async () => {
@@ -397,6 +439,14 @@ const CustomerDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Job Complete Modal */}
+      <JobCompleteModal
+        isOpen={showJobCompleteModal}
+        onClose={handleCloseJobCompleteModal}
+        cleanerName={completedJobInfo?.cleanerName || "John"}
+        jobTitle={completedJobInfo?.jobTitle || "Cleaning Service"}
+      />
     </div>
   );
 };

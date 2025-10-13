@@ -6,7 +6,9 @@ import MapWithPolyline from '../../components/MapWithPolyline';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
-import PhoneIcon from '../../assets/phone2.svg';
+import MapPinIcon1 from '../../assets/location.svg';
+import PhoneIcon from '../../assets/phone.svg';
+import PhoneIcon1 from '../../assets/phone2.svg';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
@@ -20,6 +22,8 @@ const InProgressJobDetailsPage = () => {
     const [customer, setCustomer] = useState(null);
     const [error, setError] = useState('');
     const [showMap, setShowMap] = useState(false);
+    const [routeInfo, setRouteInfo] = useState(null);
+    const [isNearCustomer, setIsNearCustomer] = useState(false);
 
     useEffect(() => {
         const fetchJobDetails = async () => {
@@ -77,6 +81,19 @@ const InProgressJobDetailsPage = () => {
     const handleGetDirections = () => {
         setShowMap(!showMap);
     };
+
+    // Check if cleaner is near customer location
+    useEffect(() => {
+        if (routeInfo && routeInfo.distanceValue) {
+            // If distance is less than 100 meters, show "Start Job"
+            const isNear = routeInfo.distanceValue < 100; // 100 meters
+            setIsNearCustomer(isNear);
+            
+            if (isNear) {
+                console.log(`Cleaner is near customer! Distance: ${routeInfo.distance}`);
+            }
+        }
+    }, [routeInfo]);
 
     const getCoordinates = (coordinates) => {
         if (!coordinates) return null;
@@ -144,10 +161,15 @@ const InProgressJobDetailsPage = () => {
 
     const handleOnTheWay = () => {
         // Handle "On the way" action
+        console.log("Cleaner is on the way");
+    };
+
+    const handleStartJob = () => {
+        navigate(`/cleaner/complete-job/${jobId}`);
     };
 
     // Component to handle getting current location and displaying map
-    const MapWithCurrentLocation = ({ customerLocation, jobId }) => {
+    const MapWithCurrentLocation = ({ customerLocation, jobId, onRouteInfo }) => {
         const [cleanerLocation, setCleanerLocation] = useState(null);
         const [locationLoading, setLocationLoading] = useState(true);
         const [locationError, setLocationError] = useState(null);
@@ -223,8 +245,8 @@ const InProgressJobDetailsPage = () => {
 
         return (
             <MapWithPolyline 
-                cleanerLocation={cleanerLocation}
                 customerLocation={customerLocation}
+                onRouteInfo={onRouteInfo}
             />
         );
     };
@@ -409,6 +431,7 @@ const InProgressJobDetailsPage = () => {
                                     <MapWithCurrentLocation 
                                         customerLocation={fixedCoords}
                                         jobId={jobId}
+                                        onRouteInfo={(info) => setRouteInfo(info)}
                                     />
                                 );
                             })()}
@@ -449,12 +472,33 @@ const InProgressJobDetailsPage = () => {
                                 </span>
                             </div>
 
+                            {/* Distance indicator */}
+                            {routeInfo && (
+                                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs text-gray-500">Distance to Customer</div>
+                                            <div className="text-sm font-semibold text-gray-900">{routeInfo.distance}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500">Estimated Time</div>
+                                            <div className="text-sm font-semibold text-gray-900">{routeInfo.duration}</div>
+                                        </div>
+                                        {isNearCustomer && (
+                                            <div className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                                                ✓ Near Customer
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex items-center justify-between">
                                 <button
                                     onClick={handleGetDirections}
                                     className="flex items-center text-[#1F6FEB] text-sm font-medium cursor-pointer"
                                 >
-                                    <img src={MapPinIcon} alt="Directions" className="w-4 h-4 mr-1" />
+                                    <img src={MapPinIcon1} alt="Directions" className="w-4 h-4 mr-1" />
                                     {showMap ? 'Hide Map' : 'Show Route'}
                                 </button>
 
@@ -469,7 +513,7 @@ const InProgressJobDetailsPage = () => {
                                         onClick={handleCallCustomer}
                                         className="w-8 h-8 shadow-custom rounded-lg! flex items-center justify-center  transition-colors cursor-pointer border border-[#9CC0F6]"
                                     >
-                                        <img src={PhoneIcon} alt="Call" className="w-4 h-4" />
+                                        <img src={PhoneIcon1} alt="Call" className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -518,12 +562,21 @@ const InProgressJobDetailsPage = () => {
                         </div>
                         {/* Bottom Action Button */}
                         <div className=" p-4 flex justify-end">
-                            <Button
-                                onClick={handleOnTheWay}
-                                variant="primary"
-                            >
-                                I'm On The Way
-                            </Button>
+                            {isNearCustomer ? (
+                                <Button
+                                    onClick={handleStartJob}
+                                    variant="primary"
+                                >
+                                    Start Job
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleOnTheWay}
+                                    variant="primary"
+                                >
+                                    I'm On The Way
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

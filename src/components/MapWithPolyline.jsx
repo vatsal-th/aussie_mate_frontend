@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -6,19 +6,18 @@ import {
   DirectionsService,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-
 import Marker1Icon from "../assets/marker1.svg";
 import Marker2Icon from "../assets/marker2.svg";
 
 const libraries = ["places"];
 const containerStyle = { width: "100%", height: "100%", borderRadius: "1rem" };
 
-const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => {
-  const mapRef = useRef(null);
+const MapWithRealtimeTracking = ({ customerLocation, onRouteInfo }) => {
+  const [cleanerLocation, setCleanerLocation] = useState(null);
   const [directions, setDirections] = useState(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [initialZoom] = useState(13);
   const [routeInfo, setRouteInfo] = useState(null);
+  const mapRef = useRef(null);
+
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY;
 
   const { isLoaded } = useJsApiLoader({
@@ -26,11 +25,35 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
     libraries,
   });
 
-  const onMapLoad = useCallback((map) => {
-    mapRef.current = map;
-    setMapLoaded(true);
+  // Track cleaner in real-time
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    const watcher = navigator.geolocation.watchPosition(
+      (position) => {
+        setCleanerLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error("Error getting location:", error),
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watcher);
   }, []);
 
+  // Reset directions when cleaner location changes to recalculate route
+  useEffect(() => {
+    if (cleanerLocation) {
+      setDirections(null);
+    }
+  }, [cleanerLocation]);
+
+  // Callback for DirectionsService
   const onDirectionsCallback = useCallback((result, status) => {
     if (status === "OK" && result) {
       setDirections(result);
@@ -39,46 +62,34 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
       const route = result.routes[0];
       const leg = route.legs[0];
       
-      setRouteInfo({
+      const routeData = {
         distance: leg.distance.text,
         duration: leg.duration.text,
         distanceValue: leg.distance.value, // in meters
         durationValue: leg.duration.value, // in seconds
-      });
+      };
+      
+      setRouteInfo(routeData);
       
       // Pass route info to parent component
       if (onRouteInfo) {
-        onRouteInfo({
-          distance: leg.distance.text,
-          duration: leg.duration.text,
-          distanceValue: leg.distance.value,
-          durationValue: leg.duration.value,
-        });
+        onRouteInfo(routeData);
       }
     } else {
       console.warn("Directions request failed:", status);
     }
+  }, [onRouteInfo]);
+
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map;
   }, []);
 
-  if (!isLoaded) {
-    return (
-      <div className="w-full h-64 sm:h-80 lg:h-96 rounded-2xl bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2" />
-        <p className="text-gray-600">Loading Google Maps...</p>
-      </div>
-    );
-  }
-
-  if (!customerLocation || !cleanerLocation) {
-    return (
-      <div className="w-full h-64 sm:h-80 lg:h-96 rounded-2xl bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Locations not available</p>
-      </div>
-    );
-  }
+  if (!isLoaded) return <div>Loading Google Maps...</div>;
+  if (!customerLocation) return <div>Customer location not available</div>;
+  if (!cleanerLocation) return <div>Fetching your location...</div>;
 
   return (
-    <div className="w-full h-64 sm:h-80 lg:h-96 rounded-2xl relative" style={{ minHeight: "300px" }}>
+    <div className="w-full h-96 rounded-2xl relative">
       {/* Route Information Overlay */}
       {routeInfo && (
         <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3 border border-gray-200">
@@ -112,7 +123,7 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
       {/* Cleaner Location Info */}
       <div className="absolute bottom-4 right-4 z-10 bg-white rounded-lg shadow-lg p-3 border border-gray-200 max-w-xs">
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
           <div>
             <div className="text-xs text-gray-500">Cleaner Location</div>
             <div className="text-sm font-medium text-gray-900">Live tracking active</div>
@@ -123,7 +134,7 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={cleanerLocation}
-        zoom={initialZoom}
+        zoom={15}
         onLoad={onMapLoad}
         options={{
           zoomControl: true,
@@ -131,19 +142,12 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
           mapTypeControl: false,
           fullscreenControl: true,
           gestureHandling: "greedy",
-          styles: [
-            {
-              featureType: "all",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#1F6FEB" }],
-            },
-          ],
         }}
       >
         {/* Cleaner Marker */}
         <Marker
           position={cleanerLocation}
-          title="Cleaner Location"
+          title="You (Cleaner)"
           icon={{
             url: Marker1Icon,
             scaledSize: new window.google.maps.Size(48, 48),
@@ -153,14 +157,14 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
         {/* Customer Marker */}
         <Marker
           position={customerLocation}
-          title="Customer Location"
+          title="Customer"
           icon={{
             url: Marker2Icon,
             scaledSize: new window.google.maps.Size(58, 58),
           }}
         />
 
-        {/* Directions Service (One-time fetch) */}
+        {/* Directions Service */}
         {!directions && (
           <DirectionsService
             options={{
@@ -191,4 +195,4 @@ const MapWithPolyline = ({ cleanerLocation, customerLocation, onRouteInfo }) => 
   );
 };
 
-export default MapWithPolyline;
+export default MapWithRealtimeTracking;

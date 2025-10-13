@@ -769,6 +769,159 @@ export const matePointsAPI = {
   }
 };
 
+// Job Photos API
+export const jobPhotosAPI = {
+  // Upload before photos
+  uploadBeforePhotos: async (jobId, files) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/before-photos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error uploading before photos:', error);
+      throw error;
+    }
+  },
+
+  // Upload after photos
+  uploadAfterPhotos: async (jobId, files) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/after-photos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error uploading after photos:', error);
+      throw error;
+    }
+  },
+
+  // Get job photos
+  getJobPhotos: async (jobId) => {
+    return apiRequest(`/api/jobs/${jobId}/photos`);
+  },
+
+  // Update job status (with photo validation)
+  updateJobStatus: async (jobId, status) => {
+    return apiRequest(`/api/jobs/${jobId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
+  }
+};
+
+// Reviews API
+export const reviewsAPI = {
+  // Create review
+  createReview: async (jobId, rating, likedAspects, feedback) => {
+    return apiRequest('/api/reviews', {
+      method: 'POST',
+      body: JSON.stringify({
+        jobId,
+        rating,
+        likedAspects,
+        feedback
+      })
+    });
+  },
+
+  // Check job review status
+  checkReviewStatus: async (jobId) => {
+    return apiRequest(`/api/reviews/job/${jobId}/status`);
+  },
+
+  // Get cleaner reviews
+  getCleanerReviews: async (cleanerId, page = 1, limit = 10) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return apiRequest(`/api/reviews/cleaner/${cleanerId}?${params.toString()}`);
+  },
+
+  // Get customer reviews
+  getCustomerReviews: async (page = 1, limit = 10) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return apiRequest(`/api/reviews/customer?${params.toString()}`);
+  }
+};
+
+// Job Details API
+export const jobDetailsAPI = {
+  // Get completed job details
+  getCompletedJobDetails: async (jobId) => {
+    return apiRequest(`/api/jobs/${jobId}/completed`);
+  },
+
+  // Get Stripe invoice
+  getStripeInvoice: async (jobId) => {
+    return apiRequest(`/api/jobs/${jobId}/stripe-invoice`);
+  },
+
+  // Download invoice
+  downloadInvoice: async (jobId) => {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/invoice`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`);
+      }
+
+      // Return blob for file download
+      return response.blob();
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      throw error;
+    }
+  }
+};
+
 // File upload helper (Cloudinary)
 export const uploadFile = async (file) => {
   const formData = new FormData();
@@ -892,6 +1045,9 @@ export default {
   locationAPI,
   userAPI,
   matePointsAPI,
+  jobPhotosAPI,
+  reviewsAPI,
+  jobDetailsAPI,
   uploadFile,
   uploadFileToCloudinary,
   uploadMultipleFilesToCloudinary,
