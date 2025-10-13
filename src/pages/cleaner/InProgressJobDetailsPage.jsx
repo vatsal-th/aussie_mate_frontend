@@ -25,12 +25,14 @@ const InProgressJobDetailsPage = () => {
     const [showMap, setShowMap] = useState(false);
     const [routeInfo, setRouteInfo] = useState(null);
     const [isNearCustomer, setIsNearCustomer] = useState(false);
+    const [cleanerLocation, setCleanerLocation] = useState(null);
+    const [customerLocation, setCustomerLocation] = useState(null);
 
     useEffect(() => {
         const fetchJobDetails = async () => {
             try {
                 setLoading(true);
-                
+
                 // Fetch job details and payment history in parallel
                 const [jobResponse, paymentResponse] = await Promise.all([
                     jobsAPI.getJobById(jobId),
@@ -39,16 +41,39 @@ const InProgressJobDetailsPage = () => {
 
                 if (jobResponse.success && jobResponse.data) {
                     setJob(jobResponse.data);
-                    
+
+                    // Set customer location from job data
+                    const coords = jobResponse.data.location?.coordinates;
+                    if (coords) {
+                        let lat, lng;
+                        if (typeof coords === 'string') {
+                            const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
+                            lat = coordsArr[0];
+                            lng = coordsArr[1];
+                        } else if (coords.lat && coords.lng) {
+                            lat = coords.lat;
+                            lng = coords.lng;
+                        } else if (Array.isArray(coords)) {
+                            lat = coords[0];
+                            lng = coords[1];
+                        }
+                        
+                        if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                            setCustomerLocation({ lat, lng });
+                        } else if (lat && lng && (lat > 90 || lat < -90)) {
+                            setCustomerLocation({ lat: lng, lng: lat });
+                        }
+                    }
+
                     // Use the customerId from job data
-                    const customerId = jobResponse.data.customerId || 
-                                     jobResponse.data.userId || 
-                                     jobResponse.data.createdBy ||
-                                     jobResponse.data.customer?._id ||
-                                     jobResponse.data.customerRef ||
-                                     jobResponse.data.owner ||
-                                     jobResponse.data.postedBy;
-                    
+                    const customerId = jobResponse.data.customerId ||
+                        jobResponse.data.userId ||
+                        jobResponse.data.createdBy ||
+                        jobResponse.data.customer?._id ||
+                        jobResponse.data.customerRef ||
+                        jobResponse.data.owner ||
+                        jobResponse.data.postedBy;
+
                     if (customerId) {
                         try {
                             const customerResponse = await userAPI.getUserById(customerId);
@@ -83,24 +108,44 @@ const InProgressJobDetailsPage = () => {
         setShowMap(!showMap);
     };
 
-    // Check if cleaner is near customer location
+    // Haversine formula to calculate distance between two coordinates in meters
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Distance in meters
+    };
+
     useEffect(() => {
-        if (routeInfo && routeInfo.distanceValue) {
-            // If distance is less than 100 meters, show "Start Job"
-            const isNear = routeInfo.distanceValue < 100; // 100 meters
-            setIsNearCustomer(isNear);
-            
-            if (isNear) {
-                console.log(`Cleaner is near customer! Distance: ${routeInfo.distance}`);
-            }
+        if (cleanerLocation && customerLocation) {
+            const distance = getDistance(
+                cleanerLocation.lat,
+                cleanerLocation.lng,
+                customerLocation.lat,
+                customerLocation.lng
+            );
+
+            const near = distance <= 100; // within 100 meters
+            setIsNearCustomer(near);
+
+            console.log(`Cleaner distance to customer: ${distance}m, near: ${near}`);
         }
-    }, [routeInfo]);
+    }, [cleanerLocation, customerLocation]);
+
 
     const getCoordinates = (coordinates) => {
         if (!coordinates) return null;
-        
+
         let lat, lng;
-        
+
         // Handle different coordinate formats
         if (typeof coordinates === 'string') {
             // If it's a string like "21.236941, 72.862925"
@@ -116,17 +161,17 @@ const InProgressJobDetailsPage = () => {
             lat = coordinates[0];
             lng = coordinates[1];
         }
-        
+
         // Validate coordinates (lat should be between -90 and 90, lng between -180 and 180)
         if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
             return { lat, lng };
         }
-        
+
         // If coordinates seem swapped (lat > 90 or lat < -90), try swapping them
         if (lat && lng && (lat > 90 || lat < -90)) {
             return { lat: lng, lng: lat };
         }
-        
+
         return null;
     };
 
@@ -136,13 +181,13 @@ const InProgressJobDetailsPage = () => {
 
     const handleCallCustomer = () => {
         // Try multiple possible phone number locations
-        const phoneNumber = customer?.phone || 
-                          customer?.phoneNumber || 
-                          customer?.mobile || 
-                          job?.customer?.phone || 
-                          job?.customer?.phoneNumber ||
-                          job?.customer?.mobile;
-        
+        const phoneNumber = customer?.phone ||
+            customer?.phoneNumber ||
+            customer?.mobile ||
+            job?.customer?.phone ||
+            job?.customer?.phoneNumber ||
+            job?.customer?.mobile;
+
         if (phoneNumber) {
             console.log('Calling customer:', phoneNumber);
             window.location.href = `tel:${phoneNumber}`;
@@ -236,13 +281,13 @@ const InProgressJobDetailsPage = () => {
     // Helper functions for payment display
     const getPaymentMethod = () => {
         // Find payment for this job from payment history (try different field names)
-        const jobPayment = paymentStatus?.data?.payments?.find(payment => 
-            payment.jobId === jobId || 
-            payment.jobId === job?.jobId || 
+        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
+            payment.jobId === jobId ||
+            payment.jobId === job?.jobId ||
             payment.jobId === job?._id ||
             payment._id === jobId
         );
-        
+
         if (jobPayment?.paymentMethod === 'online') {
             return 'Online';
         }
@@ -251,20 +296,20 @@ const InProgressJobDetailsPage = () => {
 
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
-        
+
         // Find payment for this job from payment history (try different field names)
-        const jobPayment = paymentStatus?.data?.payments?.find(payment => 
-            payment.jobId === jobId || 
-            payment.jobId === job?.jobId || 
+        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
+            payment.jobId === jobId ||
+            payment.jobId === job?.jobId ||
             payment.jobId === job?._id ||
             payment._id === jobId
         );
-        
+
         if (jobPayment?.paymentMethod === 'online') {
             // For online payments, show the breakdown
             const paidAmount = jobPayment?.amount || totalAmount;
             const cleanerAmount = jobPayment?.cleanerAmount;
-            
+
             return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
         } else {
             // For cash payments, show the breakdown
@@ -333,11 +378,11 @@ const InProgressJobDetailsPage = () => {
                                     </svg>
                                 </button>
                             </div>
-                            
+
                             {(() => {
                                 const originalCoords = job?.location?.coordinates;
                                 const fixedCoords = getCoordinates(originalCoords);
-                                
+
                                 if (!fixedCoords) {
                                     return (
                                         <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -345,12 +390,14 @@ const InProgressJobDetailsPage = () => {
                                         </div>
                                     );
                                 }
-                                
+
                                 return (
-                                    <MapWithPolyline 
+                                    <MapWithPolyline
                                         customerLocation={fixedCoords}
+                                        cleanerLocation={cleanerLocation}
                                         onRouteInfo={(info) => setRouteInfo(info)}
                                     />
+
                                 );
                             })()}
                         </div>
@@ -364,9 +411,9 @@ const InProgressJobDetailsPage = () => {
                                 <div className="flex items-center">
                                     <div className="w-12 h-12 rounded-full mr-3 overflow-hidden">
                                         {customer?.profilePhoto?.url ? (
-                                            <img 
-                                                src={customer.profilePhoto.url} 
-                                                alt="Customer" 
+                                            <img
+                                                src={customer.profilePhoto.url}
+                                                alt="Customer"
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -481,17 +528,11 @@ const InProgressJobDetailsPage = () => {
                         {/* Bottom Action Button */}
                         <div className=" p-4 flex justify-end">
                             {isNearCustomer ? (
-                                <Button
-                                    onClick={handleStartJob}
-                                    variant="primary"
-                                >
+                                <Button onClick={handleStartJob} variant="primary">
                                     Start Job
                                 </Button>
                             ) : (
-                                <Button
-                                    onClick={handleOnTheWay}
-                                    variant="primary"
-                                >
+                                <Button onClick={handleOnTheWay} variant="primary">
                                     I'm On The Way
                                 </Button>
                             )}

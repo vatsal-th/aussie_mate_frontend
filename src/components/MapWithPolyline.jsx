@@ -34,7 +34,7 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
   useEffect(() => {
     if (externalCleanerLocation) {
       setCleanerLocation(externalCleanerLocation);
-      initialCleanerLocationRef.current = externalCleanerLocation; // Store external location
+      initialCleanerLocationRef.current = externalCleanerLocation; 
       return;
     }
 
@@ -44,97 +44,105 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
     }
 
     // Get initial location first
+    console.log('🔍 Requesting initial location...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
+        console.log('✅ Initial location received:', newLocation);
         setCleanerLocation(newLocation);
-        initialCleanerLocationRef.current = newLocation; // Store initial location
+        initialCleanerLocationRef.current = newLocation; 
       },
-      (error) => console.error("Error getting initial location:", error),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      (error) => {
+        console.error("❌ Error getting initial location:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        
+        // Show user-friendly error
+        if (error.code === 1) {
+          alert("Location permission denied. Please enable location access in your browser settings.");
+        } else if (error.code === 2) {
+          alert("Location unavailable. Please check your GPS/network connection.");
+        } else if (error.code === 3) {
+          alert("Location request timed out. Please try again.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
     );
 
     // Then watch for updates with less frequent updates
+    console.log('👀 Starting location watch...');
     const watcher = navigator.geolocation.watchPosition(
       (position) => {
         const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
+        console.log('📍 Location update:', newLocation);
         setCleanerLocation(newLocation);
       },
-      (error) => console.error("Error watching location:", error),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000, distanceFilter: 50 }
+      (error) => {
+        console.error("❌ Error watching location:", error);
+        console.error("Watch error code:", error.code);
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
     );
 
-    return () => navigator.geolocation.clearWatch(watcher);
+    // Polling interval for testing with Chrome Sensors
+    // This helps when using Chrome DevTools Sensors
+    const pollingInterval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          console.log('🔄 Polling location update:', newLocation);
+          setCleanerLocation(newLocation);
+        },
+        (error) => {
+          // Silently ignore timeout errors in polling (they're expected)
+          if (error.code !== 3) {
+            console.error("❌ Polling error:", error.code, error.message);
+          }
+        },
+        { enableHighAccuracy: false, maximumAge: 1000, timeout: 10000 }
+      );
+    }, 10000); // Poll every 10 seconds
+
+    return () => {
+      navigator.geolocation.clearWatch(watcher);
+      clearInterval(pollingInterval);
+    };
   }, [externalCleanerLocation]);
 
   // Imperative DirectionsService - fetch directions once when customer location is available
   useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
+    if (!isLoaded || !customerLocation || !cleanerLocation) return;
 
-    if (!customerLocation) {
-      return;
-    }
-
-    if (directionsFetchedRef.current) {
-      return;
-    }
-
-    // Wait for initial cleaner location to be available
-    if (!initialCleanerLocationRef.current) {
-      return;
-    }
-
-    console.log('Fetching directions imperatively (ONCE)...', {
-      origin: initialCleanerLocationRef.current,
-      destination: customerLocation
-    });
-    
     const directionsService = new window.google.maps.DirectionsService();
-    
-    directionsService.route(
-      {
-        origin: initialCleanerLocationRef.current, // Use stable initial location
+
+    directionsService.route({
+        origin: cleanerLocation,
         destination: customerLocation,
         travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK" && result) {
-          console.log('✅ Directions fetched successfully');
-          setDirections(result);
-          directionsFetchedRef.current = true; // Mark as fetched to prevent re-fetching
-          
-          // Extract route information
-          const route = result.routes[0];
-          const leg = route.legs[0];
-          
-          const routeData = {
-            distance: leg.distance.text,
-            duration: leg.duration.text,
-            distanceValue: leg.distance.value, // in meters
-            durationValue: leg.duration.value, // in seconds
-          };
-          
-          console.log('✅ Route data:', routeData);
-          setRouteInfo(routeData);
-          
-          // Pass route info to parent component
-          if (onRouteInfo) {
-            onRouteInfo(routeData);
-          }
-        } else {
-          console.error("❌ Directions request failed:", status, result);
+    }, (result, status) => {
+        if (status === 'OK' && result) {
+            setDirections(result);
+
+            const route = result.routes[0].legs[0];
+            setRouteInfo({
+                distance: route.distance.text,
+                duration: route.duration.text,
+                distanceValue: route.distance.value,
+                durationValue: route.duration.value,
+            });
         }
-      }
-    );
-  }, [isLoaded, customerLocation]); // Remove cleanerLocation dependency
+    });
+}, [cleanerLocation, customerLocation, isLoaded]);
+
 
   const onMapLoad = useCallback((map) => {
     mapRef.current = map;
