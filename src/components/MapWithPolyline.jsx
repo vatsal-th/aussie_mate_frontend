@@ -4,6 +4,7 @@ import {
   useJsApiLoader,
   Marker,
   DirectionsRenderer,
+  Polyline,
 } from "@react-google-maps/api";
 import Marker1Icon from "../assets/marker1.svg";
 import Marker2Icon from "../assets/marker2.svg";
@@ -16,6 +17,7 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [directions, setDirections] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [polylinePath, setPolylinePath] = useState([]);
   const mapRef = useRef(null);
   const directionsFetchedRef = useRef(false);
   const initialCleanerLocationRef = useRef(null);
@@ -133,12 +135,47 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
             setDirections(result);
 
             const route = result.routes[0].legs[0];
-            setRouteInfo({
+            const newRouteInfo = {
                 distance: route.distance.text,
                 duration: route.duration.text,
                 distanceValue: route.distance.value,
                 durationValue: route.duration.value,
+            };
+            setRouteInfo(newRouteInfo);
+
+            // Extract polyline path from directions and extend to exact marker positions
+            const path = [];
+            
+            // Start with exact cleaner location
+            path.push({
+                lat: cleanerLocation.lat,
+                lng: cleanerLocation.lng
             });
+            
+            // Add route points
+            result.routes[0].overview_path.forEach(point => {
+                path.push({
+                    lat: point.lat(),
+                    lng: point.lng()
+                });
+            });
+            
+            // End with exact customer location
+            path.push({
+                lat: customerLocation.lat,
+                lng: customerLocation.lng
+            });
+            
+            setPolylinePath(path);
+
+            // Send route info to parent
+            if (onRouteInfo) {
+                onRouteInfo(newRouteInfo);
+            }
+
+            console.log('✅ Route calculated with', path.length, 'points');
+        } else {
+            console.error('❌ Directions failed:', status);
         }
     });
 }, [cleanerLocation, customerLocation, isLoaded]);
@@ -215,6 +252,7 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
           icon={{
             url: Marker1Icon,
             scaledSize: new window.google.maps.Size(48, 48),
+            anchor: new window.google.maps.Point(20, 20), 
           }}
         />
 
@@ -225,20 +263,18 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
           icon={{
             url: Marker2Icon,
             scaledSize: new window.google.maps.Size(58, 58),
+            anchor: new window.google.maps.Point(20, 20), 
           }}
         />
 
-        {/* Directions Renderer */}
-        {directions && (
-          <DirectionsRenderer
+        {/* Custom Polyline */}
+        {polylinePath.length > 0 && (
+          <Polyline
+            path={polylinePath}
             options={{
-              directions,
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeColor: "#1F6FEB",
-                strokeWeight: 5,
-                strokeOpacity: 0.8,
-              },
+              strokeColor: "#1F6FEB",
+              strokeWeight: 5,
+              strokeOpacity: 0.8,
             }}
           />
         )}

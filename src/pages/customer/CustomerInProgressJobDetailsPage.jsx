@@ -30,9 +30,6 @@ const CustomerInProgressJobDetailsPage = () => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
-  const demoStepRef = useRef(0);
-  const [lastLocationUpdate, setLastLocationUpdate] = useState(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -154,7 +151,6 @@ const CustomerInProgressJobDetailsPage = () => {
       
       setCleanerLocation(newCleanerLocation);
       setIsCleanerLocationLive(true);
-      setLastLocationUpdate(new Date());
       
       // Calculate distance if customer location exists
       if (customerLocation) {
@@ -463,47 +459,6 @@ const CustomerInProgressJobDetailsPage = () => {
               </span>
             </div>
           </div>
-
-          {/* Real-time Location Tracking Info */}
-          {cleanerLocation && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-4 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-800">📍 Live Tracking Active</p>
-                  {lastLocationUpdate && (
-                    <p className="text-xs text-blue-600">
-                      Updated: {lastLocationUpdate.toLocaleTimeString()}
-                    </p>
-                  )}
-                </div>
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full whitespace-nowrap">
-                  Every 10s
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-xs">
-                <div className="bg-white bg-opacity-60 rounded-lg p-2">
-                  <p className="text-blue-700 font-medium mb-1">Cleaner Location:</p>
-                  <p className="text-blue-600 font-mono">{cleanerLocation.lat.toFixed(6)}, {cleanerLocation.lng.toFixed(6)}</p>
-                </div>
-                {customerLocation && (
-                  <div className="bg-white bg-opacity-60 rounded-lg p-2">
-                    <p className="text-blue-700 font-medium mb-1">Your Location:</p>
-                    <p className="text-blue-600 font-mono">{customerLocation.lat.toFixed(6)}, {customerLocation.lng.toFixed(6)}</p>
-                  </div>
-                )}
-                {routeInfo && (
-                  <div className="bg-white bg-opacity-60 rounded-lg p-2">
-                    <p className="text-blue-700 font-medium mb-1">Route Info:</p>
-                    <p className="text-blue-600">
-                      <span className="font-semibold">{routeInfo.distance}</span> away • 
-                      <span className="font-semibold"> {routeInfo.duration}</span> ETA
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Map Section */}
           {showMap && (
