@@ -28,7 +28,8 @@ import SetAvailabilityPage from './pages/cleaner/SetAvailabilityPage'
 import SetCleanerLocationPage from './pages/cleaner/SetCleanerLocationPage'
 import SelectServicesPage from './pages/cleaner/SelectServicesPage'
 import CleanerDashboard from './pages/cleaner/CleanerDashboard'
-import CleanerJobsPage from './pages/cleaner/CleanerJobsPage' 
+import CleanerJobsPage from './pages/cleaner/CleanerJobsPage'
+import CleanerJobCompletedPage from './pages/cleaner/CleanerJobCompletedPage' 
 import JobDetailsPage from './pages/customer/JobDetailsPage'
 import CleanerChatPage from './pages/cleaner/CleanerChatPage'
 import CustomerJobDetailsPage from './pages/customer/CustomerJobDetailsPage'
@@ -204,6 +205,11 @@ function App() {
         <Route path="/in-progress-job/:jobId" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <InProgressJobDetailsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cleaner-job-completed/:jobId" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <CleanerJobCompletedPage />
           </ProtectedRoute>
         } />
         <Route path="/cleaner/complete-job/:jobId" element={

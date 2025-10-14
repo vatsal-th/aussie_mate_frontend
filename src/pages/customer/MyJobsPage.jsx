@@ -268,11 +268,11 @@ const MyJobsPage = () => {
           const messageCount = await getMessageCountForJob(j._id || j.jobId || j.id);
           
           return {
-            id: j._id || j.jobId || j.id || `job-${Math.random()}`,    // Use _id for navigation
-            status: status,  // Keep original status for filtering
-            statusLabel: statusChip.label,  // Display label
-            statusClass: statusChip.className,  // Display class
-            jobId: j.jobId, // Store jobId for display
+            id: j._id || j.jobId || j.id || `job-${Math.random()}`,   
+            status: status, 
+            statusLabel: statusChip.label,  
+            statusClass: statusChip.className,
+            jobId: j.jobId, 
             title,
             dateLabel,  
             address,
@@ -282,7 +282,7 @@ const MyJobsPage = () => {
             scheduledDate: j.scheduledDate,
             createdAt: j.createdAt,
             messageCount: messageCount,
-            originalJob: j // Store original job data for chat navigation
+            originalJob: j 
           };
         }));
         
@@ -298,7 +298,7 @@ const MyJobsPage = () => {
         });
         
         setJobs(sortedJobs);
-        setAllJobs(sortedJobs); // Store original jobs
+        setAllJobs(sortedJobs);
       } catch (e) {
         console.error('Error fetching jobs:', e);
         setError('Failed to load your jobs');
@@ -481,7 +481,9 @@ const MyJobsPage = () => {
             <div 
               key={job.id} 
               onClick={() => {
-                if (job.status === 'in_progress') {
+                if (job.status === 'completed') {
+                  navigate(`/job-completed/${job.id}`);
+                } else if (job.status === 'in_progress') {
                   navigate(`/customer-in-progress-job/${job.id}`);
                 } else {
                   navigate(`/customer-job-details/${job.id}`);
@@ -579,6 +581,7 @@ const MyJobsPage = () => {
                             if (cleanerData.id && cleanerData.id !== 'undefined' && cleanerData.id !== 'null') {
                               navigate(`/customer-chat/${job.id}?cleaner=${cleanerData.id}`);
                             }
+                            
                           }
                         } catch (error) {
                           console.error('Error fetching job details for chat:', error);

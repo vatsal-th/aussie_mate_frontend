@@ -782,7 +782,7 @@ export const jobPhotosAPI = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/before-photos`, {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/before-photos`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -814,7 +814,7 @@ export const jobPhotosAPI = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/after-photos`, {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/after-photos`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -837,12 +837,12 @@ export const jobPhotosAPI = {
 
   // Get job photos
   getJobPhotos: async (jobId) => {
-    return apiRequest(`/api/jobs/${jobId}/photos`);
+    return apiRequest(`/jobs/${jobId}/photos`);
   },
 
   // Update job status (with photo validation)
   updateJobStatus: async (jobId, status) => {
-    return apiRequest(`/api/jobs/${jobId}/status`, {
+    return apiRequest(`/jobs/${jobId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status })
     });
@@ -853,7 +853,7 @@ export const jobPhotosAPI = {
 export const reviewsAPI = {
   // Create review
   createReview: async (jobId, rating, likedAspects, feedback) => {
-    return apiRequest('/api/reviews', {
+    return apiRequest('/reviews', {
       method: 'POST',
       body: JSON.stringify({
         jobId,
@@ -866,19 +866,19 @@ export const reviewsAPI = {
 
   // Check job review status
   checkReviewStatus: async (jobId) => {
-    return apiRequest(`/api/reviews/job/${jobId}/status`);
+    return apiRequest(`/reviews/job/${jobId}/status`);
   },
 
   // Get cleaner reviews
   getCleanerReviews: async (cleanerId, page = 1, limit = 10) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    return apiRequest(`/api/reviews/cleaner/${cleanerId}?${params.toString()}`);
+    return apiRequest(`/reviews/cleaner/${cleanerId}?${params.toString()}`);
   },
 
   // Get customer reviews
   getCustomerReviews: async (page = 1, limit = 10) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    return apiRequest(`/api/reviews/customer?${params.toString()}`);
+    return apiRequest(`/reviews/customer?${params.toString()}`);
   }
 };
 
@@ -886,12 +886,12 @@ export const reviewsAPI = {
 export const jobDetailsAPI = {
   // Get completed job details
   getCompletedJobDetails: async (jobId) => {
-    return apiRequest(`/api/jobs/${jobId}/completed`);
+    return apiRequest(`/jobs/${jobId}/completed`);
   },
 
   // Get Stripe invoice
   getStripeInvoice: async (jobId) => {
-    return apiRequest(`/api/jobs/${jobId}/stripe-invoice`);
+    return apiRequest(`/jobs/${jobId}/stripe-invoice`);
   },
 
   // Download invoice
@@ -902,7 +902,7 @@ export const jobDetailsAPI = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/invoice`, {
+        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/invoice`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

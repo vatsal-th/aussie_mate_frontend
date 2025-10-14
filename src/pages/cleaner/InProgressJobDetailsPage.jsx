@@ -46,6 +46,12 @@ const InProgressJobDetailsPage = () => {
                 if (jobResponse.success && jobResponse.data) {
                     setJob(jobResponse.data);
 
+                    // If job is already started (in-progress), redirect to complete job page
+                    if (jobResponse.data.status === 'in-progress' || jobResponse.data.status === 'started') {
+                        navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+                        return;
+                    }
+
                     // Set customer location from job data
                     const coords = jobResponse.data.location?.coordinates;
                     if (coords) {
@@ -305,8 +311,19 @@ const InProgressJobDetailsPage = () => {
         console.log("Cleaner is on the way");
     };
 
-    const handleStartJob = () => {
-        navigate(`/cleaner/complete-job/${jobId}`);
+    const handleStartJob = async () => {
+        try {
+            // Update job status to 'in-progress' or 'started'
+            await jobsAPI.updateJobStatus(jobId, 'in-progress');
+            console.log('✅ Job status updated to in-progress');
+            
+            // Navigate to complete job page
+            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+        } catch (error) {
+            console.error('❌ Error updating job status:', error);
+            // Still navigate even if status update fails
+            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+        }
     };
 
     if (loading) {

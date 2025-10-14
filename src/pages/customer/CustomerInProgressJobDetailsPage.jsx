@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
+import JobCompleteModal from '../../components/JobCompleteModal';
 import MapWithPolyline from '../../components/MapWithPolyline';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -30,6 +31,8 @@ const CustomerInProgressJobDetailsPage = () => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
+  const [showJobCompleteModal, setShowJobCompleteModal] = useState(false);
+  const [completedJobInfo, setCompletedJobInfo] = useState(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -45,6 +48,16 @@ const CustomerInProgressJobDetailsPage = () => {
 
         if (jobResponse.success && jobResponse.data) {
           setJob(jobResponse.data);
+
+          // Check if job is completed - show modal
+          if (jobResponse.data.status === 'completed') {
+            setCompletedJobInfo({
+              jobId: jobId,
+              cleanerName: jobResponse.data.quotes?.find(q => q.status === 'accepted')?.cleanerId?.firstName || "Cleaner",
+              jobTitle: jobResponse.data.title || jobResponse.data.serviceType || "Cleaning Service"
+            });
+            setShowJobCompleteModal(true);
+          }
 
           // Set customer location from job data
           const coords = jobResponse.data.location?.coordinates;
@@ -152,6 +165,17 @@ const CustomerInProgressJobDetailsPage = () => {
       setCleanerLocation(newCleanerLocation);
       setIsCleanerLocationLive(true);
       
+      // Check if job status changed to completed (optional - for real-time update)
+      if (data.jobStatus === 'completed') {
+        console.log('✅ Job marked as completed!');
+        setCompletedJobInfo({
+          jobId: jobId,
+          cleanerName: cleaner?.firstName || "Cleaner",
+          jobTitle: job?.title || job?.serviceType || "Cleaning Service"
+        });
+        setShowJobCompleteModal(true);
+      }
+      
       // Calculate distance if customer location exists
       if (customerLocation) {
         const R = 6371e3;
@@ -240,6 +264,11 @@ const CustomerInProgressJobDetailsPage = () => {
     } else {
       console.error('Cleaner phone number not available');
     }
+  };
+
+  const handleCloseJobCompleteModal = () => {
+    setShowJobCompleteModal(false);
+    setCompletedJobInfo(null);
   };
 
   const getCoordinates = (coordinates) => {
@@ -557,7 +586,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       <h4 className="font-semibold text-primary-500">{cleaner.firstName} {cleaner.lastName}</h4>
                       <div className="flex items-center text-sm text-primary-200 font-medium">
                       <img src={PhoneIcon2} alt="Phone" className="w-4 h-4 mr-1" />
-                        {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}
+                        {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}``
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex items-center bg-[#FFF2DE] text-primary-500 font-medium px-2 py-1 rounded-full text-xs">
@@ -640,6 +669,15 @@ const CustomerInProgressJobDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Job Complete Modal */}
+      <JobCompleteModal
+        isOpen={showJobCompleteModal}
+        onClose={handleCloseJobCompleteModal}
+        cleanerName={completedJobInfo?.cleanerName || cleaner?.firstName || "Cleaner"}
+        jobTitle={completedJobInfo?.jobTitle || job?.title || "Cleaning Service"}
+        jobId={jobId}
+      />
     </div>
   );
 };

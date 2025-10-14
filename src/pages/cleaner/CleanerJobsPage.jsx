@@ -36,6 +36,38 @@ const CleanerJobsPage = () => {
     city: 'Please set your location',
     coordinates: null
   });
+  const [cleanerReviews, setCleanerReviews] = useState([]);
+  const [cleanerProfile, setCleanerProfile] = useState(null);
+  // Load cleaner profile and reviews
+  useEffect(() => {
+    const fetchCleanerData = async () => {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentUserId = currentUser.id || currentUser._id;
+        
+        if (currentUserId) {
+          // Fetch cleaner profile
+          const profileResponse = await userAPI.getProfile();
+          if (profileResponse.success && profileResponse.data) {
+            const profileData = profileResponse.data.user || profileResponse.data;
+            setCleanerProfile(profileData);
+          }
+          
+          // Fetch cleaner reviews
+          const reviewsResponse = await reviewsAPI.getCleanerReviews(currentUserId);
+          if (reviewsResponse.success && reviewsResponse.data) {
+            const reviewsData = reviewsResponse.data.reviews || reviewsResponse.data;
+            setCleanerReviews(reviewsData);
+          }
+        }
+      } catch (error) {
+        // Error fetching cleaner data
+      }
+    };
+    
+    fetchCleanerData();
+  }, []);
+
   // Load user location
   useEffect(() => {
     const fetchUserLocation = async () => {
@@ -129,6 +161,10 @@ const CleanerJobsPage = () => {
         setLoading(true);
         setError('');
 
+        // Get current user ID for filtering (needed for all tabs)
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentUserId = currentUser.id || currentUser._id;
+
         // Map tab to API status parameter
         const statusMap = {
           'live-jobs': 'posted',
@@ -143,8 +179,6 @@ const CleanerJobsPage = () => {
         
         // Special handling for "My Bids" tab
         if (activeTab === 'my-bids') {
-          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-          const currentUserId = currentUser.id || currentUser._id;
           
           // Get all jobs (both posted and quoted status) to find jobs where cleaner has submitted quotes
           const [postedJobsResponse, quotedJobsResponse] = await Promise.all([
@@ -184,7 +218,7 @@ const CleanerJobsPage = () => {
                 }
               }
             } catch (error) {
-              console.error(`Error fetching job ${job.jobId}:`, error);
+              // Error fetching job details
             }
           }
           
@@ -256,6 +290,59 @@ const CleanerJobsPage = () => {
               totalPages: Math.ceil(allAcceptedJobs.length / jobsPerPage)
             }
           };
+        } else if (activeTab === 'completed') {
+          try {
+            // Get ALL jobs and filter for completed status
+            const allJobsResponse = await jobsAPI.getAllJobs({ page: 1, limit: 200 });
+            const allJobs = allJobsResponse?.data?.jobs || allJobsResponse?.data || [];
+            
+            // Filter for completed jobs only
+            const completedJobs = allJobs.filter(job => job.status === 'completed');
+            
+            // Filter jobs completed by current cleaner
+            const myCompletedJobs = completedJobs.filter(job => {
+              // Check multiple possible fields for cleaner assignment
+              const isAssignedToCurrentCleaner = 
+                job.assignedCleanerId === currentUserId ||
+                job.assignedCleanerId?.toString() === currentUserId?.toString() ||
+                job.cleanerId === currentUserId ||
+                job.cleanerId?.toString() === currentUserId?.toString() ||
+                job.completedBy === currentUserId ||
+                job.completedBy?.toString() === currentUserId?.toString() ||
+                job.completedBy?._id === currentUserId ||
+                job.completedBy?._id?.toString() === currentUserId?.toString();
+              
+              return isAssignedToCurrentCleaner;
+            });
+            
+            // Apply pagination to filtered results
+            const startIndex = (currentPage - 1) * jobsPerPage;
+            const endIndex = startIndex + jobsPerPage;
+            const paginatedJobs = myCompletedJobs.slice(startIndex, endIndex);
+            
+            response = {
+              success: true,
+              data: {
+                jobs: paginatedJobs,
+                total: myCompletedJobs.length,
+                page: currentPage,
+                limit: jobsPerPage,
+                totalPages: Math.ceil(myCompletedJobs.length / jobsPerPage)
+              }
+            };
+          } catch (completedJobsError) {
+            // Fallback to empty response
+            response = {
+              success: true,
+              data: {
+                jobs: [],
+                total: 0,
+                page: currentPage,
+                limit: jobsPerPage,
+                totalPages: 0
+              }
+            };
+          }
         } else {
           // Fetch jobs from API with pagination for other tabs
           response = await jobsAPI.getAllJobs({
@@ -282,10 +369,6 @@ const CleanerJobsPage = () => {
         
         setTotalJobs(totalCount);
         setTotalPages(totalPagesCount);
-
-        // Get current user ID for filtering (only once)
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const currentUserId = currentUser.id || currentUser._id;
 
         const transformedJobs = jobsData.map(job => {
           
@@ -365,25 +448,14 @@ const CleanerJobsPage = () => {
                 }
               }
             } catch (error) {
-              console.error(`Error fetching job ${job.originalJob.jobId}:`, error);
+              // Error fetching job details
             }
           }
           
           filteredJobs = acceptedJobs;
         }
 
-        if (activeTab === 'completed') {
-          // For completed jobs, only show jobs completed by current cleaner
-          filteredJobs = transformedJobs.filter(job => {
-            const jobData = job.originalJob;
-            // Check if job is completed and assigned to current cleaner
-            const isCompleted = jobData.status === 'completed';
-            const isAssignedToCurrentCleaner = jobData.assignedCleanerId === currentUserId ||
-              jobData.cleanerId === currentUserId ||
-              jobData.completedBy === currentUserId;
-            return isCompleted && isAssignedToCurrentCleaner;
-          });
-        }
+        // Completed jobs filtering is now handled in the API call above
 
         setJobs(filteredJobs);
       } catch (err) {
@@ -435,6 +507,11 @@ const CleanerJobsPage = () => {
   const handleJobClick = (jobId, jobStatus) => {
     // Don't navigate for in_progress jobs
     if (jobStatus === 'in_progress') {
+      return;
+    }
+    // Navigate to completed job details page if job is completed
+    if (jobStatus === 'completed') {
+      navigate(`/cleaner-job-completed/${jobId}`);
       return;
     }
     // Navigate to job details page for other statuses
@@ -618,7 +695,7 @@ const CleanerJobsPage = () => {
                         {job.originalJob?.jobId || job.id?.substring(0, 8) || 'AM' + Math.random().toString(36).substr(2, 5).toUpperCase()}
                       </div>
                       {activeTab === 'completed' && (
-                        <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-500 text-white">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#D1FAE5] border border-[#D1FAE5] text-[#059669]">
                           Completed
                         </span>
                       )}

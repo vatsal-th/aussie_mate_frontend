@@ -7,10 +7,12 @@ import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
 import { handleAPIError } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const CompleteJobPage = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
@@ -25,21 +27,46 @@ const CompleteJobPage = () => {
   const [uploadingBefore, setUploadingBefore] = useState(false);
   const [uploadingAfter, setUploadingAfter] = useState(false);
   const [completingJob, setCompletingJob] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
         setLoading(true);
-        setJob({
-          id: jobId,
-          title: 'Bond Cleaning - 2 Bed Apartment',
-          serviceType: 'Bond Clean',
-          estimatedPrice: 220,
-          paymentMethod: 'Cash',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), 
-        });
+        setError(null);
+        
+        // Fetch job details from API
+        const jobResponse = await jobsAPI.getJobById(jobId);
+        const jobData = jobResponse.data || jobResponse;
+        
+        // If job is NOT started yet, redirect back to in-progress page
+        if (jobData.status !== 'in-progress' && jobData.status !== 'started') {
+          navigate(`/cleaner/in-progress-job/${jobId}`, { replace: true });
+          return;
+        }
+        
+        // Fetch existing photos
+        const photosResponse = await jobPhotosAPI.getJobPhotos(jobId);
+        const photosData = photosResponse.data || photosResponse;
+        
+        setJob(jobData);
+        
+        // Set existing photos
+        if (photosData.beforePhotos && photosData.beforePhotos.length > 0) {
+          setUploadedPhotos(photosData.beforePhotos);
+          setBeforePhotosUploaded(true);
+        }
+        
+        if (photosData.afterPhotos && photosData.afterPhotos.length > 0) {
+          setAfterPhotos(photosData.afterPhotos);
+          setAfterPhotosUploaded(true);
+        }
+        
       } catch (error) {
-        console.error('Error fetching job:', error);
+        console.error('Error fetching job details:', error);
+        setError(handleAPIError(error));
       } finally {
         setLoading(false);
       }
@@ -95,6 +122,7 @@ const CompleteJobPage = () => {
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
+    console.log('📁 Files selected:', files.length);
   };
 
   const handleAfterFileSelect = (event) => {
@@ -118,12 +146,14 @@ const CompleteJobPage = () => {
 
   const handleSubmitPhoto = async () => {
     if (selectedFiles.length === 0) {
-      alert('Please select at least one photo');
+      setUploadError('Please select at least one photo');
+      setTimeout(() => setUploadError(null), 3000);
       return;
     }
     
     try {
       setUploadingBefore(true);
+      setUploadError(null);
       
       const response = await jobPhotosAPI.uploadBeforePhotos(jobId, selectedFiles);
       
@@ -131,11 +161,13 @@ const CompleteJobPage = () => {
         setUploadedPhotos(response.data.beforePhotos || []);
         setBeforePhotosUploaded(true);
         setSelectedFiles([]);
-        alert('Before photos uploaded successfully!');
+        setSuccessMessage('Before photos uploaded successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
       }
     } catch (error) {
       console.error('Error uploading before photos:', error);
-      alert(handleAPIError(error));
+      setUploadError(handleAPIError(error));
+      setTimeout(() => setUploadError(null), 5000);
     } finally {
       setUploadingBefore(false);
     }
@@ -143,12 +175,14 @@ const CompleteJobPage = () => {
 
   const handleCompleteJob = async () => {
     if (!beforePhotosUploaded || !afterPhotosUploaded) {
-      alert('Please upload both before and after photos to complete the job');
+      setUploadError('Please upload both before and after photos to complete the job');
+      setTimeout(() => setUploadError(null), 3000);
       return;
     }
 
     try {
       setCompletingJob(true);
+      setUploadError(null);
       
       // Update job status to completed
       const response = await jobPhotosAPI.updateJobStatus(jobId, 'completed');
@@ -157,20 +191,23 @@ const CompleteJobPage = () => {
         // Store completion data for customer notification
         const completedJobData = {
           jobId: jobId,
-          cleanerName: "John", // This should come from user context
-          jobTitle: job?.title || "Cleaning Service",
+          cleanerName: user?.name || user?.firstName || "Cleaner", // Use dynamic user data
+          jobTitle: job?.title || job?.serviceType || "Cleaning Service",
           completedAt: new Date().toISOString()
         };
         
         // Store in localStorage for customer dashboard to pick up
         localStorage.setItem('recentlyCompletedJob', JSON.stringify(completedJobData));
         
-        alert('Job completed successfully!');
-        navigate('/cleaner-dashboard');
+        setSuccessMessage('Job completed successfully! Redirecting...');
+        setTimeout(() => {
+          navigate('/cleaner-dashboard');
+        }, 1500);
       }
     } catch (error) {
       console.error('Error completing job:', error);
-      alert(handleAPIError(error));
+      setUploadError(handleAPIError(error));
+      setTimeout(() => setUploadError(null), 5000);
     } finally {
       setCompletingJob(false);
     }
@@ -191,12 +228,14 @@ const CompleteJobPage = () => {
 
   const handleSubmitAfterPhoto = async () => {
     if (selectedAfterFiles.length === 0) {
-      alert('Please select at least one photo');
+      setUploadError('Please select at least one photo');
+      setTimeout(() => setUploadError(null), 3000);
       return;
     }
     
     try {
       setUploadingAfter(true);
+      setUploadError(null);
       
       const response = await jobPhotosAPI.uploadAfterPhotos(jobId, selectedAfterFiles);
       
@@ -204,11 +243,13 @@ const CompleteJobPage = () => {
         setAfterPhotos(response.data.afterPhotos || []);
         setAfterPhotosUploaded(true);
         setSelectedAfterFiles([]);
-        alert('After photos uploaded successfully!');
+        setSuccessMessage('After photos uploaded successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
       }
     } catch (error) {
       console.error('Error uploading after photos:', error);
-      alert(handleAPIError(error));
+      setUploadError(handleAPIError(error));
+      setTimeout(() => setUploadError(null), 5000);
     } finally {
       setUploadingAfter(false);
     }
@@ -240,14 +281,26 @@ const CompleteJobPage = () => {
         <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 text-center">
-            <p className="text-red-500">Job not found</p>
-            <Button
-              onClick={() => navigate(-1)}
-              variant="primary"
-              className="mt-4"
-            >
-              Go Back
-            </Button>
+            {error ? (
+              <div>
+                <p className="text-red-500 mb-4">{error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="primary"
+                  className="mr-2"
+                >
+                  Retry
+                </Button>
+                <Button
+                  onClick={() => navigate(-1)}
+                  variant="secondary"
+                >
+                  Go Back
+                </Button>
+              </div>
+            ) : (
+              <p className="text-red-500">Job not found</p>
+            )}
           </div>
         </div>
       </div>
@@ -271,18 +324,41 @@ const CompleteJobPage = () => {
               <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-primary-500 truncate">
-              {job.title}
+              {job?.title || job?.serviceType || 'Job Details'}
             </h1>
           </div>
         </div>
 
         <div className="px-4 space-y-4">
+          {/* Success Message */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-green-700 font-medium">{successMessage}</p>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {uploadError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
+              <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="text-red-700 font-medium">{uploadError}</p>
+            </div>
+          )}
+
           {/* Job Overview */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-primary-500  mb-1">
-              {job.serviceType} — {job.title.split(' - ')[1] || 'Apartment'}
+              {job?.serviceType || 'Cleaning Service'} — {job?.title?.split(' - ')[1] || job?.location?.address || 'Location'}
             </h2>
-            <p className="text-sm text-primary-200 font-medium">{getTimeAgo(job.createdAt)}</p>
           </div>
 
           {/* Review Property Section - Hide after 5 minutes */}
@@ -341,33 +417,6 @@ const CompleteJobPage = () => {
             </div>
           )}
 
-          {/* Payment Summary Section */}
-          <div className="bg-white rounded-2xl px-6 py-3 shadow-sm">
-            <h3 className="text-lg font-semibold text-primary-500 mb-4">Payment Summary</h3>
-            
-            <div className="space-y-1">
-              <div className="flex items-center">
-                <span className="text-sm text-primary-200 font-medium mr-1">Quoted Price:</span>
-                <span className="text-lg font-semibold text-[#1F6FEB]">${job.estimatedPrice}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <span className="text-sm text-primary-200 font-medium mr-1">Payment Method:</span>
-                <span className="text-sm font-semibold text-[#1F6FEB]">{job.paymentMethod}</span>
-              </div>
-              
-              <p className="text-sm text-primary-200 font-medium leading-relaxed">
-                Customer paid $44 (10%) online to platform. $176 (80%) will be paid cash after job.
-              </p>
-              
-              <div className="flex">
-                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#E4FBED] text-[#1EB154] border border-[#DBF9E7]">
-                  Paid
-                </span>
-              </div>
-            </div>
-          </div>
-
           {/* Upload Before Photo Section - Hide after upload */}
           {!beforePhotosUploaded && (
             <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -375,9 +424,9 @@ const CompleteJobPage = () => {
               
               {/* Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center bg-gray-50 mx-auto">
-              <div className='rounded-full p-3 bg-primary-200 w-fit mx-auto mb-3'>
+                <div className='rounded-full p-3 bg-primary-200 w-fit mx-auto mb-3'>
                   <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8" />
-              </div>
+                </div>
                 <p className="text-primary-500 mb-4 font-medium">Select photos/videos to upload</p>
                 
                 <input
@@ -391,55 +440,76 @@ const CompleteJobPage = () => {
                 
                 <label
                   htmlFor="file-upload"
-                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors ${
-                    uploadingBefore 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : 'bg-primary-500 text-white hover:bg-blue-700'
-                  }`}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors bg-primary-500 text-white hover:bg-blue-700"
                 >
-                  {uploadingBefore ? 'Uploading...' : 'Upload Here'}
+                  Select Files
                   <img src={UploadIcon} alt="Upload" className="w-5 h-5" />
                 </label>
               </div>
 
-              {/* Uploaded Photos */}
-              {uploadedPhotos.length > 0 && (
-                <div className="mt-6 space-y-4">
-                  {uploadedPhotos.map((photo) => (
-                    <div key={photo.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                      <img
-                        src={photo.url}
-                        alt={photo.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{photo.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {(photo.file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+              {/* Selected Files Preview & Upload */}
+              {selectedFiles.length > 0 && (
+                <div className="mt-6">
+                  <div className="space-y-2 mb-4">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleSubmitPhoto(photo.id)}
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
-                      >
-                        Submit Photo
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={handleSubmitPhoto}
+                    disabled={uploadingBefore}
+                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-colors ${
+                      uploadingBefore
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-[#1F6FEB] text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {uploadingBefore ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              )}
+
+              {/* Successfully Uploaded Photos */}
+              {beforePhotosUploaded && uploadedPhotos.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm font-semibold text-green-600 mb-3">✓ Before photos uploaded successfully</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {uploadedPhotos.map((photo, index) => (
+                      <img
+                        key={index}
+                        src={photo.url || photo}
+                        alt={`Before ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
           {/* Upload After Photo Section - Show after before photos uploaded */}
-          {beforePhotosUploaded && (
+          {beforePhotosUploaded && !afterPhotosUploaded && (
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-primary-500 mb-4">Upload After Photo</h3>
+              <h3 className="text-lg font-semibold text-primary-500 mb-2">Upload After Photo</h3>
               
               {/* Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center bg-gray-50 mx-auto">
                 <div className='rounded-full p-3 bg-primary-200 w-fit mx-auto mb-3'>
-                 <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8" />
+                  <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8" />
                 </div>
                 <p className="text-primary-500 mb-4 font-medium">Select photos/videos to upload</p>
                 
@@ -454,41 +524,62 @@ const CompleteJobPage = () => {
                 
                 <label
                   htmlFor="after-file-upload"
-                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors ${
-                    uploadingAfter 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : 'bg-primary-500 text-white hover:bg-blue-700'
-                  }`}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors bg-primary-500 text-white hover:bg-blue-700"
                 >
-                  {uploadingAfter ? 'Uploading...' : 'Upload Here'}
+                  Select Files
                   <img src={UploadIcon} alt="Upload" className="w-5 h-5" />
                 </label>
               </div>
 
-              {/* Uploaded After Photos */}
-              {afterPhotos.length > 0 && (
-                <div className="mt-6 space-y-4">
-                  {afterPhotos.map((photo) => (
-                    <div key={photo.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                      <img
-                        src={photo.url}
-                        alt={photo.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{photo.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {(photo.file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+              {/* Selected Files Preview & Upload */}
+              {selectedAfterFiles.length > 0 && (
+                <div className="mt-6">
+                  <div className="space-y-2 mb-4">
+                    {selectedAfterFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleSubmitAfterPhoto(photo.id)}
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
-                      >
-                        Submit Photo
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={handleSubmitAfterPhoto}
+                    disabled={uploadingAfter}
+                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-colors ${
+                      uploadingAfter
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-[#1F6FEB] text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {uploadingAfter ? 'Uploading...' : `Upload ${selectedAfterFiles.length} Photo${selectedAfterFiles.length > 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              )}
+
+              {/* Successfully Uploaded Photos */}
+              {afterPhotosUploaded && afterPhotos.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm font-semibold text-green-600 mb-3">✓ After photos uploaded successfully</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {afterPhotos.map((photo, index) => (
+                      <img
+                        key={index}
+                        src={photo.url || photo}
+                        alt={`After ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
