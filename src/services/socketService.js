@@ -71,6 +71,21 @@ class SocketService {
       this.notifyListeners('messagesMarkedRead', data)
     );
 
+    // Location tracking events
+    this.socket.on('job_room_joined', (data) => {
+      console.log('✅ Joined job room:', data);
+      this.notifyListeners('jobRoomJoined', data);
+    });
+
+    this.socket.on('cleaner_location_update', (data) => {
+      console.log('📍 Cleaner location update received:', data);
+      this.notifyListeners('cleanerLocationUpdate', data);
+    });
+
+    this.socket.on('location_update_acknowledged', (data) => {
+      this.notifyListeners('locationUpdateAcknowledged', data);
+    });
+
     this.socket.on('error', (error) => {
       if (error.message === 'Failed to join chat') {
         return;
@@ -186,6 +201,35 @@ class SocketService {
   leaveChat() {
     if (this.socket && this.isConnected) {
       this.socket.emit('leave_chat');
+    }
+  }
+
+  // Location tracking methods
+  joinJobRoom(jobId) {
+    if (this.socket && this.isConnected) {
+      console.log(`🔌 Joining job room: ${jobId}`);
+      this.socket.emit('join_job_room', { jobId });
+    } else {
+      console.warn('⚠️ Socket not connected, cannot join job room');
+    }
+  }
+
+  leaveJobRoom(jobId) {
+    if (this.socket && this.isConnected) {
+      console.log(`👋 Leaving job room: ${jobId}`);
+      this.socket.emit('leave_job_room', { jobId });
+    }
+  }
+
+  updateCleanerLocation(latitude, longitude, jobId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('update_cleaner_location', {
+        latitude,
+        longitude,
+        jobId
+      });
+    } else {
+      console.warn('⚠️ Socket not connected, cannot update location');
     }
   }
 }

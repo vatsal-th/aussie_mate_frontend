@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
@@ -12,6 +12,7 @@ import PhoneIcon1 from '../../assets/phone2.svg';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
+import { socketService } from '../../services/socketService';
 
 
 const InProgressJobDetailsPage = () => {
@@ -27,6 +28,9 @@ const InProgressJobDetailsPage = () => {
     const [isNearCustomer, setIsNearCustomer] = useState(false);
     const [cleanerLocation, setCleanerLocation] = useState(null);
     const [customerLocation, setCustomerLocation] = useState(null);
+    const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+    const [locationError, setLocationError] = useState(null);
+    const cleanerLocationRef = useRef(null); 
 
     useEffect(() => {
         const fetchJobDetails = async () => {
@@ -139,6 +143,100 @@ const InProgressJobDetailsPage = () => {
             console.log(`Cleaner distance to customer: ${distance}m, near: ${near}`);
         }
     }, [cleanerLocation, customerLocation]);
+
+    // Socket connection and location tracking
+    useEffect(() => {
+        if (!jobId || !job) return;
+
+        // Connect to socket
+        const token = localStorage.getItem('authToken');
+        if (token && !socketService.isConnected) {
+            socketService.connect(token);
+        }
+
+        // Wait for socket connection before joining room
+        const connectionTimeout = setTimeout(() => {
+            if (socketService.isConnected) {
+                socketService.joinJobRoom(jobId);
+                console.log('🔌 Joined job room for location tracking');
+            }
+        }, 1000);
+
+        // Start location tracking
+        let watchId;
+        let locationInterval;
+
+        const startLocationTracking = () => {
+            if (!navigator.geolocation) {
+                setLocationError('Geolocation is not supported by your browser');
+                console.error('❌ Geolocation not supported');
+                return;
+            }
+
+            setIsTrackingLocation(true);
+            console.log('📍 Starting location tracking...');
+
+            // Watch position continuously
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const newLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    setCleanerLocation(newLocation);
+                    cleanerLocationRef.current = newLocation; // Update ref for interval access
+                    console.log('📍 Cleaner location updated:', newLocation);
+                },
+                (error) => {
+                    console.error('❌ Geolocation error:', error);
+                    setLocationError(error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+
+            // Send location updates every 10 seconds
+            locationInterval = setInterval(() => {
+                const currentLocation = cleanerLocationRef.current; // Use ref to get latest location
+                if (currentLocation && socketService.isConnected) {
+                    socketService.updateCleanerLocation(
+                        currentLocation.lat,
+                        currentLocation.lng,
+                        jobId
+                    );
+                    console.log('📡 Sent location update to server');
+                }
+            }, 10000); // Every 10 seconds
+        };
+
+        // Start tracking after a short delay to ensure everything is loaded
+        const trackingTimeout = setTimeout(startLocationTracking, 1500);
+
+        // Cleanup
+        return () => {
+            clearTimeout(connectionTimeout);
+            clearTimeout(trackingTimeout);
+            
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                console.log('🛑 Stopped location tracking');
+            }
+            
+            if (locationInterval) {
+                clearInterval(locationInterval);
+            }
+            
+            if (socketService.isConnected && jobId) {
+                socketService.leaveJobRoom(jobId);
+                console.log('👋 Left job room');
+            }
+            
+            setIsTrackingLocation(false);
+        };
+    }, [jobId, job]); 
 
 
     const getCoordinates = (coordinates) => {
@@ -363,6 +461,34 @@ const InProgressJobDetailsPage = () => {
                             </span>
                         </div>
                     </div>
+
+                    {/* Location Tracking Status */}
+                    {isTrackingLocation && (
+                        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-4 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-green-800">Location Tracking Active</p>
+                                    <p className="text-xs text-green-600">Your location is being shared with the customer</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Location Error */}
+                    {locationError && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-4 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-yellow-800">Location Access Issue</p>
+                                    <p className="text-xs text-yellow-600">{locationError}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Map Section */}
                     {showMap && (

@@ -13,6 +13,7 @@ import StarIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
+import { socketService } from '../../services/socketService';
 
 const CustomerInProgressJobDetailsPage = () => {
   const { jobId } = useParams();
@@ -26,6 +27,9 @@ const CustomerInProgressJobDetailsPage = () => {
   const [showArrivalStatus, setShowArrivalStatus] = useState(false);
   const [arrivalTime, setArrivalTime] = useState(8);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [cleanerLocation, setCleanerLocation] = useState(null);
+  const [customerLocation, setCustomerLocation] = useState(null);
+  const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -41,6 +45,29 @@ const CustomerInProgressJobDetailsPage = () => {
 
         if (jobResponse.success && jobResponse.data) {
           setJob(jobResponse.data);
+
+          // Set customer location from job data
+          const coords = jobResponse.data.location?.coordinates;
+          if (coords) {
+            let lat, lng;
+            if (typeof coords === 'string') {
+              const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
+              lat = coordsArr[0];
+              lng = coordsArr[1];
+            } else if (coords.lat && coords.lng) {
+              lat = coords.lat;
+              lng = coords.lng;
+            } else if (Array.isArray(coords)) {
+              lat = coords[0];
+              lng = coords[1];
+            }
+            
+            if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+              setCustomerLocation({ lat, lng });
+            } else if (lat && lng && (lat > 90 || lat < -90)) {
+              setCustomerLocation({ lat: lng, lng: lat });
+            }
+          }
 
           // Find accepted quote and cleaner info
           const acceptedQuote = jobResponse.data.quotes?.find(quote => quote.status === 'accepted');
@@ -89,6 +116,58 @@ const CustomerInProgressJobDetailsPage = () => {
       fetchJobDetails();
     }
   }, [jobId]);
+
+  // Socket connection and real-time location tracking
+  useEffect(() => {
+    if (!jobId || !job) return;
+
+    // Connect to socket
+    const token = localStorage.getItem('authToken');
+    if (token && !socketService.isConnected) {
+      socketService.connect(token);
+    }
+
+    // Wait for socket connection before joining room
+    const connectionTimeout = setTimeout(() => {
+      if (socketService.isConnected) {
+        socketService.joinJobRoom(jobId);
+        console.log('🔌 Customer joined job room for location tracking');
+      }
+    }, 1000);
+
+    // Listen for cleaner location updates
+    const handleCleanerLocationUpdate = (data) => {
+      console.log('📍 Received cleaner location update:', data);
+      setCleanerLocation({
+        lat: data.latitude,
+        lng: data.longitude
+      });
+      setIsCleanerLocationLive(true);
+      
+      // Update arrival time based on route info if available
+      if (routeInfo && routeInfo.duration) {
+        // Parse duration string like "8 mins" to get number
+        const mins = parseInt(routeInfo.duration);
+        if (!isNaN(mins)) {
+          setArrivalTime(mins);
+        }
+      }
+    };
+
+    // Register event listener
+    socketService.on('cleanerLocationUpdate', handleCleanerLocationUpdate);
+
+    // Cleanup
+    return () => {
+      clearTimeout(connectionTimeout);
+      socketService.off('cleanerLocationUpdate', handleCleanerLocationUpdate);
+      
+      if (socketService.isConnected && jobId) {
+        socketService.leaveJobRoom(jobId);
+        console.log('👋 Customer left job room');
+      }
+    };
+  }, [jobId, job, routeInfo]);
 
   const handleGetDirections = (e) => {
     e.preventDefault();
@@ -332,7 +411,7 @@ const CustomerInProgressJobDetailsPage = () => {
     return `Posted ${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   };
 
-  const customerLocation = getCoordinates(job.location?.coordinates);
+  // customerLocation is now a state variable set in useEffect
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -395,22 +474,32 @@ const CustomerInProgressJobDetailsPage = () => {
                 </button>
               </div>
 
-              {(() => {
-                const originalCoords = job?.location?.coordinates;
-                const fixedCoords = getCoordinates(originalCoords);
-                return (
-                  <MapWithPolyline
-                    customerLocation={fixedCoords}
-                    onRouteInfo={(info) => {
-                      setRouteInfo(info);
-                      // Update arrival time based on real route info
-                      if (info && info.durationValue) {
-                        setArrivalTime(Math.round(info.durationValue / 60));
-                      }
-                    }}
-                  />
-                );
-              })()}
+              <MapWithPolyline
+                customerLocation={customerLocation}
+                cleanerLocation={cleanerLocation}
+                onRouteInfo={(info) => {
+                  setRouteInfo(info);
+                  // Update arrival time based on real route info
+                  if (info && info.durationValue) {
+                    setArrivalTime(Math.round(info.durationValue / 60));
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {/* Live Location Tracking Indicator */}
+          {isCleanerLocationLive && (
+            <div className="mb-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-800">Live Location Tracking</p>
+                    <p className="text-xs text-blue-600">Cleaner's location is being tracked in real-time</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
