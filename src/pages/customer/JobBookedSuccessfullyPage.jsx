@@ -120,7 +120,7 @@ const JobBookedSuccessfullyPage = () => {
             phone: cleanerInfo.phone || cleanerInfo.phoneNumber || cleanerInfo.mobile || 'Not available',
             email: cleanerInfo.email || '',
             avatar: cleanerInfo.profilePhoto || cleanerInfo.profilePicture || cleanerInfo.avatar || '',
-            rating: cleanerInfo.rating || 0,
+            rating: cleanerInfo.averageRating !== undefined ? cleanerInfo.averageRating : (cleanerInfo.rating || 0),
             status: 'Booked'
           });
 

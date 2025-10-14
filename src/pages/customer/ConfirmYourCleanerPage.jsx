@@ -6,6 +6,8 @@ import { paymentService, handlePaymentError } from '../../services/paymentServic
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import StarIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
+import GoldBadgeIcon from '../../assets/goldBadge.svg';
+import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 import UserIcon from '../../assets/user.svg';
 
 const ConfirmYourCleanerPage = () => {
@@ -27,8 +29,8 @@ const ConfirmYourCleanerPage = () => {
       `Cleaner #${(quoteData.cleanerId._id || quoteData.cleanerId.id || quoteData.cleanerId).slice(-4)}` : 
       'Cleaner',
     distance: 'Distance not available', // This should be calculated based on locations
-    rating: quoteData.cleanerId?.rating || 4.5,
-    tier: quoteData.cleanerId?.tier || 'Standard',
+    rating: quoteData.cleanerId?.averageRating !== undefined ? quoteData.cleanerId.averageRating : (quoteData.cleanerId?.rating || 0),
+    tier: quoteData.cleanerId?.tier || 'none',
     baseQuote: quoteData.basePrice || quoteData.price || 0,
     addOns: quoteData.addOns || 0,
     addOnName: quoteData.addOnName || 'Additional Services',
@@ -155,12 +157,32 @@ const ConfirmYourCleanerPage = () => {
                   </span>
                 </div>
                 
-                <div className="flex items-center bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] px-2 py-1 rounded-full border border-[#E5E7EB]">
-                  <img src={SilverBadgeIcon} alt="Tier" className="w-4 h-4 mr-1" />
-                  <span className="text-sm font-medium text-primary-500">
-                    {finalCleanerData.tier}
-                  </span>
-                </div>
+                {finalCleanerData.tier && finalCleanerData.tier !== 'none' && (
+                  <div className={`flex items-center px-2 py-1 rounded-full border ${
+                    finalCleanerData.tier === 'gold'
+                      ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
+                      : finalCleanerData.tier === 'silver'
+                      ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-[#E5E7EB]'
+                      : finalCleanerData.tier === 'bronze'
+                      ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
+                      : 'bg-gray-100 border-gray-300'
+                  }`}>
+                    <img 
+                      src={
+                        finalCleanerData.tier === 'gold' 
+                          ? GoldBadgeIcon 
+                          : finalCleanerData.tier === 'silver'
+                          ? SilverBadgeIcon
+                          : BronzeBadgeIcon
+                      } 
+                      alt="Tier" 
+                      className="w-4 h-4 mr-1" 
+                    />
+                    <span className="text-sm font-medium text-primary-500 capitalize">
+                      {finalCleanerData.tier}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

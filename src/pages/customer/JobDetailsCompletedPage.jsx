@@ -8,6 +8,8 @@ import Rating2Icon from '../../assets/rating2.svg';
 import PdfIcon from '../../assets/pdf.svg';
 import DownloadIcon from '../../assets/download.svg';
 import GoldBadgeIcon from '../../assets/goldBadge.svg';
+import SilverBadgeIcon from '../../assets/silverBadge.svg';
+import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import { jobsAPI, jobPhotosAPI, jobDetailsAPI, reviewsAPI } from '../../services/api';
@@ -59,7 +61,12 @@ const JobDetailsCompletedPage = () => {
           
           // Transform job data to match expected format
           const acceptedQuote = job.quotes?.find(q => q.status === 'accepted');
-          const cleaner = acceptedQuote?.cleanerId;
+          // Use completedBy if it's an object, otherwise try acceptedQuote cleanerId
+          const cleaner = (job.completedBy && typeof job.completedBy === 'object') 
+            ? job.completedBy 
+            : (acceptedQuote?.cleanerId && typeof acceptedQuote.cleanerId === 'object')
+              ? acceptedQuote.cleanerId
+              : null;
           
           // Get photos from multiple possible sources
           const beforeImages = photosData.beforePhotos || job.beforePhotos || [];
@@ -79,8 +86,8 @@ const JobDetailsCompletedPage = () => {
             cleaner: {
               id: cleaner?._id || cleaner?.id || 'N/A',
               name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() : 'Cleaner',
-              rating: cleaner?.rating || 4.5,
-              tier: cleaner?.tier || 'Standard'
+              rating: cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0),
+              tier: cleaner?.tier || 'none'
             },
             payment: {
               totalPaid: acceptedQuote?.price || job.estimatedPrice || 0,
@@ -369,10 +376,30 @@ const JobDetailsCompletedPage = () => {
                   <img src={RatingIcon} alt="Rating" className="w-4 h-4" />
                   <span className="text-sm font-medium text-primary-500 font-medium">{jobData.cleaner.rating}</span>
                 </div>
-                <div className="flex items-center space-x-1 bg-gradient-to-r from-white to-[#FFDBAE] px-2 py-1 rounded-full border border-[#FFDBAE]">
-                <img src={GoldBadgeIcon} alt="Badge" className="w-5 h-5" />
-                <span className="text-sm text-primary-500 font-medium ml-1">{jobData.cleaner.tier} Tier</span>
-                </div>
+                {jobData.cleaner.tier && jobData.cleaner.tier !== 'none' && (
+                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full border ${
+                    jobData.cleaner.tier === 'gold' 
+                      ? 'bg-gradient-to-r from-white to-[#FFDBAE] border-[#FFDBAE]'
+                      : jobData.cleaner.tier === 'silver'
+                      ? 'bg-gradient-to-r from-white to-[#E9E9E9] border-[#E5E7EB]'
+                      : jobData.cleaner.tier === 'bronze'
+                      ? 'bg-gradient-to-r from-white to-[#D4A574] border-[#CD7F32]'
+                      : 'bg-gradient-to-r from-white to-gray-200 border-gray-300'
+                  }`}>
+                    <img 
+                      src={
+                        jobData.cleaner.tier === 'gold' 
+                          ? GoldBadgeIcon 
+                          : jobData.cleaner.tier === 'silver'
+                          ? SilverBadgeIcon
+                          : BronzeBadgeIcon
+                      } 
+                      alt="Badge" 
+                      className="w-5 h-5" 
+                    />
+                    <span className="text-sm text-primary-500 font-medium ml-1 capitalize">{jobData.cleaner.tier} Tier</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

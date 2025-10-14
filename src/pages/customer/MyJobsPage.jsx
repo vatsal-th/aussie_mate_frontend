@@ -91,7 +91,7 @@ const formatCleanerData = (quote) => {
     id: cleanerId,
     quoteId: quote._id || quote.id,
     name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() || `Cleaner #${cleanerId?.slice(-4)}` : 'Cleaner',
-    rating: cleaner?.rating || 4.5,
+    rating: cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0),
     reviews: cleaner?.reviewCount || 0,
     tier: cleaner?.tier || 'Standard',
     quoteAmount: quote.price || quote.amount || 0,

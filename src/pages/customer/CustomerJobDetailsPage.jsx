@@ -10,6 +10,8 @@ import MapPinIcon from '../../assets/map-pin 1.png';
 import UserIcon from '../../assets/user.svg';
 import RatingIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
+import GoldBadgeIcon from '../../assets/goldBadge.svg';
+import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 import MessageIcon from '../../assets/message2.svg';
 import CloseIcon from '../../assets/close.svg';
 import { jobsAPI, quotesAPI } from '../../services/api';
@@ -290,7 +292,7 @@ const CustomerJobDetailsPage = () => {
       id: cleanerId,
       quoteId: quote._id || quote.id,
       name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() || `Cleaner #${cleanerId?.slice(-4)}` : 'Cleaner',
-      rating: cleaner?.rating || 4.5,
+      rating: cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0),
       reviews: cleaner?.reviewCount || 0,
       tier: cleaner?.tier || 'Standard',
       quoteAmount: quote.price || quote.amount || 0,
@@ -470,10 +472,28 @@ const CustomerJobDetailsPage = () => {
                               {cleaner.name}
                             </span>
                           </div>
-                          {cleaner.tier && (
-                            <div className="flex items-center space-x-1 bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] border-[#E5E7EB]">
-                              <img src={SilverBadgeIcon} alt="Badge" className="w-3 h-3 sm:w-4 sm:h-4" />
-                              <span className="text-xs text-primary-500 font-medium">
+                          {cleaner.tier && cleaner.tier !== 'none' && (
+                            <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] ${
+                              cleaner.tier === 'gold'
+                                ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
+                                : cleaner.tier === 'silver'
+                                ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-[#E5E7EB]'
+                                : cleaner.tier === 'bronze'
+                                ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
+                                : 'bg-gray-100 border-gray-300'
+                            }`}>
+                              <img 
+                                src={
+                                  cleaner.tier === 'gold' 
+                                    ? GoldBadgeIcon 
+                                    : cleaner.tier === 'silver'
+                                    ? SilverBadgeIcon
+                                    : BronzeBadgeIcon
+                                } 
+                                alt="Badge" 
+                                className="w-3 h-3 sm:w-4 sm:h-4" 
+                              />
+                              <span className="text-xs text-primary-500 font-medium capitalize">
                                 {cleaner.tier}
                               </span>
                             </div>

@@ -12,6 +12,8 @@ import PhoneIcon2 from '../../assets/phone.svg';
 import ChatIcon from '../../assets/message2.svg';
 import StarIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
+import GoldBadgeIcon from '../../assets/goldBadge.svg';
+import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
@@ -368,11 +370,11 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   const getCleanerTier = () => {
-    return cleaner?.tier || 'Standard';
+    return cleaner?.tier || 'none';
   };
 
   const getCleanerRating = () => {
-    return cleaner?.rating || 4.8;
+    return cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0);
   };
 
   if (loading) {
@@ -593,10 +595,30 @@ const CustomerInProgressJobDetailsPage = () => {
                           <img src={StarIcon} alt="Rating" className="w-4 h-4 mr-1" />
                           {getCleanerRating()}
                         </div>
-                        <div className="flex items-center bg-gradient-to-r from-[#FDFDFD] to-[#E9E9E9] text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] border-[#E9E9E9]">
-                          <img src={SilverBadgeIcon} alt="Badge" className="w-4 h-4 mr-1" />
-                          {getCleanerTier()} Tier
-                        </div>
+                        {getCleanerTier() && getCleanerTier() !== 'none' && (
+                          <div className={`flex items-center text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] ${
+                            getCleanerTier() === 'gold'
+                              ? 'bg-gradient-to-r from-[#FFDBAE] to-[#FFE7C4] border-[#FFDBAE]'
+                              : getCleanerTier() === 'silver'
+                              ? 'bg-gradient-to-r from-[#FDFDFD] to-[#E9E9E9] border-[#E9E9E9]'
+                              : getCleanerTier() === 'bronze'
+                              ? 'bg-gradient-to-r from-[#D4A574] to-[#E6C7A3] border-[#CD7F32]'
+                              : 'bg-gray-100 border-gray-300'
+                          }`}>
+                            <img 
+                              src={
+                                getCleanerTier() === 'gold' 
+                                  ? GoldBadgeIcon 
+                                  : getCleanerTier() === 'silver'
+                                  ? SilverBadgeIcon
+                                  : BronzeBadgeIcon
+                              } 
+                              alt="Badge" 
+                              className="w-4 h-4 mr-1" 
+                            />
+                            <span className="capitalize">{getCleanerTier()} Tier</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

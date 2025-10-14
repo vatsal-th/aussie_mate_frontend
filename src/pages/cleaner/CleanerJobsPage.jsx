@@ -7,13 +7,12 @@ import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import CurrentLocationIcon from '../../assets/currentLocation.svg';
 import SearchIcon from '../../assets/search.svg';
-import { jobsAPI, userAPI } from '../../services/api';
+import { jobsAPI, userAPI, reviewsAPI } from '../../services/api';
 import ChatIcon from '../../assets/message2.svg';  
 
 const CleanerJobsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('live-jobs');
-  const [sortBy, setSortBy] = useState('distance');
   const [showSortModal, setShowSortModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [jobs, setJobs] = useState([]);
@@ -503,6 +502,13 @@ const CleanerJobsPage = () => {
 
     return filtered;
   }, [jobs, searchQuery]);
+
+  // Helper function to calculate average rating
+  const getAverageRating = () => {
+    if (!cleanerReviews || cleanerReviews.length === 0) return 0;
+    const totalRating = cleanerReviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    return Math.round((totalRating / cleanerReviews.length) * 10) / 10; // Round to 1 decimal
+  };
 
   const handleJobClick = (jobId, jobStatus) => {
     // Don't navigate for in_progress jobs
