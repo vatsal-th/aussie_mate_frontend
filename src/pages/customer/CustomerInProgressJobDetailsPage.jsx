@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
@@ -30,6 +30,9 @@ const CustomerInProgressJobDetailsPage = () => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const demoStepRef = useRef(0);
+  const [lastLocationUpdate, setLastLocationUpdate] = useState(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -137,16 +140,40 @@ const CustomerInProgressJobDetailsPage = () => {
 
     // Listen for cleaner location updates
     const handleCleanerLocationUpdate = (data) => {
-      console.log('📍 Received cleaner location update:', data);
-      setCleanerLocation({
+      console.log('📍 [CUSTOMER] Received cleaner location update:', {
+        cleanerId: data.cleanerId,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        timestamp: new Date(data.timestamp).toLocaleTimeString()
+      });
+      
+      const newCleanerLocation = {
         lat: data.latitude,
         lng: data.longitude
-      });
+      };
+      
+      setCleanerLocation(newCleanerLocation);
       setIsCleanerLocationLive(true);
+      setLastLocationUpdate(new Date());
+      
+      // Calculate distance if customer location exists
+      if (customerLocation) {
+        const R = 6371e3;
+        const φ1 = customerLocation.lat * Math.PI / 180;
+        const φ2 = newCleanerLocation.lat * Math.PI / 180;
+        const Δφ = (newCleanerLocation.lat - customerLocation.lat) * Math.PI / 180;
+        const Δλ = (newCleanerLocation.lng - customerLocation.lng) * Math.PI / 180;
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+        
+        console.log(`📏 [CUSTOMER] Distance to cleaner: ${distance.toFixed(0)}m`);
+      }
       
       // Update arrival time based on route info if available
       if (routeInfo && routeInfo.duration) {
-        // Parse duration string like "8 mins" to get number
         const mins = parseInt(routeInfo.duration);
         if (!isNaN(mins)) {
           setArrivalTime(mins);
@@ -167,18 +194,23 @@ const CustomerInProgressJobDetailsPage = () => {
         console.log('👋 Customer left job room');
       }
     };
-  }, [jobId, job, routeInfo]);
+  }, [jobId, job, customerLocation]); // Added customerLocation to dependencies
+
+  // Update arrival time when route info changes
+  useEffect(() => {
+    if (routeInfo && routeInfo.durationValue) {
+      const mins = Math.round(routeInfo.durationValue / 60);
+      setArrivalTime(mins);
+      console.log(`⏱️ [CUSTOMER] Arrival time auto-updated: ${mins} mins (${routeInfo.duration})`);
+    }
+  }, [routeInfo]);
 
   const handleGetDirections = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!showMap) {
-      // Opening map - show arrival status
       setShowMap(true);
-      setShowArrivalStatus(true);
-      // Start real-time arrival countdown
-      startArrivalCountdown();
     } else {
       // Closing map - hide arrival status
       setShowMap(false);
@@ -187,33 +219,7 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   const startArrivalCountdown = () => {
-    // Use route info if available, otherwise calculate from distance
-    if (routeInfo) {
-      setArrivalTime(Math.round(routeInfo.durationValue / 60));
-    } else {
-      const distanceText = getCleanerDistance();
-      const distance = parseFloat(distanceText);
-
-      if (!isNaN(distance)) {
-        // Assume average speed of 30 km/h in city traffic
-        const estimatedMinutes = Math.round((distance / 30) * 60);
-        setArrivalTime(Math.max(1, estimatedMinutes));
-      }
-    }
-
-    // Update arrival time every minute
-    const countdownInterval = setInterval(() => {
-      setArrivalTime(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 60000); // Update every minute
-
-    // Cleanup interval when component unmounts or map is hidden
-    return () => clearInterval(countdownInterval);
+    console.log('ℹ️ Using real-time route info instead of countdown');
   };
 
   const handleChatWithCleaner = () => {
@@ -458,6 +464,47 @@ const CustomerInProgressJobDetailsPage = () => {
             </div>
           </div>
 
+          {/* Real-time Location Tracking Info */}
+          {cleanerLocation && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-4 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-800">📍 Live Tracking Active</p>
+                  {lastLocationUpdate && (
+                    <p className="text-xs text-blue-600">
+                      Updated: {lastLocationUpdate.toLocaleTimeString()}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full whitespace-nowrap">
+                  Every 10s
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                  <p className="text-blue-700 font-medium mb-1">Cleaner Location:</p>
+                  <p className="text-blue-600 font-mono">{cleanerLocation.lat.toFixed(6)}, {cleanerLocation.lng.toFixed(6)}</p>
+                </div>
+                {customerLocation && (
+                  <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                    <p className="text-blue-700 font-medium mb-1">Your Location:</p>
+                    <p className="text-blue-600 font-mono">{customerLocation.lat.toFixed(6)}, {customerLocation.lng.toFixed(6)}</p>
+                  </div>
+                )}
+                {routeInfo && (
+                  <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                    <p className="text-blue-700 font-medium mb-1">Route Info:</p>
+                    <p className="text-blue-600">
+                      <span className="font-semibold">{routeInfo.distance}</span> away • 
+                      <span className="font-semibold"> {routeInfo.duration}</span> ETA
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Map Section */}
           {showMap && (
             <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
@@ -478,28 +525,20 @@ const CustomerInProgressJobDetailsPage = () => {
                 customerLocation={customerLocation}
                 cleanerLocation={cleanerLocation}
                 onRouteInfo={(info) => {
+                  console.log('🗺️ [CUSTOMER] Route info received:', info);
                   setRouteInfo(info);
                   // Update arrival time based on real route info
                   if (info && info.durationValue) {
-                    setArrivalTime(Math.round(info.durationValue / 60));
+                    const mins = Math.round(info.durationValue / 60);
+                    setArrivalTime(mins);
+                    console.log(`⏱️ [CUSTOMER] ETA updated: ${mins} mins`);
+                  }
+                  // Show arrival status now that we have real route data
+                  if (info) {
+                    setShowArrivalStatus(true);
                   }
                 }}
               />
-            </div>
-          )}
-
-          {/* Live Location Tracking Indicator */}
-          {isCleanerLocationLive && (
-            <div className="mb-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-800">Live Location Tracking</p>
-                    <p className="text-xs text-blue-600">Cleaner's location is being tracked in real-time</p>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 

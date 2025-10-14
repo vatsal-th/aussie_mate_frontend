@@ -30,7 +30,9 @@ const InProgressJobDetailsPage = () => {
     const [customerLocation, setCustomerLocation] = useState(null);
     const [isTrackingLocation, setIsTrackingLocation] = useState(false);
     const [locationError, setLocationError] = useState(null);
-    const cleanerLocationRef = useRef(null); 
+    const cleanerLocationRef = useRef(null);
+    const [demoMode, setDemoMode] = useState(false);
+    const demoStepRef = useRef(0); 
 
     useEffect(() => {
         const fetchJobDetails = async () => {
@@ -167,47 +169,102 @@ const InProgressJobDetailsPage = () => {
         let locationInterval;
 
         const startLocationTracking = () => {
-            if (!navigator.geolocation) {
-                setLocationError('Geolocation is not supported by your browser');
-                console.error('❌ Geolocation not supported');
-                return;
-            }
-
             setIsTrackingLocation(true);
             console.log('📍 Starting location tracking...');
 
-            // Watch position continuously
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
+            // Demo mode: simulate movement towards customer
+            if (demoMode && customerLocation) {
+                console.log('🎮 DEMO MODE: Simulating cleaner movement');
+                
+                // Generate random starting location ~2-5km away
+                const offsetLat = (Math.random() - 0.5) * 0.05; // ~5km range
+                const offsetLng = (Math.random() - 0.5) * 0.05;
+                const startLat = customerLocation.lat + offsetLat;
+                const startLng = customerLocation.lng + offsetLng;
+                
+                const startLocation = { lat: startLat, lng: startLng };
+                setCleanerLocation(startLocation);
+                cleanerLocationRef.current = startLocation;
+                
+                console.log('🎮 Starting from:', startLocation);
+                console.log('🎯 Moving towards:', customerLocation);
+                
+                const totalSteps = 24; // 24 steps * 5 seconds = 120 seconds (2 minutes)
+                demoStepRef.current = 0;
+                
+                // Update position every 5 seconds
+                watchId = setInterval(() => {
+                    demoStepRef.current += 1;
+                    const progress = Math.min(demoStepRef.current / totalSteps, 1);
+                    
+                    // Linear interpolation (lerp) between start and customer location
+                    const currentLat = startLat + (customerLocation.lat - startLat) * progress;
+                    const currentLng = startLng + (customerLocation.lng - startLng) * progress;
+                    
                     const newLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
+                        lat: currentLat,
+                        lng: currentLng
                     };
+                    
                     setCleanerLocation(newLocation);
-                    cleanerLocationRef.current = newLocation; // Update ref for interval access
-                    console.log('📍 Cleaner location updated:', newLocation);
-                },
-                (error) => {
-                    console.error('❌ Geolocation error:', error);
-                    setLocationError(error.message);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    cleanerLocationRef.current = newLocation;
+                    
+                    const distance = getDistance(currentLat, currentLng, customerLocation.lat, customerLocation.lng);
+                    console.log(`🎮 Step ${demoStepRef.current}/${totalSteps} - Progress: ${(progress * 100).toFixed(0)}% - Distance: ${distance.toFixed(0)}m`);
+                    
+                    // Stop when reached customer
+                    if (progress >= 1) {
+                        console.log('🎯 DEMO: Reached customer location!');
+                    }
+                }, 5000); // Update every 5 seconds
+                
+            } else {
+                // Real GPS tracking
+                if (!navigator.geolocation) {
+                    setLocationError('Geolocation is not supported by your browser');
+                    console.error('❌ Geolocation not supported');
+                    return;
                 }
-            );
+
+                // Watch position continuously
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const newLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        setCleanerLocation(newLocation);
+                        cleanerLocationRef.current = newLocation;
+                        console.log('📍 Cleaner location updated:', newLocation);
+                    },
+                    (error) => {
+                        console.error('❌ Geolocation error:', error);
+                        setLocationError(error.message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            }
 
             // Send location updates every 10 seconds
             locationInterval = setInterval(() => {
-                const currentLocation = cleanerLocationRef.current; // Use ref to get latest location
+                const currentLocation = cleanerLocationRef.current;
                 if (currentLocation && socketService.isConnected) {
                     socketService.updateCleanerLocation(
                         currentLocation.lat,
                         currentLocation.lng,
                         jobId
                     );
-                    console.log('📡 Sent location update to server');
+                    console.log('📡 [CLEANER] Sent location update:', {
+                        lat: currentLocation.lat,
+                        lng: currentLocation.lng,
+                        jobId: jobId,
+                        mode: demoMode ? 'DEMO' : 'GPS',
+                        time: new Date().toLocaleTimeString()
+                    });
                 }
             }, 10000); // Every 10 seconds
         };
@@ -236,7 +293,7 @@ const InProgressJobDetailsPage = () => {
             
             setIsTrackingLocation(false);
         };
-    }, [jobId, job]); 
+    }, [jobId, job, demoMode, customerLocation]); 
 
 
     const getCoordinates = (coordinates) => {
@@ -462,14 +519,40 @@ const InProgressJobDetailsPage = () => {
                         </div>
                     </div>
 
+                    {/* Demo Mode Toggle (FOR TESTING) */}
+                    <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-4 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="text-sm font-semibold text-purple-800">🎮 Demo Mode (Testing)</p>
+                                <p className="text-xs text-purple-600">Simulate movement towards customer (2 min)</p>
+                            </div>
+                            <button
+                                onClick={() => setDemoMode(!demoMode)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    demoMode ? 'bg-purple-600' : 'bg-gray-300'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        demoMode ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Location Tracking Status */}
                     {isTrackingLocation && (
-                        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-4 shadow-sm">
+                        <div className={`${demoMode ? 'bg-purple-50 border-purple-200' : 'bg-green-50 border-green-200'} border rounded-2xl p-4 mb-4 shadow-sm`}>
                             <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <div className={`w-3 h-3 ${demoMode ? 'bg-purple-500' : 'bg-green-500'} rounded-full animate-pulse`}></div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-green-800">Location Tracking Active</p>
-                                    <p className="text-xs text-green-600">Your location is being shared with the customer</p>
+                                    <p className={`text-sm font-semibold ${demoMode ? 'text-purple-800' : 'text-green-800'}`}>
+                                        {demoMode ? '🎮 Demo Location Tracking' : 'Location Tracking Active'}
+                                    </p>
+                                    <p className={`text-xs ${demoMode ? 'text-purple-600' : 'text-green-600'}`}>
+                                        {demoMode ? 'Simulating movement to customer location' : 'Your location is being shared with the customer'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
