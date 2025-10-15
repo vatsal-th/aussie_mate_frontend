@@ -19,7 +19,6 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
   const [routeInfo, setRouteInfo] = useState(null);
   const [polylinePath, setPolylinePath] = useState([]);
   const mapRef = useRef(null);
-  const directionsFetchedRef = useRef(false);
   const initialCleanerLocationRef = useRef(null);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY;
@@ -46,14 +45,12 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
     }
 
     // Get initial location first
-    console.log('🔍 Requesting initial location...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        console.log('✅ Initial location received:', newLocation);
         setCleanerLocation(newLocation);
         initialCleanerLocationRef.current = newLocation; 
       },
@@ -75,14 +72,12 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
     );
 
     // Then watch for updates with less frequent updates
-    console.log('👀 Starting location watch...');
     const watcher = navigator.geolocation.watchPosition(
       (position) => {
         const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        console.log('📍 Location update:', newLocation);
         setCleanerLocation(newLocation);
       },
       (error) => {
@@ -101,7 +96,6 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          console.log('🔄 Polling location update:', newLocation);
           setCleanerLocation(newLocation);
         },
         (error) => {
@@ -172,8 +166,6 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
             if (onRouteInfo) {
                 onRouteInfo(newRouteInfo);
             }
-
-            console.log('✅ Route calculated with', path.length, 'points');
         } else {
             console.error('❌ Directions failed:', status);
         }

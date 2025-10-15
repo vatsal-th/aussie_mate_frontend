@@ -67,14 +67,14 @@ const CustomerInProgressJobDetailsPage = () => {
             let lat, lng;
             if (typeof coords === 'string') {
               const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
-              lat = coordsArr[0];
-              lng = coordsArr[1];
+              lat = coordsArr[1];
+              lng = coordsArr[0];
             } else if (coords.lat && coords.lng) {
               lat = coords.lat;
               lng = coords.lng;
             } else if (Array.isArray(coords)) {
-              lat = coords[0];
-              lng = coords[1];
+              lat = coords[1];
+              lng = coords[0];
             }
             
             if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
@@ -146,18 +146,11 @@ const CustomerInProgressJobDetailsPage = () => {
     const connectionTimeout = setTimeout(() => {
       if (socketService.isConnected) {
         socketService.joinJobRoom(jobId);
-        console.log('🔌 Customer joined job room for location tracking');
       }
     }, 1000);
 
     // Listen for cleaner location updates
     const handleCleanerLocationUpdate = (data) => {
-      console.log('📍 [CUSTOMER] Received cleaner location update:', {
-        cleanerId: data.cleanerId,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        timestamp: new Date(data.timestamp).toLocaleTimeString()
-      });
       
       const newCleanerLocation = {
         lat: data.latitude,
@@ -169,7 +162,6 @@ const CustomerInProgressJobDetailsPage = () => {
       
       // Check if job status changed to completed (optional - for real-time update)
       if (data.jobStatus === 'completed') {
-        console.log('✅ Job marked as completed!');
         setCompletedJobInfo({
           jobId: jobId,
           cleanerName: cleaner?.firstName || "Cleaner",
@@ -190,8 +182,6 @@ const CustomerInProgressJobDetailsPage = () => {
           Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c;
-        
-        console.log(`📏 [CUSTOMER] Distance to cleaner: ${distance.toFixed(0)}m`);
       }
       
       // Update arrival time based on route info if available
@@ -213,7 +203,6 @@ const CustomerInProgressJobDetailsPage = () => {
       
       if (socketService.isConnected && jobId) {
         socketService.leaveJobRoom(jobId);
-        console.log('👋 Customer left job room');
       }
     };
   }, [jobId, job, customerLocation]); // Added customerLocation to dependencies
@@ -223,7 +212,6 @@ const CustomerInProgressJobDetailsPage = () => {
     if (routeInfo && routeInfo.durationValue) {
       const mins = Math.round(routeInfo.durationValue / 60);
       setArrivalTime(mins);
-      console.log(`⏱️ [CUSTOMER] Arrival time auto-updated: ${mins} mins (${routeInfo.duration})`);
     }
   }, [routeInfo]);
 
@@ -241,7 +229,7 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   const startArrivalCountdown = () => {
-    console.log('ℹ️ Using real-time route info instead of countdown');
+    // Using real-time route info instead of countdown
   };
 
   const handleChatWithCleaner = () => {
@@ -511,13 +499,11 @@ const CustomerInProgressJobDetailsPage = () => {
                 customerLocation={customerLocation}
                 cleanerLocation={cleanerLocation}
                 onRouteInfo={(info) => {
-                  console.log('🗺️ [CUSTOMER] Route info received:', info);
                   setRouteInfo(info);
                   // Update arrival time based on real route info
                   if (info && info.durationValue) {
                     const mins = Math.round(info.durationValue / 60);
                     setArrivalTime(mins);
-                    console.log(`⏱️ [CUSTOMER] ETA updated: ${mins} mins`);
                   }
                   // Show arrival status now that we have real route data
                   if (info) {
