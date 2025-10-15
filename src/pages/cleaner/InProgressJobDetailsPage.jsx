@@ -146,7 +146,6 @@ const InProgressJobDetailsPage = () => {
             const near = distance <= 100; // within 100 meters
             setIsNearCustomer(near);
 
-            console.log(`Cleaner distance to customer: ${distance}m, near: ${near}`);
         }
     }, [cleanerLocation, customerLocation]);
 
@@ -164,7 +163,6 @@ const InProgressJobDetailsPage = () => {
         const connectionTimeout = setTimeout(() => {
             if (socketService.isConnected) {
                 socketService.joinJobRoom(jobId);
-                console.log('🔌 Joined job room for location tracking');
             }
         }, 1000);
 
@@ -180,7 +178,6 @@ const InProgressJobDetailsPage = () => {
             }
 
             setIsTrackingLocation(true);
-            console.log('📍 Starting GPS location tracking...');
 
             // Real GPS tracking
             watchId = navigator.geolocation.watchPosition(
@@ -191,7 +188,6 @@ const InProgressJobDetailsPage = () => {
                     };
                     setCleanerLocation(newLocation);
                     cleanerLocationRef.current = newLocation;
-                    console.log('📍 Cleaner location updated:', newLocation);
                 },
                 (error) => {
                     console.error('❌ Geolocation error:', error);
@@ -213,12 +209,6 @@ const InProgressJobDetailsPage = () => {
                         currentLocation.lng,
                         jobId
                     );
-                    console.log('📡 [CLEANER] Sent location update:', {
-                        lat: currentLocation.lat,
-                        lng: currentLocation.lng,
-                        jobId: jobId,
-                        time: new Date().toLocaleTimeString()
-                    });
                 }
             }, 10000); // Every 10 seconds
         };
@@ -233,7 +223,6 @@ const InProgressJobDetailsPage = () => {
             
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
-                console.log('🛑 Stopped location tracking');
             }
             
             if (locationInterval) {
@@ -242,7 +231,6 @@ const InProgressJobDetailsPage = () => {
             
             if (socketService.isConnected && jobId) {
                 socketService.leaveJobRoom(jobId);
-                console.log('👋 Left job room');
             }
             
             setIsTrackingLocation(false);
@@ -298,7 +286,6 @@ const InProgressJobDetailsPage = () => {
             job?.customer?.mobile;
 
         if (phoneNumber) {
-            console.log('Calling customer:', phoneNumber);
             window.location.href = `tel:${phoneNumber}`;
         } else {
             console.error('Customer phone number not available');
@@ -308,14 +295,12 @@ const InProgressJobDetailsPage = () => {
 
     const handleOnTheWay = () => {
         // Handle "On the way" action
-        console.log("Cleaner is on the way");
     };
 
     const handleStartJob = async () => {
         try {
             // Update job status to 'in-progress' or 'started'
             await jobsAPI.updateJobStatus(jobId, 'in-progress');
-            console.log('✅ Job status updated to in-progress');
             
             // Navigate to complete job page
             navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
@@ -490,7 +475,7 @@ const InProgressJobDetailsPage = () => {
                             <div className="flex items-center gap-3">
                                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-green-800">📍 Live Location Tracking</p>
+                                    <p className="text-sm font-semibold text-green-800">Live Location Tracking</p>
                                     <p className="text-xs text-green-600">Your location is being shared with the customer in real-time</p>
                                 </div>
                             </div>

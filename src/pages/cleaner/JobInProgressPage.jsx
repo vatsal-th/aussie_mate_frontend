@@ -93,13 +93,10 @@ const CompleteJobPage = () => {
   };
 
   const handleSubmitPhoto = (photoId) => {
-    // TODO: Submit individual photo
-    console.log('Submitting photo:', photoId);
   };
 
   const handleCompleteJob = () => {
-    // TODO: Complete job API call
-    console.log('Completing job');
+
     navigate(`/cleaner/job-completed/${jobId}`);
   };
 

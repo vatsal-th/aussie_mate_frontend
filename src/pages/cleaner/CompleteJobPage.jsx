@@ -122,7 +122,6 @@ const CompleteJobPage = () => {
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
-    console.log('📁 Files selected:', files.length);
   };
 
   const handleAfterFileSelect = (event) => {
