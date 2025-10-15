@@ -96,7 +96,6 @@ const CompleteJobPage = () => {
   };
 
   const handleCompleteJob = () => {
-
     navigate(`/cleaner/job-completed/${jobId}`);
   };
 
