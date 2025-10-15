@@ -247,16 +247,16 @@ const InProgressJobDetailsPage = () => {
         if (typeof coordinates === 'string') {
             // If it's a string like "21.236941, 72.862925"
             const coords = coordinates.split(',').map(coord => parseFloat(coord.trim()));
-            lat = coords[0];
-            lng = coords[1];
+            lat = coords[1];
+            lng = coords[0];
         } else if (coordinates.lat && coordinates.lng) {
             // If it's an object like { lat: 21.236941, lng: 72.862925 }
             lat = coordinates.lat;
             lng = coordinates.lng;
         } else if (Array.isArray(coordinates)) {
             // If it's an array like [21.236941, 72.862925]
-            lat = coordinates[0];
-            lng = coordinates[1];
+            lat = coordinates[1];
+            lng = coordinates[0];
         }
 
         // Validate coordinates (lat should be between -90 and 90, lng between -180 and 180)
