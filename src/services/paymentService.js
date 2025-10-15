@@ -59,12 +59,29 @@ export const paymentService = {
    * @param {string} jobId - Job ID
    * @param {string} paymentMethod - 'cash' or 'online'
    * @param {boolean} useCheckout - Use Stripe Checkout (true) or Elements (false)
+   * @param {string} captureMethod - 'automatic' (instant) or 'manual' (3-day hold) - DEFAULT: 'manual'
    * @returns {Promise} Payment response with checkout URL or clientSecret
    */
-  createPayment: async (jobId, paymentMethod, useCheckout = true) => {
+  createPayment: async (jobId, paymentMethod, useCheckout = true, captureMethod = 'manual') => {
     return paymentApiRequest('/payments/create', {
       method: 'POST',
-      body: JSON.stringify({ jobId, paymentMethod, useCheckout }),
+      body: JSON.stringify({ 
+        jobId, 
+        paymentMethod, 
+        useCheckout,
+        captureMethod  // ← NEW: Added capture method
+      }),
+    });
+  },
+
+  /**
+   * Capture manually held payment
+   * @param {string} paymentId - Payment ID
+   * @returns {Promise} Capture response
+   */
+  capturePayment: async (paymentId) => {
+    return paymentApiRequest(`/payments/capture/${paymentId}`, {
+      method: 'POST',
     });
   },
 
@@ -167,6 +184,18 @@ export const handlePaymentError = (error) => {
     return error.response?.details?.map(d => d.msg).join(', ') || 'Validation failed.';
   }
 
+  if (error.response?.code === 'PAYMENT_NOT_FOUND') {
+    return 'Payment not found.';
+  }
+
+  if (error.response?.code === 'INVALID_PAYMENT_STATUS') {
+    return 'Payment cannot be captured. Invalid status.';
+  }
+
+  if (error.response?.code === 'CAPTURE_FAILED') {
+    return 'Payment capture failed. Please try again.';
+  }
+
   // Handle authentication errors
   if (error.message.includes('401') || error.message.includes('Unauthorized')) {
     return 'Session expired. Please login again.';
@@ -181,5 +210,29 @@ export const handlePaymentError = (error) => {
   return error.message || 'Payment processing failed. Please try again.';
 };
 
-export default paymentService;
+/**
+ * Helper: Get payment status badge info for UI
+ * @param {string} status - Payment status
+ * @returns {object} Badge color and text
+ */
+export const getPaymentStatusBadge = (status) => {
+  switch (status) {
+    case 'succeeded':
+    case 'completed':
+      return { color: 'green', text: 'Completed', icon: '✅' };
+    case 'pending_capture':
+      return { color: 'orange', text: 'Pending Capture', icon: '⏳' };
+    case 'processing':
+      return { color: 'blue', text: 'Processing', icon: '🔄' };
+    case 'pending':
+      return { color: 'yellow', text: 'Pending', icon: '⏱️' };
+    case 'failed':
+      return { color: 'red', text: 'Failed', icon: '❌' };
+    case 'cancelled':
+      return { color: 'gray', text: 'Cancelled', icon: '🚫' };
+    default:
+      return { color: 'gray', text: status, icon: '❓' };
+  }
+};
 
+export default paymentService;

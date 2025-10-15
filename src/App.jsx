@@ -36,6 +36,7 @@ import CustomerJobDetailsPage from './pages/customer/CustomerJobDetailsPage'
 import CustomerChatPage from './pages/customer/CustomerChatPage'
 import ConfirmYourCleanerPage from './pages/customer/ConfirmYourCleanerPage'
 import JobBookedSuccessfullyPage from './pages/customer/JobBookedSuccessfullyPage'
+import PaymentSuccessCallbackPage from './pages/customer/PaymentSuccessCallbackPage'
 import NotificationPage from './pages/profile/NotificationPage'
 import EarningsPage from './pages/cleaner/EarningsPage'
 import InProgressJobDetailsPage from './pages/cleaner/InProgressJobDetailsPage'
@@ -150,6 +151,11 @@ function App() {
         <Route path="/booking-confirmation/:jobId" element={
           <ProtectedRoute allowedRoles={['Customer']}>
             <JobBookedSuccessfullyPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/payment/success" element={
+          <ProtectedRoute allowedRoles={['Customer']}>
+            <PaymentSuccessCallbackPage />
           </ProtectedRoute>
         } />
         <Route path="/verify-documents" element={

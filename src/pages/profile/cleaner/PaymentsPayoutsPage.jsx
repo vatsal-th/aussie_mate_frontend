@@ -16,37 +16,7 @@ const PaymentsPayoutsPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [stripeAccountStatus, setStripeAccountStatus] = useState(null);
     const [backendStatus, setBackendStatus] = useState('checking');
-    const [payoutData, setPayoutData] = useState({
-        activeMethod: {
-            type: 'BANK TRANSFER',
-            bankName: 'Commonwealth Bank',
-            status: 'Verified',
-            bsb: '062-000',
-            accountNumber: '....5678'
-        },
-        payoutHistory: [
-            {
-                id: 1,
-                date: 'Aug 28, 2025',
-                amount: '$220.00',
-                description: 'Paid to Commonwealth Bank ....5678',
-                status: 'completed'
-            },
-            {
-                id: 2,
-                date: 'Aug 21, 2025',
-                amount: '$120.00',
-                description: 'Paid via PayID',
-                status: 'completed'
-            }
-        ]
-    });
 
-    const payoutMethods = [
-        { id: 'bank_transfer', label: 'Bank Transfer' },
-        { id: 'stripe_instant', label: 'Stripe Instant Payout' },
-        { id: 'payid', label: 'PayID' }
-    ];
 
     // Check Stripe account status
     const checkStripeStatus = async () => {
@@ -231,7 +201,6 @@ const PaymentsPayoutsPage = () => {
                                     onClick={handleStripeConnect}
                                     loading={stripeLoading}
                                     disabled={stripeLoading || backendStatus === 'offline'}
-                                    className="bg-white text-[#635BFF] hover:bg-white/90 font-semibold border-2 border-white"
                                     size="md"
                                 >
                                     {stripeLoading ? 'Connecting...' : 'Connect Stripe Account'}

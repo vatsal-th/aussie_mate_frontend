@@ -72,16 +72,28 @@ const ConfirmYourCleanerPage = () => {
         const response = await paymentService.createPayment(jobId, 'cash');
 
         if (response.success) {
-          // Navigate to success page
-          navigate('/job-success', {
-            state: {
-              jobId,
-              paymentMethod: 'cash',
-              amount: onlineNowAmount,
-              cashAmount: cashAmount,
-              totalAmount: finalCleanerData.total,
+          // Verify payment was created successfully before redirecting
+          try {
+            const paymentStatus = await paymentService.getPaymentStatus(jobId);
+            
+            if (paymentStatus.success && paymentStatus.data) {
+              // Payment verified, navigate to booking confirmation
+              navigate(`/booking-confirmation/${jobId}`, { replace: true });
+            } else {
+              setError('Payment created but verification failed. Please check "My Jobs" to confirm.');
+              setTimeout(() => {
+                navigate('/my-jobs');
+              }, 3000);
             }
-          });
+          } catch (verifyErr) {
+            console.error('Payment verification error:', verifyErr);
+            // Even if verification fails, payment might have succeeded
+            // Navigate to My Jobs as fallback
+            setError('Payment created but verification failed. Redirecting to My Jobs...');
+            setTimeout(() => {
+              navigate('/my-jobs');
+            }, 3000);
+          }
         }
       } catch (err) {
         console.error('Cash payment error:', err);
