@@ -588,7 +588,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       <h4 className="font-semibold text-primary-500">{cleaner.firstName} {cleaner.lastName}</h4>
                       <div className="flex items-center text-sm text-primary-200 font-medium">
                       <img src={PhoneIcon2} alt="Phone" className="w-4 h-4 mr-1" />
-                        {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}``
+                        {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex items-center bg-[#FFF2DE] text-primary-500 font-medium px-2 py-1 rounded-full text-xs">
