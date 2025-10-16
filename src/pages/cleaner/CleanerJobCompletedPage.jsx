@@ -5,7 +5,8 @@ import Button from '../../components/Button';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
-import { jobsAPI, jobPhotosAPI } from '../../services/api';
+import { jobsAPI, jobPhotosAPI, reviewsAPI } from '../../services/api';
+import StarFullIcon from '../../assets/rating.svg';
 
 const CleanerJobCompletedPage = () => {
   const { jobId } = useParams();
@@ -14,6 +15,7 @@ const CleanerJobCompletedPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [invoiceData, setInvoiceData] = useState(null);
+  const [customerReview, setCustomerReview] = useState(null);
 
   // Fetch job details
   useEffect(() => {
@@ -21,10 +23,11 @@ const CleanerJobCompletedPage = () => {
       try {
         setLoading(true);
         
-        // Fetch job details and photos in parallel
-        const [jobResponse, photosResponse] = await Promise.all([
+        // Fetch job details, photos, and reviews in parallel
+        const [jobResponse, photosResponse, reviewResponse] = await Promise.all([
           jobsAPI.getJobById(jobId),
-          jobPhotosAPI.getJobPhotos(jobId).catch(() => ({ data: { beforePhotos: [], afterPhotos: [] } }))
+          jobPhotosAPI.getJobPhotos(jobId).catch(() => ({ data: { beforePhotos: [], afterPhotos: [] } })),
+          reviewsAPI.getMyReviews().catch(() => null)
         ]);
         
         if (jobResponse.success && jobResponse.data) {
@@ -87,6 +90,26 @@ const CleanerJobCompletedPage = () => {
             paidOnline: transformedData.payment.paidOnline,
             cashToPay: transformedData.payment.cashToPay
           });
+          
+          // Set review data if available
+          if (reviewResponse && reviewResponse.success && reviewResponse.data) {
+            // Find review for this specific job
+            const reviews = reviewResponse.data.reviews || reviewResponse.data;
+            
+            const jobReview = Array.isArray(reviews) 
+              ? reviews.find(r => 
+                  r.jobId === jobId || 
+                  r.jobId?._id === jobId || 
+                  r.job === jobId ||
+                  r.job?._id === jobId ||
+                  r.job?.jobId === jobId
+                )
+              : null;
+            
+            if (jobReview) {
+              setCustomerReview({ review: jobReview });
+            }
+          }
         }
       } catch (err) {
         setError('Failed to load job details');
@@ -144,7 +167,7 @@ const CleanerJobCompletedPage = () => {
           {/* Job ID and Status Badge */}
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-primary-200 font-medium">{jobData.jobId}</div>
-            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium ">
               Completed
             </div>
           </div>
@@ -165,6 +188,50 @@ const CleanerJobCompletedPage = () => {
               <span className="text-sm text-primary-200 font-medium">{jobData.location}</span>
             </div>
           </div>
+
+          {/* Customer Review Section */}
+          {customerReview && customerReview.review && (
+            <div className="border-t border-gray-200 pt-4 mb-6">
+              <h3 className="text-lg font-semibold text-primary-500 mb-3 flex items-center gap-2">
+                Customer Review
+              </h3>
+              
+              <div className="shadow-custom rounded-xl p-4 border border-[#E5E7EB]">
+                {/* Rating */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                     <img src={StarFullIcon} alt="Star" className="w-5 h-5" />  
+                    ))}
+                  </div>
+                  <span className="text-base font-semibold text-gray-900">
+                    {customerReview.review.rating}/5
+                  </span>
+                </div>
+
+                {/* Feedback */}
+                {customerReview.review.feedback && (
+                  <p className="text-sm text-primary-500  mb-3 font-medium">
+                    "{customerReview.review.feedback}"
+                  </p>
+                )}
+
+                {/* Liked Aspects */}
+                {customerReview.review.likedAspects && customerReview.review.likedAspects.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {customerReview.review.likedAspects.map((aspect, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-[#EBF2FD] text-[#1F6FEB] text-xs font-medium rounded-full border border-[#9CC0F6]"
+                      >
+                        {aspect}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Payment Summary */}
           <div className="border-t border-gray-200 pt-4 mb-6">

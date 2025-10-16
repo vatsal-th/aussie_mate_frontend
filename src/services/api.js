@@ -879,6 +879,11 @@ export const reviewsAPI = {
   getCustomerReviews: async (page = 1, limit = 10) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     return apiRequest(`/reviews/customer?${params.toString()}`);
+  },
+
+  // Get my reviews (for logged-in user)
+  getMyReviews: async () => {
+    return apiRequest('/reviews/my-reviews');
   }
 };
 
