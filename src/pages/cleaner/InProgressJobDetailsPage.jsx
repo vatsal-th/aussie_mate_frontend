@@ -30,7 +30,7 @@ const InProgressJobDetailsPage = () => {
     const [customerLocation, setCustomerLocation] = useState(null);
     const [isTrackingLocation, setIsTrackingLocation] = useState(false);
     const [locationError, setLocationError] = useState(null);
-    const cleanerLocationRef = useRef(null); 
+    const cleanerLocationRef = useRef(null);
 
     useEffect(() => {
         const fetchJobDetails = async () => {
@@ -58,16 +58,16 @@ const InProgressJobDetailsPage = () => {
                         let lat, lng;
                         if (typeof coords === 'string') {
                             const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
-                            lat = coordsArr[0];
-                            lng = coordsArr[1];
+                            lat = coordsArr[1];
+                            lng = coordsArr[0];
                         } else if (coords.lat && coords.lng) {
                             lat = coords.lat;
                             lng = coords.lng;
                         } else if (Array.isArray(coords)) {
-                            lat = coords[0];
-                            lng = coords[1];
+                            lat = coords[1];
+                            lng = coords[0];
                         }
-                        
+
                         if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                             setCustomerLocation({ lat, lng });
                         } else if (lat && lng && (lat > 90 || lat < -90)) {
@@ -120,7 +120,7 @@ const InProgressJobDetailsPage = () => {
 
     // Haversine formula to calculate distance between two coordinates in meters
     const getDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371e3; // Earth's radius in meters
+        const R = 6371e3;
         const φ1 = lat1 * Math.PI / 180;
         const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -134,7 +134,7 @@ const InProgressJobDetailsPage = () => {
         return R * c; // Distance in meters
     };
 
-    useEffect(() => {
+ useEffect(() => {
         if (cleanerLocation && customerLocation) {
             const distance = getDistance(
                 cleanerLocation.lat,
@@ -143,9 +143,8 @@ const InProgressJobDetailsPage = () => {
                 customerLocation.lng
             );
 
-            const near = distance <= 100; // within 100 meters
+            const near = distance <= 100;
             setIsNearCustomer(near);
-
         }
     }, [cleanerLocation, customerLocation]);
 
@@ -220,22 +219,22 @@ const InProgressJobDetailsPage = () => {
         return () => {
             clearTimeout(connectionTimeout);
             clearTimeout(trackingTimeout);
-            
+
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
             }
-            
+
             if (locationInterval) {
                 clearInterval(locationInterval);
             }
-            
+
             if (socketService.isConnected && jobId) {
                 socketService.leaveJobRoom(jobId);
             }
-            
+
             setIsTrackingLocation(false);
         };
-    }, [jobId, job]); 
+    }, [jobId, job]);
 
 
     const getCoordinates = (coordinates) => {
@@ -301,7 +300,7 @@ const InProgressJobDetailsPage = () => {
         try {
             // Update job status to 'in-progress' or 'started'
             await jobsAPI.updateJobStatus(jobId, 'in-progress');
-            
+
             // Navigate to complete job page
             navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
         } catch (error) {
