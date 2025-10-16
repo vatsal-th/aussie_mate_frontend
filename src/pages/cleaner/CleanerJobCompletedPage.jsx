@@ -31,6 +31,16 @@ const CleanerJobCompletedPage = () => {
           const job = jobResponse.data;
           const photosData = photosResponse.data || photosResponse;
           
+          // If job is NOT completed, redirect to appropriate page
+          if (job.status === 'in_progress' || job.status === 'in-progress' || job.status === 'started') {
+            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+            return;
+          }
+          if (job.status === 'accepted') {
+            navigate(`/cleaner/in-progress-job/${jobId}`, { replace: true });
+            return;
+          }
+          
           // Transform job data to match expected format
           const acceptedQuote = job.quotes?.find(q => q.status === 'accepted');
           const customer = job.customerId;
