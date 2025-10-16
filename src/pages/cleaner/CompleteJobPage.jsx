@@ -339,12 +339,13 @@ const CompleteJobPage = () => {
         {/* Top Navigation */}
         <div className="flex items-center justify-between py-4 px-4">
           <div className="flex items-center gap-3">
-            <button
+            <Button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-            </button>
+              variant="ghost"
+              size="sm"
+              icon={ArrowLeftIcon}
+              className="p-2"
+            />
             <h1 className="text-lg font-semibold text-primary-500 truncate">
               {job?.title || job?.serviceType || 'Job Details'}
             </h1>
@@ -472,35 +473,39 @@ const CompleteJobPage = () => {
               {/* Selected Files Preview & Upload */}
               {selectedFiles.length > 0 && (
                 <div className="mt-6">
-                  <div className="space-y-2 mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 mb-4">
                     {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border-2 border-blue-200"
+                        />
+                        <button
+                          onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== index))}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
+                        </button>
                       </div>
                     ))}
                   </div>
-                  
-                  <button
+                  <div className="flex justify-end">    
+                  <Button
                     onClick={handleSubmitPhoto}
                     disabled={uploadingBefore}
-                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-colors ${
-                      uploadingBefore
-                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-[#1F6FEB] text-white hover:bg-blue-700'
-                    }`}
+                    loading={uploadingBefore}
+                    variant="primary"
+
                   >
                     {uploadingBefore ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
-                  </button>
+                  </Button>
+                  </div>
                 </div>
               )}
 
@@ -556,35 +561,38 @@ const CompleteJobPage = () => {
               {/* Selected Files Preview & Upload */}
               {selectedAfterFiles.length > 0 && (
                 <div className="mt-6">
-                  <div className="space-y-2 mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    {selectedAfterFiles.length} file{selectedAfterFiles.length > 1 ? 's' : ''} selected
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 mb-4">
                     {selectedAfterFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border-2 border-blue-200"
+                        />
+                        <button
+                          onClick={() => setSelectedAfterFiles(selectedAfterFiles.filter((_, i) => i !== index))}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
+                        </button>
                       </div>
                     ))}
                   </div>
                   
-                  <button
+                  <Button
                     onClick={handleSubmitAfterPhoto}
                     disabled={uploadingAfter}
-                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-colors ${
-                      uploadingAfter
-                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-[#1F6FEB] text-white hover:bg-blue-700'
-                    }`}
+                    loading={uploadingAfter}
+                    variant="primary"
+                    size="lg"
                   >
                     {uploadingAfter ? 'Uploading...' : `Upload ${selectedAfterFiles.length} Photo${selectedAfterFiles.length > 1 ? 's' : ''}`}
-                  </button>
+                  </Button>
                 </div>
               )}
 

@@ -100,33 +100,6 @@ const CleanerJobCompletedPage = () => {
     }
   }, [jobId]);
 
-  const handleDownloadInvoice = () => {
-    if (!invoiceData) return;
-    
-    const invoiceText = `
-INVOICE
-========================================
-Job ID: ${invoiceData.jobId}
-Customer: ${invoiceData.customerName}
-Completed: ${invoiceData.completedAt}
-----------------------------------------
-Total Amount: $${invoiceData.totalPaid}
-Paid Online: $${invoiceData.paidOnline}
-Cash Payment: $${invoiceData.cashToPay}
-========================================
-Thank you for using Aussie Mate!
-    `;
-    
-    const blob = new Blob([invoiceText], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `invoice-${invoiceData.jobId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  };
 
   if (loading) {
     return (
