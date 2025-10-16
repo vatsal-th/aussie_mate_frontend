@@ -44,13 +44,15 @@ const InProgressJobDetailsPage = () => {
                 ]);
 
                 if (jobResponse.success && jobResponse.data) {
-                    setJob(jobResponse.data);
-
                     // If job is already started (in-progress), redirect to complete job page
-                    if (jobResponse.data.status === 'in-progress' || jobResponse.data.status === 'started') {
+                    if (jobResponse.data.status === 'in_progress' || 
+                        jobResponse.data.status === 'in-progress' || 
+                        jobResponse.data.status === 'started') {
                         navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
                         return;
                     }
+
+                    setJob(jobResponse.data);
 
                     // Set customer location from job data
                     const coords = jobResponse.data.location?.coordinates;
@@ -147,6 +149,13 @@ const InProgressJobDetailsPage = () => {
             setIsNearCustomer(near);
         }
     }, [cleanerLocation, customerLocation]);
+
+    // Auto-redirect if job is already in progress
+    useEffect(() => {
+        if (job?.status === 'in_progress' || job?.status === 'in-progress' || job?.status === 'started') {
+            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+        }
+    }, [job?.status, jobId, navigate]);
 
     // Socket connection and location tracking
     useEffect(() => {
@@ -298,15 +307,31 @@ const InProgressJobDetailsPage = () => {
 
     const handleStartJob = async () => {
         try {
-            // Update job status to 'in-progress' or 'started'
-            await jobsAPI.updateJobStatus(jobId, 'in-progress');
+            // Check if job is already in progress
+            if (job?.status === 'in_progress' || job?.status === 'in-progress' || job?.status === 'started') {
+                // Already in progress, just navigate
+                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+                return;
+            }
+
+            // Update job status to 'in_progress'
+            await jobsAPI.updateJobStatus(jobId, 'in_progress');
 
             // Navigate to complete job page
             navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
         } catch (error) {
             console.error('❌ Error updating job status:', error);
-            // Still navigate even if status update fails
-            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+            
+            // Check if it's a validation error about already being in progress
+            if (error.message?.includes('already') || 
+                error.message?.includes('in progress') ||
+                error.response?.code === 'INVALID_STATUS_TRANSITION') {
+                // Job is already in progress, just navigate
+                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+            } else {
+                // Still navigate even on error to not block the user
+                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+            }
         }
     };
 

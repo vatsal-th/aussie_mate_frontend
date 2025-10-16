@@ -42,8 +42,17 @@ const CompleteJobPage = () => {
         const jobData = jobResponse.data || jobResponse;
         
         // If job is NOT started yet, redirect back to in-progress page
-        if (jobData.status !== 'in-progress' && jobData.status !== 'started') {
+        if (jobData.status !== 'in_progress' && 
+            jobData.status !== 'in-progress' && 
+            jobData.status !== 'started' &&
+            jobData.status !== 'completed') {
           navigate(`/cleaner/in-progress-job/${jobId}`, { replace: true });
+          return;
+        }
+        
+        // If job is already completed, redirect to completed page
+        if (jobData.status === 'completed') {
+          navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
           return;
         }
         
@@ -101,6 +110,20 @@ const CompleteJobPage = () => {
 
     return () => clearInterval(timer);
   }, [jobId]);
+
+  // Auto-redirect if job status changes
+  useEffect(() => {
+    if (!job) return;
+    
+    // If job gets completed while on this page, redirect to completed page
+    if (job.status === 'completed') {
+      navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
+    }
+    // If job goes back to accepted status, redirect to in-progress page
+    else if (job.status === 'accepted') {
+      navigate(`/cleaner/in-progress-job/${jobId}`, { replace: true });
+    }
+  }, [job?.status, jobId, navigate]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
