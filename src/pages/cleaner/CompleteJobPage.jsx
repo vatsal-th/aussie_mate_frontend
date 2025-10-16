@@ -583,7 +583,7 @@ const CompleteJobPage = () => {
                       </div>
                     ))}
                   </div>
-                  
+                  <div className="flex justify-end">    
                   <Button
                     onClick={handleSubmitAfterPhoto}
                     disabled={uploadingAfter}
@@ -593,6 +593,7 @@ const CompleteJobPage = () => {
                   >
                     {uploadingAfter ? 'Uploading...' : `Upload ${selectedAfterFiles.length} Photo${selectedAfterFiles.length > 1 ? 's' : ''}`}
                   </Button>
+                  </div>
                 </div>
               )}
 
@@ -620,7 +621,7 @@ const CompleteJobPage = () => {
             <Button
               onClick={handleCompleteJob}
               variant="secondary"
-              className={`px-8 py-4 rounded-xl font-semibold text-lg transition-colors ${
+              className={` rounded-xl font-semibold text-lg transition-colors ${
                 beforePhotosUploaded && afterPhotosUploaded && !completingJob
                   ? 'bg-gray-200 text-gray-900 hover:bg-gray-300 cursor-pointer'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
