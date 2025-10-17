@@ -78,7 +78,7 @@ const JobDetailsPage = () => {
       }) : 'Date not specified',
       location: apiJob.location?.address || 'Location not specified',
       description: apiJob.instructions || 'No specific instructions provided.',
-      propertySize: `${apiJob.bedrooms || 0}BHK, ${apiJob.bathrooms || 0} bathrooms`,
+      propertySize: `${apiJob.propertySize}`,
       customerName: apiJob.customerId?.firstName || apiJob.customerId?.lastName || apiJob.customer?.firstName || apiJob.customer?.name || apiJob.customerName || apiJob.postedBy || 'Customer',
       customerPhone: '+61 412 345 678', // Will be updated when customer data is available
       images: apiJob.photos?.map(photo => photo.url) || [],
