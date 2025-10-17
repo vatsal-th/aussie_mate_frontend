@@ -134,25 +134,32 @@ const CustomerDashboard = () => {
 
     // Listen for jobCompleted event
     const handleJobCompleted = (data) => {
+      console.log('🎯 [DASHBOARD] handleJobCompleted called with data:', data);
       
       const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
       
-      setCompletedJobInfo({
+      const jobInfo = {
         jobId: data.jobDisplayId || data.jobId,  
         cleanerName: cleanerName,
         jobTitle: data.jobTitle || data.serviceType || 'Cleaning Service',
         completedAt: data.completedAt || data.timestamp
-      });
+      };
       
+      console.log('📦 [DASHBOARD] Setting completedJobInfo:', jobInfo);
+      
+      setCompletedJobInfo(jobInfo);
       setShowJobCompleteModal(true);
       
+      console.log('✅ [DASHBOARD] Modal should be visible now');
     };
 
     // Register event listener
+    console.log('👂 [DASHBOARD] Registering jobCompleted listener');
     socketService.on('jobCompleted', handleJobCompleted);
 
     // Cleanup: Only remove listener, don't disconnect socket
     return () => {
+      console.log('🗑️ [DASHBOARD] Removing jobCompleted listener');
       socketService.off('jobCompleted', handleJobCompleted);
     };
   }, []);

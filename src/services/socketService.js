@@ -50,10 +50,16 @@ class SocketService {
       console.log('✅ Socket connected successfully');
       console.log('📡 Socket ID:', this.socket.id);
       
+      // Join user-specific room for notifications
       try {
         const userStr = localStorage.getItem('user');
         if (userStr) {
-          JSON.parse(userStr);
+          const user = JSON.parse(userStr);
+          const userId = user._id || user.id || user.userId;
+          if (userId) {
+            console.log('🚪 Joining user room:', userId);
+            this.joinUserRoom(userId);
+          }
         }
       } catch (e) {
         console.error('❌ Error parsing user data:', e);
@@ -102,8 +108,15 @@ class SocketService {
       this.notifyListeners('locationUpdateAcknowledged', data);
     });
 
+    // User room events
+    this.socket.on('user_room_joined', (data) => {
+      console.log('✅ Joined user room successfully:', data);
+    });
+
     // 🎯 JOB COMPLETION EVENT - ENHANCED LOGGING
     this.socket.on('jobCompleted', (data) => {
+      console.log('🎉 JOB COMPLETED EVENT RECEIVED:', data);
+      console.log('📋 Event data:', JSON.stringify(data, null, 2));
       this.notifyListeners('jobCompleted', data);
     });
 
@@ -250,6 +263,16 @@ class SocketService {
         longitude,
         jobId
       });
+    }
+  }
+
+  // Join user-specific room for notifications
+  joinUserRoom(userId) {
+    if (this.socket && this.isConnected) {
+      console.log('📤 Emitting join_user_room for userId:', userId);
+      this.socket.emit('join_user_room', { userId });
+    } else {
+      console.warn('⚠️ Cannot join user room: Socket not connected');
     }
   }
 }
