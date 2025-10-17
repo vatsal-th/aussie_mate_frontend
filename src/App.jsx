@@ -24,6 +24,7 @@ import VerifyDocumentsPage from './pages/auth/VerifyDocumentsPage'
 import VerificationStatusPage from './pages/profile/cleaner/VerificationStatusPage'
 import AvailabilityPage from './pages/profile/cleaner/AvailabilityPage'
 import PaymentsPayoutsPage from './pages/profile/cleaner/PaymentsPayoutsPage'
+import ReviewsPage from './pages/profile/cleaner/ReviewsPage'
 import SetAvailabilityPage from './pages/cleaner/SetAvailabilityPage'
 import SetCleanerLocationPage from './pages/cleaner/SetCleanerLocationPage'
 import SelectServicesPage from './pages/cleaner/SelectServicesPage'
@@ -176,6 +177,11 @@ function App() {
         <Route path="/payments" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <PaymentsPayoutsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/reviews" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <ReviewsPage />
           </ProtectedRoute>
         } />
         <Route path="/set-availability" element={
