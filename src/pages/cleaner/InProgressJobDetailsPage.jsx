@@ -44,14 +44,11 @@ const InProgressJobDetailsPage = () => {
                 ]);
 
                 if (jobResponse.success && jobResponse.data) {
-                    // If job is already started (in-progress), redirect to complete job page
-                    if (jobResponse.data.status === 'in_progress' || 
-                        jobResponse.data.status === 'in-progress' || 
-                        jobResponse.data.status === 'started') {
-                        navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+                    if (jobResponse.data.status === 'completed') {
+                        navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
                         return;
                     }
-
+                    
                     setJob(jobResponse.data);
 
                     // Set customer location from job data
@@ -150,10 +147,10 @@ const InProgressJobDetailsPage = () => {
         }
     }, [cleanerLocation, customerLocation]);
 
-    // Auto-redirect if job is already in progress
+    // Auto-redirect only if job is completed
     useEffect(() => {
-        if (job?.status === 'in_progress' || job?.status === 'in-progress' || job?.status === 'started') {
-            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
+        if (job?.status === 'completed') {
+            navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
         }
     }, [job?.status, jobId, navigate]);
 
@@ -305,34 +302,10 @@ const InProgressJobDetailsPage = () => {
         // Handle "On the way" action
     };
 
-    const handleStartJob = async () => {
-        try {
-            // Check if job is already in progress
-            if (job?.status === 'in_progress' || job?.status === 'in-progress' || job?.status === 'started') {
-                // Already in progress, just navigate
-                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
-                return;
-            }
-
-            // Update job status to 'in_progress'
-            await jobsAPI.updateJobStatus(jobId, 'in_progress');
-
-            // Navigate to complete job page
-            navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
-        } catch (error) {
-            console.error('❌ Error updating job status:', error);
-            
-            // Check if it's a validation error about already being in progress
-            if (error.message?.includes('already') || 
-                error.message?.includes('in progress') ||
-                error.response?.code === 'INVALID_STATUS_TRANSITION') {
-                // Job is already in progress, just navigate
-                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
-            } else {
-                // Still navigate even on error to not block the user
-                navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
-            }
-        }
+    const handleStartJob = () => {
+        // Customer payment करने पर status already 'in_progress' हो जाती है
+        // यहाँ सिर्फ CompleteJobPage पर navigate करना है
+        navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
     };
 
     if (loading) {

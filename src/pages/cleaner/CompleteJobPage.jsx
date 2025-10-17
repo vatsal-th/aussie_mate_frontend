@@ -41,21 +41,12 @@ const CompleteJobPage = () => {
         const jobResponse = await jobsAPI.getJobById(jobId);
         const jobData = jobResponse.data || jobResponse;
         
-        // If job is NOT started yet, redirect back to in-progress page
-        if (jobData.status !== 'in_progress' && 
-            jobData.status !== 'in-progress' && 
-            jobData.status !== 'started' &&
-            jobData.status !== 'completed') {
-          navigate(`/cleaner/in-progress-job/${jobId}`, { replace: true });
-          return;
-        }
-        
-        // If job is already completed, redirect to completed page
+        // Only redirect if job is completed
         if (jobData.status === 'completed') {
           navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
           return;
         }
-        
+
         // Fetch existing photos
         const photosResponse = await jobPhotosAPI.getJobPhotos(jobId);
         const photosData = photosResponse.data || photosResponse;

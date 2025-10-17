@@ -69,7 +69,7 @@ const ConfirmYourCleanerPage = () => {
         setProcessing(true);
         setError(null);
 
-        const response = await paymentService.createPayment(jobId, 'cash');
+        const response = await paymentService.createPayment(jobId, 'cash', true, 'automatic');
 
         if (response.success) {
           // Verify payment was created successfully before redirecting
@@ -107,8 +107,8 @@ const ConfirmYourCleanerPage = () => {
         setProcessing(true);
         setError(null);
 
-        // Create payment with Stripe Checkout (useCheckout = true)
-        const response = await paymentService.createPayment(jobId, 'online', true);
+        // Create payment with Stripe Checkout (useCheckout = true, captureMethod = 'automatic')
+        const response = await paymentService.createPayment(jobId, 'online', true, 'automatic');
 
         if (response.success && response.data.url) {
           // Redirect to Stripe Checkout page

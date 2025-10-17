@@ -10,7 +10,13 @@ class SocketService {
   }
 
   connect(token) {
-    if (this.socket) this.disconnect();
+    if (this.socket && this.isConnected) {
+      return;
+    }
+    
+    if (this.socket && !this.isConnected) {
+      this.disconnect();
+    }
 
     let backendURL = API_CONFIG.BASE_URL;
     
@@ -30,6 +36,7 @@ class SocketService {
     }
 
     console.log('🔌 Connecting to WebSocket:', backendURL);
+    console.log('🔑 Auth token (first 20 chars):', token?.substring(0, 20) + '...');
 
     this.socket = io(backendURL, {
       auth: { token },
@@ -41,6 +48,17 @@ class SocketService {
     this.socket.on('connect', () => {
       this.isConnected = true;
       console.log('✅ Socket connected successfully');
+      console.log('📡 Socket ID:', this.socket.id);
+      
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          JSON.parse(userStr);
+        }
+      } catch (e) {
+        console.error('❌ Error parsing user data:', e);
+      }
+      
       this.notifyListeners('connectionStatus', true);
     });
 
@@ -67,18 +85,16 @@ class SocketService {
       this.notifyListeners('chatNotification', notification);
     });
 
-    this.socket.on('messages_marked_read', (data) => 
-      this.notifyListeners('messagesMarkedRead', data)
-    );
+    this.socket.on('messages_marked_read', (data) => {
+      this.notifyListeners('messagesMarkedRead', data);
+    });
 
     // Location tracking events
     this.socket.on('job_room_joined', (data) => {
-      console.log('✅ Joined job room:', data);
       this.notifyListeners('jobRoomJoined', data);
     });
 
     this.socket.on('cleaner_location_update', (data) => {
-      console.log('📍 Cleaner location update received:', data);
       this.notifyListeners('cleanerLocationUpdate', data);
     });
 
@@ -86,13 +102,13 @@ class SocketService {
       this.notifyListeners('locationUpdateAcknowledged', data);
     });
 
-    // Job completion event
+    // 🎯 JOB COMPLETION EVENT - ENHANCED LOGGING
     this.socket.on('jobCompleted', (data) => {
-      console.log('🎉 Job completed event received in socketService:', data);
       this.notifyListeners('jobCompleted', data);
     });
 
     this.socket.on('error', (error) => {
+      console.error('❌ Socket error:', error);
       if (error.message === 'Failed to join chat') {
         return;
       } else if (error.message === 'Access denied') {
@@ -130,21 +146,25 @@ class SocketService {
   }
 
   off(event, callback) {
+    const beforeCount = this.listeners.length;
     this.listeners = this.listeners.filter(
       listener => !(listener.event === event && listener.callback === callback)
     );
+    const afterCount = this.listeners.length;
   }
 
   notifyListeners(event, data) {
-    this.listeners
-      .filter(listener => listener.event === event)
-      .forEach(listener => listener.callback(data));
+    const matchingListeners = this.listeners.filter(listener => listener.event === event);
+      matchingListeners.forEach((listener, index) => {
+      listener.callback(data);
+    });
   }
 
   // Socket actions
   joinChat(jobId, cleanerId) {
     if (this.socket && this.isConnected) {
       this.socket.emit('join_chat', { jobId, cleanerId });
+    } else {
     }
   }
 
@@ -213,16 +233,12 @@ class SocketService {
   // Location tracking methods
   joinJobRoom(jobId) {
     if (this.socket && this.isConnected) {
-      console.log(`🔌 Joining job room: ${jobId}`);
       this.socket.emit('join_job_room', { jobId });
-    } else {
-      console.warn('⚠️ Socket not connected, cannot join job room');
     }
   }
 
   leaveJobRoom(jobId) {
     if (this.socket && this.isConnected) {
-      console.log(`👋 Leaving job room: ${jobId}`);
       this.socket.emit('leave_job_room', { jobId });
     }
   }
@@ -234,8 +250,6 @@ class SocketService {
         longitude,
         jobId
       });
-    } else {
-      console.warn('⚠️ Socket not connected, cannot update location');
     }
   }
 }

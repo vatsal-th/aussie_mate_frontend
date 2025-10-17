@@ -112,8 +112,6 @@ const CustomerDashboard = () => {
           const jobData = JSON.parse(completedJob);
           setCompletedJobInfo(jobData);
           setShowJobCompleteModal(true);
-          // Remove from localStorage after showing
-          localStorage.removeItem('recentlyCompletedJob');
         } catch (error) {
           console.error('Error parsing completed job data:', error);
         }
@@ -127,13 +125,15 @@ const CustomerDashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     
-    if (token && !socketService.isConnected) {
+    if (!token) return;
+    
+    // Only connect if not already connected
+    if (!socketService.isConnected) {
       socketService.connect(token);
     }
 
     // Listen for jobCompleted event
     const handleJobCompleted = (data) => {
-      console.log('🎉 Job completed event received:', data);
       
       const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
       
@@ -151,7 +151,7 @@ const CustomerDashboard = () => {
     // Register event listener
     socketService.on('jobCompleted', handleJobCompleted);
 
-    // Cleanup on unmount
+    // Cleanup: Only remove listener, don't disconnect socket
     return () => {
       socketService.off('jobCompleted', handleJobCompleted);
     };
