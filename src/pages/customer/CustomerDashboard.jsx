@@ -9,6 +9,7 @@ import Header from '../../components/Header';
 import Button from '../../components/Button';
 import JobCompleteModal from '../../components/JobCompleteModal';
 import { jobsAPI } from '../../services/api';
+import { socketService } from '../../services/socketService';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
 import CardBG4 from '../../assets/CardBG4.png';
@@ -120,6 +121,40 @@ const CustomerDashboard = () => {
     };
 
     checkCompletedJobs();
+  }, []);
+
+  // WebSocket: Listen for job completion events
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    
+    if (token && !socketService.isConnected) {
+      socketService.connect(token);
+    }
+
+    // Listen for jobCompleted event
+    const handleJobCompleted = (data) => {
+      console.log('🎉 Job completed event received:', data);
+      
+      const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
+      
+      setCompletedJobInfo({
+        jobId: data.jobDisplayId || data.jobId,  
+        cleanerName: cleanerName,
+        jobTitle: data.jobTitle || data.serviceType || 'Cleaning Service',
+        completedAt: data.completedAt || data.timestamp
+      });
+      
+      setShowJobCompleteModal(true);
+      
+    };
+
+    // Register event listener
+    socketService.on('jobCompleted', handleJobCompleted);
+
+    // Cleanup on unmount
+    return () => {
+      socketService.off('jobCompleted', handleJobCompleted);
+    };
   }, []);
 
   // Fetch jobs data
@@ -446,6 +481,7 @@ const CustomerDashboard = () => {
         onClose={handleCloseJobCompleteModal}
         cleanerName={completedJobInfo?.cleanerName || "John"}
         jobTitle={completedJobInfo?.jobTitle || "Cleaning Service"}
+        jobId={completedJobInfo?.jobId || ""}
       />
     </div>
   );

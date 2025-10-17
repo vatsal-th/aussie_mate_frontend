@@ -86,6 +86,12 @@ class SocketService {
       this.notifyListeners('locationUpdateAcknowledged', data);
     });
 
+    // Job completion event
+    this.socket.on('jobCompleted', (data) => {
+      console.log('🎉 Job completed event received in socketService:', data);
+      this.notifyListeners('jobCompleted', data);
+    });
+
     this.socket.on('error', (error) => {
       if (error.message === 'Failed to join chat') {
         return;
