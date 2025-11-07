@@ -6,8 +6,8 @@ import {
   DirectionsRenderer,
   Polyline,
 } from "@react-google-maps/api";
-import Marker1Icon from "../assets/marker1.svg";
-import Marker2Icon from "../assets/marker2.svg";
+import Marker1Icon from "../../assets/marker1.svg";
+import Marker2Icon from "../../assets/marker2.svg";
 
 // Define libraries outside component to prevent re-creation
 const GOOGLE_MAPS_LIBRARIES = ["places"];

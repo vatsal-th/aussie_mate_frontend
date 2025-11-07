@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
+import { Header } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import SwitchIcon from '../../assets/Switch.svg';
 import { useAuth } from '../../contexts/AuthContext';

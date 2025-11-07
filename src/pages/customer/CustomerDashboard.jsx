@@ -5,9 +5,7 @@ import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
-import JobCompleteModal from '../../components/JobCompleteModal';
+import { Header, Button, JobCompleteModal } from '../../components';
 import { jobsAPI } from '../../services/api';
 import { socketService } from '../../services/socketService';
 import CardBG2 from '../../assets/CardBG2.png';
@@ -24,10 +22,9 @@ import HandymanImage from '../../assets/Handyman.png';
 import HousekeepingImage from '../../assets/Housekeeping.png';
 import PetSittingImage from '../../assets/Pet Sitting.png';
 import NDISSupportImage from '../../assets/NDIS Support.png';
-import RetailAuditorImage from '../../assets/Retail Auditor.png';
+import CommercialCleaningImage from '../../assets/commercialCleaning.svg';
 
 const CustomerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('messages');
   const [ongoingJobs, setOngoingJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,6 +63,9 @@ const CustomerDashboard = () => {
     if (s === 'completed') {
       return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
     }
+    if (s === 'pending_customer_confirmation') {
+      return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };
+    }
     if (['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) {
       return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
     }
@@ -90,28 +90,15 @@ const CustomerDashboard = () => {
     setCompletedJobInfo(null);
   };
 
-  // Test function to show modal
-  const handleTestModal = () => {
-    setCompletedJobInfo({
-      jobId: 'test-123',
-      cleanerName: 'John',
-      jobTitle: 'House Cleaning Service',
-      completedAt: new Date().toISOString()
-    });
-    setShowJobCompleteModal(true);
-  };
-
-  // Check for completed jobs and show modal
   useEffect(() => {
     const checkCompletedJobs = () => {
-      // Check if there are any jobs that were just completed
-      // This would typically come from a real-time notification or API call
       const completedJob = localStorage.getItem('recentlyCompletedJob');
       if (completedJob) {
         try {
           const jobData = JSON.parse(completedJob);
           setCompletedJobInfo(jobData);
           setShowJobCompleteModal(true);
+          localStorage.removeItem('recentlyCompletedJob');
         } catch (error) {
           console.error('Error parsing completed job data:', error);
         }
@@ -120,51 +107,70 @@ const CustomerDashboard = () => {
 
     checkCompletedJobs();
   }, []);
-
-  // WebSocket: Listen for job completion events
+        
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     
-    if (!token) return;
+    console.log('useEffect running...');
+    console.log('Token exists:', !!token);
     
-    // Only connect if not already connected
+    if (!token) {
+      console.warn('No auth token found');
+      return;
+    }
+    
+    // Connect to socket if not connected
     if (!socketService.isConnected) {
+      console.log('Socket not connected, connecting...');
       socketService.connect(token);
+    } else {
+      console.log('Socket already connected');
     }
 
-    // Listen for jobCompleted event
+    // Job Completed event handler
     const handleJobCompleted = (data) => {
-      console.log('🎯 [DASHBOARD] handleJobCompleted called with data:', data);
+      console.log('JOB COMPLETED EVENT RECEIVED');
+            console.log('Event data:', JSON.stringify(data, null, 2));
       
-      const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
+      const status = data?.status || 'completed';
+      console.log('Status:', status);
       
-      const jobInfo = {
-        jobId: data.jobDisplayId || data.jobId,  
-        cleanerName: cleanerName,
-        jobTitle: data.jobTitle || data.serviceType || 'Cleaning Service',
-        completedAt: data.completedAt || data.timestamp
-      };
-      
-      console.log('📦 [DASHBOARD] Setting completedJobInfo:', jobInfo);
-      
-      setCompletedJobInfo(jobInfo);
-      setShowJobCompleteModal(true);
-      
-      console.log('✅ [DASHBOARD] Modal should be visible now');
+      // Only show modal for pending_customer_confirmation status
+      if (status === 'pending_customer_confirmation') {
+        console.log('Status is pending_customer_confirmation - showing modal');
+        
+        const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
+        
+        const jobInfo = {
+          jobId: data.jobDisplayId || data.jobId,  
+          cleanerName: cleanerName,
+          jobTitle: data.jobTitle || data.serviceType || 'Cleaning Service',
+          completedAt: data.completedAt || data.timestamp,
+          status: status 
+        };
+        
+        console.log('Setting completedJobInfo:', jobInfo);
+        
+        setCompletedJobInfo(jobInfo);
+        setShowJobCompleteModal(true);
+        
+              console.log('Modal should be visible now');
+      } else {
+        console.log(`Ignoring jobCompleted event for status: ${status}`);
+      }
     };
 
     // Register event listener
-    console.log('👂 [DASHBOARD] Registering jobCompleted listener');
+    console.log('Registering jobCompleted listener');
     socketService.on('jobCompleted', handleJobCompleted);
 
-    // Cleanup: Only remove listener, don't disconnect socket
+    // Cleanup
     return () => {
-      console.log('🗑️ [DASHBOARD] Removing jobCompleted listener');
+      console.log('Cleaning up - removing jobCompleted listener');
       socketService.off('jobCompleted', handleJobCompleted);
     };
   }, []);
 
-  // Fetch jobs data
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -172,7 +178,6 @@ const CustomerDashboard = () => {
         const res = await jobsAPI.getAllJobs({ page: 1, limit: 10 });
         const list = res?.data?.jobs || res?.data || res || [];
 
-        // Normalize into UI shape
         const normalized = list.map((j) => {
           const status = (j.status || '').toString();
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
@@ -217,14 +222,14 @@ const CustomerDashboard = () => {
     },
     {
       id: 'ndis',
-      name: 'NDIS Support',
+      name: 'Support Services',
       image: NDISSupportImage,
-      description: 'NDIS support services'
+      description: 'Support services'
     },
     {
       id: 'retail',
-      name: 'Retail Auditor',
-      image: RetailAuditorImage,
+      name: 'Commercial Cleaning',
+      image: CommercialCleaningImage,
       description: 'Retail auditing services'
     },
     {
@@ -489,6 +494,7 @@ const CustomerDashboard = () => {
         cleanerName={completedJobInfo?.cleanerName || "John"}
         jobTitle={completedJobInfo?.jobTitle || "Cleaning Service"}
         jobId={completedJobInfo?.jobId || ""}
+        status={completedJobInfo?.status || "pending_customer_confirmation"}
       />
     </div>
   );

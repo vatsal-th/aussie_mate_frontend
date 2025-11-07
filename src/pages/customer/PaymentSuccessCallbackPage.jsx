@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { paymentService } from '../../services/paymentService';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 
 const PaymentSuccessCallbackPage = () => {
   const navigate = useNavigate();

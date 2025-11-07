@@ -5,7 +5,7 @@ import ExportIcon from '../../assets/export.svg';
 import BusinessIcon from '../../assets/business.svg';
 import DollarIcon from '../../assets/dollar.svg';
 import TimeIcon from '../../assets/time.svg';
-import Header from '../../components/Header';
+import { Header } from '../../components';
 
 const EarningsPage = () => {
   const navigate = useNavigate();

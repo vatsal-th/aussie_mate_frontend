@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
-import JobCompleteModal from '../../components/JobCompleteModal';
-import MapWithPolyline from '../../components/MapWithPolyline';
+import { Header, Button, JobCompleteModal, MapWithPolyline } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/location.svg';

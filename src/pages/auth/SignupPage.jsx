@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { signupSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { FloatingLabelInput, Button } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 
 
 const SignupPage = () => {
+  const location = useLocation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,7 +19,8 @@ const SignupPage = () => {
     role: '',
     password: '',
     confirmPassword: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    isNDISParticipant: false
   });
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,15 +30,20 @@ const SignupPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const roleOptions = [
-    'Customer',
-    'Student Cleaner',
-    'Professional Cleaner',
-    'NDIS Assistant',
-    'Retail Auditor',
-    'Pet Sitter',
-    'Housekeeper'
-  ];
+  // Get role and NDIS status from URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const role = params.get('role');
+    const ndis = params.get('ndis') === 'true';
+    
+    if (role) {
+      setFormData(prev => ({
+        ...prev,
+        role: role,
+        isNDISParticipant: ndis
+      }));
+    }
+  }, [location.search]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -72,50 +79,8 @@ const SignupPage = () => {
     setIsLoading(true);
 
     try {
-      // Validate passwords match
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate required fields
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.password) {
-        setError('Please fill in all required fields');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        setError('Please enter a valid email address');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate password strength
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate phone number - only 9 digits allowed
-      const cleanedPhone = formData.phone.replace(/[^\d]/g, '');
-      if (cleanedPhone.length !== 9) {
-        setError('Phone number must be exactly 9 digits');
-        setIsLoading(false);
-        return;
-      }
-
-
-      // Validate terms agreement
-      if (!formData.agreeToTerms) {
-        setError('Please agree to the Terms & Conditions');
-        setIsLoading(false);
-        return;
-      }
+      // Validate using Yup schema
+      await signupSchema.validate(formData, { abortEarly: false });
 
       // Prepare data for API
       const { agreeToTerms, ...userData } = formData;
@@ -146,30 +111,32 @@ const SignupPage = () => {
         password: userData.password,
         confirmPassword: userData.confirmPassword,
         userType: roleMapping[userData.role] || userData.role.toLowerCase(),
-        role: userData.role, // Keep the original role for backend
+        role: userData.role, 
       };
-
-
 
       await register(apiData);
 
-      // Navigate based on user role
+      // Navigate based on user role and NDIS status
       if (formData.role === 'Customer') {
-        navigate('/location');
+        if (formData.isNDISParticipant) {
+          navigate('/ndis-plan-info');
+        } else {
+          navigate('/location');
+        }
       } else {
-        // For cleaner roles, navigate to document verification first
         navigate('/verify-documents');
       }
     } catch (error) {
-
-
-      // Show more detailed error information
+      // Handle validation errors
       let errorMessage = 'Registration failed. Please try again.';
 
-      if (error.status === 400) {
+      // If it's a Yup validation error
+      if (error.inner) {
+        const firstError = error.inner[0];
+        errorMessage = firstError.message;
+      } else if (error.status === 400) {
         errorMessage = 'Invalid data provided. Please check all fields and try again.';
         if (error.response && error.response.errors) {
-          // Handle different error formats
           const errors = error.response.errors;
           
           // Handle array format with objects containing msg, path, type
@@ -223,13 +190,6 @@ const SignupPage = () => {
     }
   };
 
-  const handleRoleSelect = (role) => {
-    setFormData({
-      ...formData,
-      role: role
-    });
-    setShowRoleDropdown(false);
-  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 sm:p-4">
@@ -291,43 +251,6 @@ const SignupPage = () => {
                 required
               />
 
-              {/* Role Selection */}
-              <div className="relative">
-                <div
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="w-full px-4 border border-gray-300 rounded-[36px] focus:outline-none transition-all duration-200 cursor-pointer bg-white min-h-[56px] flex items-center text-base peer"
-                >
-                  <span className={`${formData.role ? 'text-primary-500' : 'text-gray-500 '}`}>
-                    {formData.role || 'Select your role'}
-                  </span>
-                </div>
-                {/* Custom dropdown arrow */}
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                  <svg
-                    className={`w-5 h-5 text-primary-500 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-
-                {/* Dropdown Options */}
-                {showRoleDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
-                    {roleOptions.map((role, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleRoleSelect(role)}
-                        className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl text-sm sm:text-base"
-                      >
-                        <span className="text-primary-500">{role}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {/* Student Info Message */}
               {formData.role === 'Student Cleaner' && (
@@ -420,7 +343,9 @@ const SignupPage = () => {
               size="md"
               className="mt-4"
             >
-              {formData.role === 'Customer'
+              {formData.role === 'Customer' && formData.isNDISParticipant
+                ? 'Continue For NDIS Verification'
+                : formData.role === 'Customer'
                 ? 'Continue & Set My Location'
                 : 'Continue For Verification'
               }

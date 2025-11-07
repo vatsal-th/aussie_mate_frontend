@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
@@ -197,8 +196,8 @@ const CompleteJobPage = () => {
       setCompletingJob(true);
       setUploadError(null);
       
-      // Update job status to completed
-      const response = await jobPhotosAPI.updateJobStatus(jobId, 'completed');
+      // Update job status to pending_customer_confirmation
+      const response = await jobPhotosAPI.updateJobStatus(jobId, 'pending_customer_confirmation');
       
       if (response.success) {
         // Store completion data for customer notification
@@ -206,11 +205,10 @@ const CompleteJobPage = () => {
           jobId: jobId,
           cleanerName: user?.name || user?.firstName || "Cleaner", // Use dynamic user data
           jobTitle: job?.title || job?.serviceType || "Cleaning Service",
-          completedAt: new Date().toISOString()
+          completedAt: new Date().toISOString(),
+          status: 'pending_customer_confirmation'
         };
         
-        // Store in localStorage for customer dashboard to pick up
-        localStorage.setItem('recentlyCompletedJob', JSON.stringify(completedJobData));
         
         setSuccessMessage('Job completed successfully! Redirecting...');
         setTimeout(() => {

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
+import { resetPasswordSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { FloatingLabelInput, Button } from '../../components';
 
 const ResetPasswordPage = () => {
   const [formData, setFormData] = useState({
@@ -45,19 +45,8 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
 
     try {
-      // Validate passwords match
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match. Please make sure both passwords are identical.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate password strength
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        setIsLoading(false);
-        return;
-      }
+      // Validate using Yup schema
+      await resetPasswordSchema.validate(formData, { abortEarly: false });
 
       if (!token) {
         setError('Invalid reset token. Please request a new password reset.');
@@ -68,6 +57,13 @@ const ResetPasswordPage = () => {
       await authAPI.resetPassword(token, formData.password, formData.confirmPassword);
       setIsSubmitted(true);
     } catch (error) {
+      // Handle validation errors
+      if (error.inner) {
+        const firstError = error.inner[0];
+        setError(firstError.message);
+      }
+
+      // Handle API errors
       // Handle different types of password reset errors
       let errorMessage = 'Failed to reset password. Please try again.';
       

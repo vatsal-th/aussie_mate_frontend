@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../../services/api';
-import Button from '../../components/Button';
+import { Button } from '../../components';
 
 const SetAvailabilityPage = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
+import { Header } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import ArrowDownIcon from '../../../assets/arrow-down.svg';
 import ArrowUpIcon from '../../../assets/arrow-up.svg';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';

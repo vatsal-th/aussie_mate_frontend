@@ -1,14 +1,16 @@
-  import React, { useState, useEffect } from 'react';
-  import { useNavigate, useLocation } from 'react-router-dom';
-import UploadCloudIcon from '../../assets/upload-cloud.svg';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import PlusIcon from '../../assets/plus2.svg';
+import CloseIcon from '../../assets/close.svg';
 import { userAPI } from '../../services/api';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { FloatingLabelInput, Button, FileUploadArea } from '../../components';
+import { createVerifyDocumentsSchema } from '../../utils/validationSchemas';
 
   const VerifyDocumentsPage = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [formData, setFormData] = useState({
+      profilePicture: null,
+      bio: '',
       abnNumber: '',
       tfnNumber: '',
       policeCheck: null,
@@ -19,6 +21,9 @@ import Button from '../../components/Button';
     const [error, setError] = useState('');
     const [userRole, setUserRole] = useState('');
     const [documentStatus, setDocumentStatus] = useState(null);
+
+    // Create validation schema based on user role
+    const validationSchema = useMemo(() => createVerifyDocumentsSchema(userRole), [userRole]);
 
     // Get user role from localStorage
     useEffect(() => {
@@ -86,6 +91,63 @@ import Button from '../../components/Button';
       });
     };
 
+    // Handle profile picture upload
+    const handleProfilePictureUpload = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Profile picture size must be less than 5MB');
+          return;
+        }
+
+        // Validate file type (only images)
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+          setError('Only JPEG, JPG, and PNG images are allowed for profile picture');
+          return;
+        }
+
+        try {
+          const base64 = await convertToBase64(file);
+          setFormData(prev => ({
+            ...prev,
+            profilePicture: {
+              file: base64,
+              originalFile: file,
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+              preview: URL.createObjectURL(file)
+            }
+          }));
+          setError('');
+        } catch (error) {
+          setError('Failed to process profile picture. Please try again.');
+        }
+      }
+    };
+
+    // Handle profile picture removal
+    const handleRemoveProfilePicture = () => {
+      if (formData.profilePicture?.preview) {
+        URL.revokeObjectURL(formData.profilePicture.preview);
+      }
+      setFormData(prev => ({
+        ...prev,
+        profilePicture: null
+      }));
+    };
+
+    // Calculate word count for bio
+    const getBioWordCount = () => {
+      if (!formData.bio) return 0;
+      return formData.bio.trim().split(/\s+/).filter(word => word.length > 0).length;
+    };
+
+    const bioWordCount = getBioWordCount();
+    const minBioWords = 50;
+
   const handleFileUpload = async (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
@@ -109,8 +171,8 @@ import Button from '../../components/Button';
         setFormData({
           ...formData,
           [fieldName]: {
-            file: base64, // Keep base64 for preview
-            originalFile: file, // Store original file for upload
+            file: base64, 
+            originalFile: file,
             fileName: file.name,
             fileType: file.type,
             fileSize: file.size
@@ -139,34 +201,8 @@ import Button from '../../components/Button';
       setIsLoading(true);
 
       try {
-        // Validate required fields
-        if (!formData.abnNumber.trim()) {
-          setError('ABN Number is required.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Validate ABN Number - must be exactly 11 digits
-        if (formData.abnNumber.length !== 11) {
-          setError('ABN Number must be exactly 11 digits.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Validate TFN Number - must be exactly 9 digits if provided
-        if (formData.tfnNumber && formData.tfnNumber.length !== 9) {
-          setError('TFN Number must be exactly 9 digits.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Check if at least one document is uploaded
-        const hasDocuments = formData.policeCheck || formData.visaWorkRights || formData.trainingCertificates;
-        if (!hasDocuments) {
-          setError('Please upload at least one document.');
-          setIsLoading(false);
-          return;
-        }
+        // Validate using Yup schema
+        await validationSchema.validate(formData, { abortEarly: false });
 
         // Create FormData for file upload (backend expects multipart/form-data)
         const formDataToSend = new FormData();
@@ -175,6 +211,16 @@ import Button from '../../components/Button';
           formDataToSend.append('tfnNumber', formData.tfnNumber);
         }
 
+        // Add profile picture to FormData
+        if (formData.profilePicture) {
+          formDataToSend.append('profilePicture', formData.profilePicture.originalFile);
+        }
+
+        // Add bio to FormData
+        if (formData.bio) {
+          formDataToSend.append('bio', formData.bio);
+        }
+        
         // Add files to FormData (use original file objects)
         if (formData.policeCheck) {
           formDataToSend.append('policeCheck', formData.policeCheck.originalFile);
@@ -198,6 +244,14 @@ import Button from '../../components/Button';
           setError(response.message || 'Failed to submit documents. Please try again.');
         }
       } catch (error) {
+        // Handle validation errors
+        if (error.inner) {
+          const firstError = error.inner[0];
+          setError(firstError.message);
+          setIsLoading(false);
+          return;
+        }
+
         // Handle specific error types
         if (error.message === 'Failed to fetch') {
           setError('Network error: Unable to connect to server. Please check your internet connection and try again.');
@@ -215,36 +269,6 @@ import Button from '../../components/Button';
       }
     };
 
-    const FileUploadArea = ({ fieldName, title, description, placeholder }) => (
-      <div className="mb-6">
-        <h3 className="text-sm font-semibold text-primary-500 mb-1">{title}</h3>
-        <p className="text-xs text-primary-200 font-medium mb-3">{description}</p>
-        <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer"
-          onClick={() => document.getElementById(`${fieldName}-file`).click()}
-        >
-          <div className="flex flex-col items-center">
-              <div className='rounded-full p-2 sm:p-4 bg-primary-200'>
-                  <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8 sm:w-10 sm:h-10" />
-              </div>
-            <p className="text-sm font-medium text-primary-500 mb-1 mt-2">Click Here</p>
-            <p className="text-xs text-primary-200 font-medium">{placeholder}</p>
-          </div>
-          <input
-            id={`${fieldName}-file`}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={(e) => handleFileUpload(e, fieldName)}
-            className="hidden"
-          />
-          {formData[fieldName] && (
-            <p className="text-xs text-green-600 mt-2">
-              ✓ {formData[fieldName].fileName || formData[fieldName].name}
-            </p>
-          )}
-        </div>
-      </div>
-    );
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -268,6 +292,77 @@ import Button from '../../components/Button';
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Profile Picture Upload */}
+              <div className="mb-6">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                      {formData.profilePicture?.preview ? (
+                        <img 
+                          src={formData.profilePicture.preview} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg 
+                          className="w-16 h-16 text-gray-400" 
+                          fill="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                      )}
+                    </div>
+                    {/* Add/Change Button */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('profile-picture-input').click()}
+                      className="absolute bottom-0 right-0 w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg hover:锋 bg-primary-600 transition-colors cursor-pointer z-10"
+                    >
+                      <img src={PlusIcon} alt="Add" className="w-5 h-5" />
+                    </button>
+                    {/* Remove Button - Show only when image is uploaded */}
+                    {formData.profilePicture?.preview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveProfilePicture}
+                        className="absolute top-0 right-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg hover:bg-red-600 transition-colors cursor-pointer z-10"
+                      >
+                        <img src={CloseIcon} alt="Remove" className="w-4 h-4" />
+                      </button>
+                    )}
+                    <input
+                      id="profile-picture-input"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleProfilePictureUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio Section */}
+              <div className="mb-6">
+                <h3 className="text-base font-semibold text-primary-500 mb-3">Bio</h3>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  placeholder="Tell us about your profession..."
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl! focus:outline-none text-primary-500 placeholder:text-primary-200 resize-none"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className={`text-xs font-medium ${bioWordCount < minBioWords ? 'text-primary-500' : 'text-primary-200'}`}>
+                    Minimum {minBioWords} words
+                  </p>
+                  <p className={`text-xs font-medium ${bioWordCount < minBioWords ? 'text-primary-500' : 'text-primary-500'}`}>
+                    {bioWordCount} {bioWordCount === 1 ? 'word' : 'words'}
+                  </p>
+                </div>
+              </div>
+
               {/* ABN Number */}
               <div className="mb-6">
                 <FloatingLabelInput
@@ -316,15 +411,19 @@ import Button from '../../components/Button';
                   title=""
                   description=""
                   placeholder="to Upload PDF/JPEG"
+                  onFileSelect={handleFileUpload}
+                  selectedFile={formData.policeCheck}
                 />
               </div>
 
               {/* Visa/Work Rights */}
               <FileUploadArea
-                fieldName="visaWorkRights"
-                title="Visa/Work Rights"
-                description="Required if you're on a student or work visa."
+                fieldName="photoId"
+                title="Photo ID"
+                description="To verify your identity. Accepted: Passport /  Driver's License / Visa / Others."
                 placeholder="to Upload Documents"
+                onFileSelect={handleFileUpload}
+                selectedFile={formData.photoId}
               />
 
               {/* Training Certificates (Optional) */}
@@ -333,6 +432,8 @@ import Button from '../../components/Button';
                 title="Training Certificates (Optional)"
                 description="NDIS/Other certifications if applicable."
                 placeholder="to Upload Documents"
+                onFileSelect={handleFileUpload}
+                selectedFile={formData.trainingCertificates}
               />
 
               {/* Submit Button */}

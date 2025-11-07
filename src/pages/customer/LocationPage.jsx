@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { userAPI } from '../../services/api';
-import Button from '../../components/Button';
+import { Button } from '../../components';
 import CurrentLocationIcon from "../../assets/currentLocation.svg";
 
   

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
+import { Header } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import MapPinIcon from '../../../assets/map-pin 1.png';
 import { userAPI } from '../../../services/api';

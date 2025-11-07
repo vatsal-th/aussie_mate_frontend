@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
+import { forgotPasswordSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { FloatingLabelInput, Button } from '../../components';
 import ForgotSuccessIcon from '../../assets/forgot success.svg';
 
 const ForgotPasswordPage = () => {
@@ -28,10 +28,19 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
 
     try {
+      // Validate using Yup schema
+      await forgotPasswordSchema.validate(formData, { abortEarly: false });
+      
       await authAPI.forgotPassword(formData.email);
       setIsSubmitted(true);
     } catch (error) {
-      setError(error.message || 'Failed to send reset email. Please try again.');
+      // Handle validation errors
+      if (error.inner) {
+        const firstError = error.inner[0];
+        setError(firstError.message);
+      } else {
+        setError(error.message || 'Failed to send reset email. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
-import MapWithPolyline from '../../components/MapWithPolyline';
+import { Header, Button, MapWithPolyline } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Header from '../../../components/Header';
+import { Header } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import CopyIcon from '../../../assets/copy.svg';
 import JobLiveGif from '../../../assets/joblive.gif';

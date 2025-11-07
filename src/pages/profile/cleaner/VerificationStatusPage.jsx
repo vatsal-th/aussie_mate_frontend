@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
+import { Header } from '../../../components';
 import PdfIcon from '../../../assets/pdf.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
 import InfoIcon from '../../../assets/info.svg';

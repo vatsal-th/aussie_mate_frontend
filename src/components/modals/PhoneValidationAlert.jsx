@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import InfoIcon from '../assets/info.svg';
-import CloseIcon from '../assets/close.svg';
+import InfoIcon from '../../assets/info.svg';
+import CloseIcon from '../../assets/close.svg';
 
 const PhoneValidationAlert = ({ error, onClose, isVisible }) => {
   // Prevent body scroll when alert is open

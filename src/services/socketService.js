@@ -11,21 +11,25 @@ class SocketService {
 
   connect(token) {
     if (this.socket && this.isConnected) {
+      console.log('✅ [SOCKET] Already connected, skipping');
       return;
     }
     
     if (this.socket && !this.isConnected) {
+      console.log('🔄 [SOCKET] Disconnecting old socket');
       this.disconnect();
     }
 
     let backendURL = API_CONFIG.BASE_URL;
+    console.log('🌐 [SOCKET] Original API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
     
     if (backendURL && backendURL.endsWith('/api')) {
       backendURL = backendURL.slice(0, -4);
     }
 
     if (!backendURL || backendURL.includes('undefined')) {
-      console.error('❌ VITE_BACKEND_URL environment variable is not set');
+      console.error('❌ [SOCKET] VITE_BACKEND_URL environment variable is not set');
+      console.error('📋 Current API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
       return;
     }
 

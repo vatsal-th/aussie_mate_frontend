@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/auth/LoginPage'
+import RoleSelectionPage from './pages/auth/RoleSelectionPage'
 import SignupPage from './pages/auth/SignupPage'
+import NDISPlanInfoPage from './pages/auth/NDISPlanInfoPage'
 import LocationPage from './pages/customer/LocationPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
@@ -45,7 +47,7 @@ import CustomerInProgressJobDetailsPage from './pages/customer/CustomerInProgres
 import JobDetailsCompletedPage from './pages/customer/JobDetailsCompletedPage'
 import CompleteJobPage from './pages/cleaner/CompleteJobPage'
 import StripeSuccessPage from './pages/StripeSuccessPage'
-import ProtectedRoute from './components/ProtectedRoute'
+import { ProtectedRoute } from './components'
 
 function App() {
 
@@ -55,7 +57,9 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/select-role" element={<RoleSelectionPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/ndis-plan-info" element={<NDISPlanInfoPage />} />
           <Route path="/location" element={<LocationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

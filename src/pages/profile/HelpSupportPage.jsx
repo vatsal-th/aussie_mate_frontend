@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
+import { Header } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import MessageIcon from '../../assets/message.svg';
 import RightIcon from '../../assets/right.svg';

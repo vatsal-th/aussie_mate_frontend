@@ -135,14 +135,14 @@ button {
 }
 
 /* Custom checkbox styling */
-input[type="checkbox"] {
+/* input[type="checkbox"] {
   accent-color: #1F6FEB !important;
 }
 
 input[type="checkbox"]:checked {
   background-color: #1F6FEB !important;
   border-color: #1F6FEB !important;
-}
+} */
 
 /* Custom shadow classes */
 .shadow-custom {

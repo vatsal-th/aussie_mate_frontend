@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
-import Button from '../../../components/Button';
-import FloatingLabelInput from '../../../components/FloatingLabelInput';
-import ConfirmationModal from '../../../components/ConfirmationModal';
+import { Header, Button, FloatingLabelInput, ConfirmationModal } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import ChevronRightIcon from '../../../assets/chevron-right.svg';
 import ThreeDotIcon from '../../../assets/3dot.svg';

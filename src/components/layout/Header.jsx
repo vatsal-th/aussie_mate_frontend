@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { userAPI } from '../services/api';
-import logo from '../assets/logo.svg';
-import ProfileIcon from '../assets/Profile.svg';
-import NotificationIcon from '../assets/notification.svg';
-import HeaderLocationIcon from '../assets/headerlocation.svg';
-import CardBG8 from '../assets/CardBG8.png';
-import CardBG9 from '../assets/CardBG9.png';
+import { useAuth } from '../../contexts/AuthContext';
+import { userAPI } from '../../services/api';
+import logo from '../../assets/logo.svg';
+import ProfileIcon from '../../assets/Profile.svg';
+import NotificationIcon from '../../assets/notification.svg';
+import HeaderLocationIcon from '../../assets/headerlocation.svg';
+import CardBG8 from '../../assets/CardBG8.png';
+import CardBG9 from '../../assets/CardBG9.png';
 
 const Header = () => {
   const { user } = useAuth();

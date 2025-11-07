@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import Header from '../../components/Header';
+import {
+  Header,
+  Button,
+  FloatingLabelInput,
+  CleaningJobDetailsForm,
+  PetSittingJobDetailsForm,
+  CommercialCleaningJobDetailsForm,
+  HandymanJobDetailsForm,
+  NDISSupportJobDetailsForm,
+  HousekeepingJobDetailsForm
+} from '../../components';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
 import CardBG4 from '../../assets/CardBG4.png';
@@ -9,17 +19,10 @@ import HandymanImage from '../../assets/Handyman.png';
 import HousekeepingImage from '../../assets/Housekeeping.png';
 import PetSittingImage from '../../assets/Pet Sitting.png';
 import NDISSupportImage from '../../assets/NDIS Support.png';
-import RetailAuditorImage from '../../assets/Retail Auditor.png';
-import Button from '../../components/Button';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
+import CommercialCleaningImage from '../../assets/commercialCleaning.svg';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
-import UploadIcon from '../../assets/upload.svg';
-import MinusIcon from '../../assets/minus.svg';
-import UploadCloudIcon from '../../assets/upload-cloud.svg';
-import PlusIcon from '../../assets/plus.svg';
-
 import MapPinIcon from '../../assets/map-pin 1.png';
-import { jobsAPI, handleAPIError, userAPI } from '../../services/api';
+import { jobsAPI, userAPI } from '../../services/api';
 
 const PostNewJobPage = () => {
   const navigate = useNavigate();
@@ -52,9 +55,28 @@ const PostNewJobPage = () => {
   const [uploadError, setUploadError] = useState('');
 
   // Final details
-  const [selectedDate, setSelectedDate] = useState('Aug 20, 2025');
+  const [selectedDate, setSelectedDate] = useState('');
   const [finalInstructions, setFinalInstructions] = useState('');
   const [isUrgent, setIsUrgent] = useState(true);
+  
+  // Boarding specific fields
+  const [pickupDate, setPickupDate] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
+  const [dropoffDate, setDropoffDate] = useState('');
+  const [dropoffTime, setDropoffTime] = useState('');
+
+  // Calculate duration in days for boarding
+  const calculateDuration = () => {
+    if (!pickupDate || !dropoffDate) return null;
+    const pickup = new Date(pickupDate);
+    const dropoff = new Date(dropoffDate);
+    const diffTime = Math.abs(dropoff - pickup);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const boardingDuration = calculateDuration();
+  
   const [selectedLocation, setSelectedLocation] = useState({
     address: 'Location not set',
     city: 'Please set your location'
@@ -67,6 +89,7 @@ const PostNewJobPage = () => {
 
   // UI states
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isBondCleaning, setIsBondCleaning] = useState(false);
   const dropdownRef = useRef(null);
 
   const propertyTypes = [
@@ -90,14 +113,14 @@ const PostNewJobPage = () => {
     },
     {
       id: 'ndis',
-      name: 'NDIS Support',
+      name: 'Support Services',
       image: NDISSupportImage,
       description: 'NDIS support services'
     },
     {
       id: 'retail',
-      name: 'Retail Auditor',
-      image: RetailAuditorImage,
+      name: 'Commercial Cleaning',
+      image: CommercialCleaningImage,
       description: 'Retail auditing services'
     },
     {
@@ -171,12 +194,10 @@ const PostNewJobPage = () => {
   // Separate effect for cleanup - only clear when navigating away from post-new-job
   useEffect(() => {
     return () => {
-      // Only clear if we're navigating away from post-new-job page AND not going to location
       const isNavigatingToLocation = localStorage.getItem('navigatingToLocation') === 'true';
       if (!window.location.pathname.includes('/post-new-job') && !isNavigatingToLocation) {
         localStorage.removeItem('postJobFormState');
       }
-      // Clear the navigation flag
       localStorage.removeItem('navigatingToLocation');
     };
   }, []);
@@ -256,15 +277,6 @@ const PostNewJobPage = () => {
         ...prev.addons,
         [addon]: !prev.addons[addon]
       }
-    }));
-  };
-
-  const handleNumberChange = (field, operation) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: operation === 'increment'
-        ? Math.min(prev[field] + 1, 10)
-        : Math.max(prev[field] - 1, 1)
     }));
   };
 
@@ -362,6 +374,10 @@ const PostNewJobPage = () => {
 
   const handleUrgencyToggle = () => {
     setIsUrgent(!isUrgent);
+  };
+
+  const handleBondCleaningToggle = () => {
+    setIsBondCleaning(!isBondCleaning);
   };
 
   const handleChangeLocation = () => {
@@ -462,21 +478,18 @@ const PostNewJobPage = () => {
       return;
     }
 
-    // Determine effective location: prefer current selection; otherwise, fall back to saved localStorage location
     let effectiveLocation = selectedLocation;
     try {
       const storedLocationStr = localStorage.getItem('userLocation');
       if (storedLocationStr) {
         const storedLocation = JSON.parse(storedLocationStr);
 
-        // Prefer a more complete address from localStorage when current selection is missing or looks too short
         const shouldUseStored =
           !effectiveLocation?.address ||
           effectiveLocation.address === 'Location not set' ||
           (effectiveLocation.address && effectiveLocation.address.length < 10); 
 
         if (shouldUseStored) {
-          // Parse coordinates if they are stored as "lat, lng" string → [lng, lat]
           let parsedCoordinates = undefined;
           if (typeof storedLocation.coordinates === 'string') {
             const parts = storedLocation.coordinates.split(',').map((s) => s.trim());
@@ -499,18 +512,15 @@ const PostNewJobPage = () => {
         }
       }
     } catch (_) {
-      // noop - if parsing fails, we'll validate below
     }
 
-    // Validate location before posting
     if (!effectiveLocation?.address || effectiveLocation.address === 'Location not set') {
       setAddressError('Please set your address in profile before posting jobs');
       setIsLoading(false);
       return;
     }
 
-    try {
-      // Convert date to ISO string
+    try { 
       const scheduledDate = new Date(selectedDate).toISOString();
 
       const userStr = localStorage.getItem('user');
@@ -541,16 +551,11 @@ const PostNewJobPage = () => {
         videos: []
       };
       
-
-      // Create job
       const response = await jobsAPI.createJobWithFiles(jobData, files);
       
-
       if (response.success) {
-        // Clear saved form state since job was posted successfully
         localStorage.removeItem('postJobFormState');
         
-        // Navigate to success page with job ID
         navigate('/job-success', { state: { jobId: response.data._id } });
       } else {  
         setError(response.message || 'Failed to post job');
@@ -558,7 +563,6 @@ const PostNewJobPage = () => {
     } catch (error) {
       console.error('Error posting job:', error);
       
-      // Extract detailed error message
       let errorMessage = 'Failed to post job';
       
       if (error.message) {
@@ -566,7 +570,6 @@ const PostNewJobPage = () => {
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.errors) {
-        // Handle validation errors array
         const validationErrors = error.response.data.errors.map(err => 
           typeof err === 'string' ? err : err.msg || err.message
         ).join(', ');
@@ -716,7 +719,7 @@ const PostNewJobPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Header Section */}
       <div className="flex items-center mb-6">
-        <Button onClick={handleBack} variant="ghost" size="sm" className="mr-4 p-0">
+        <Button onClick={handleBack} variant="" size="sm" className="mr-4 pl-0 pr-0">
           <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
         </Button>
         <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
@@ -724,292 +727,76 @@ const PostNewJobPage = () => {
 
       {/* Main Content */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-custom">
-        <form onSubmit={(e) => { e.preventDefault(); handleContinue(); }} className="space-y-6 sm:space-y-8">
-          {/* Property Details Section */}
-          <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-2">
-              Tell us about your property
-            </h2>
-            <p className="text-sm sm:text-base text-primary-200 font-medium mb-6">
-              Add property details to ensure the best cleaning plan for you.
-            </p>
-
-            {/* Property Type */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-primary-500 mb-2">
-                Property Type
-              </label>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none text-sm sm:text-base text-left flex justify-between items-center bg-white cursor-pointer text-primary-200 font-medium"
-                >
-                  <span className={formData.propertyType ? 'text-primary-500' : 'text-primary-200'}>
-                    {getSelectedPropertyType()}
-                  </span>
-                  <svg
-                    className={`w-5 h-5 text-primary-200 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-[1px] bg-white border border-gray-300 rounded-lg shadow-lg py-2 px-4">
-                    {propertyTypes.map((type) => (
-                      <Button
-                        key={type.value}
-                        type="button"
-                        onClick={() => handlePropertyTypeSelect(type.value)}
-                        variant=""
-                        size="sm"
-                        className={`w-full text-left! first:rounded-t-lg last:rounded-b-lg! ${formData.propertyType === type.value
-                            ? 'bg-primary-200! text-primary-500 '
-                            : 'text-primary-200'
-                          }`}
-                      >
-                        {type.label}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bedrooms and Bathrooms */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              {/* Bedrooms */}
-              <div>
-                <label className="block text-sm font-medium text-primary-500 mb-2">
-                  Bedrooms
-                </label>
-                <div className="flex items-center border border-gray-300 rounded-full">
-                  <Button
-                    type="button"
-                    onClick={() => handleNumberChange('bedrooms', 'decrement')}
-                    variant="ghost"
-                    size="xs"
-                    className="p-1 ml-3 bg-primary-200 hover:bg-primary-300"
-                  >
-                    <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
-                  </Button>
-                  <input
-                    type="number"
-                    value={formData.bedrooms}
-                    onChange={(e) => handleInputChange('bedrooms', parseInt(e.target.value) || 1)}
-                    className="flex-1 px-4 py-3 text-center border-0 focus:outline-none text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    min="1"
-                    max="10"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleNumberChange('bedrooms', 'increment')}
-                    variant="ghost"
-                    size="xs"
-                    className="p-1 mr-3 bg-primary-500 hover:bg-primary-600"
-                  >
-                    <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Bathrooms */}
-              <div>
-                <label className="block text-sm font-medium text-primary-500 mb-2">
-                  Bathrooms
-                </label>
-                <div className="flex items-center border border-gray-300 rounded-full">
-                  <Button
-                    type="button"
-                    onClick={() => handleNumberChange('bathrooms', 'decrement')}
-                    variant="ghost"
-                    size="xs"
-                    className="p-1 ml-3 bg-primary-200 hover:bg-primary-300"
-                  >
-                    <img src={MinusIcon} alt="Minus" className="w-5 h-5" />
-                  </Button>
-                  <input
-                    type="number"
-                    value={formData.bathrooms}
-                    onChange={(e) => handleInputChange('bathrooms', parseInt(e.target.value) || 1)}
-                    className="flex-1 px-4 py-3 text-center border-0 focus:outline-none text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    min="1"
-                    max="10"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => handleNumberChange('bathrooms', 'increment')}
-                    variant="ghost"
-                    size="xs"
-                    className="p-1 mr-3 bg-primary-500 hover:bg-primary-600"
-                  >
-                    <img src={PlusIcon} alt="Plus" className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Property Size Section */}
-          <div className="">
-            <FloatingLabelInput
-              id="propertySize"
-              name="propertySize"
-              label="Property Size"
-              type="text"
-              value={formData.propertySize}
-              onChange={(e) => handleInputChange('propertySize', e.target.value)}
-              placeholder=" "
-              required
-            />
-            <p className="text-xs text-primary-200 font-medium mt-1">Enter the size or description of your property (1-100 characters)</p>
-          </div>
-
-          {/* Add-ons Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary-500 mb-4">Add-ons</h3>
-            <div className="space-y-3">
-              {[
-                { id: 'carpetCleaning', label: 'Carpet cleaning' },
-                { id: 'windowCleaning', label: 'Window cleaning' },
-                { id: 'ovenCleaning', label: 'Oven cleaning' }
-              ].map((addon) => (
-                <label key={addon.id} className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={formData.addons[addon.id]}
-                    onChange={() => handleAddonChange(addon.id)}
-                    className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:outline-none cursor-pointer"
-                  />
-                  <span className="text-sm sm:text-base text-[#374151] font-medium">{addon.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Upload Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary-500 mb-4 cursor-pointer">
-              Upload Photos/Videos <span className="text-primary-200 font-medium"> (Optional)</span>
-            </h3>
-
-            {/* Error Message */}
-            {uploadError && (
-              <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {uploadError}
-              </div>
-            )}
-
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors cursor-pointer ${dragActive
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-primary-200 hover:border-primary-300'
-                }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
+        <form onSubmit={(e) => { e.preventDefault(); handleContinue(); }}>
+          {/* Use CleaningJobDetailsForm for cleaning-related services */}
+          {selectedService === 'cleaning' && (
+            <CleaningJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+              onPropertyTypeSelect={handlePropertyTypeSelect}
+              selectedPropertyTypeLabel={getSelectedPropertyType()}
+              onAddonChange={handleAddonChange}
+              selectedFiles={selectedFiles}
+              onDrag={handleDrag}
               onDrop={handleDrop}
-              onClick={() => document.getElementById('fileInput').click()}
-            >
-              <input
-                id="fileInput"
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                onChange={handleFileInputChange}
-                className="hidden"
-              />
+              dragActive={dragActive}
+              uploadError={uploadError}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
+              isDropdownOpen={isDropdownOpen}
+              propertyTypes={propertyTypes}
+              dropdownRef={dropdownRef}
+              isBondCleaning={isBondCleaning}
+              onBondCleaningToggle={handleBondCleaningToggle}
+            />
+          )}
 
-              <div className="flex flex-col items-center space-y-4">
-                <div className={`rounded-full p-4 ${dragActive ? 'bg-primary-500' : 'bg-primary-200'}`}>
-                  <img
-                    src={UploadCloudIcon}
-                    alt="Upload"
-                    className="w-8 h-8 sm:w-10 sm:h-10"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm sm:text-base text-primary-200 mb-2">
-                    {dragActive ? 'Drop files here' : 'Select photos/videos to upload'}
-                  </p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Max 10 files, 50MB each. Supported: Images (JPEG, PNG, GIF, WebP), Videos (MP4, AVI, MOV, WMV, FLV, WebM)
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    icon={UploadIcon}
-                    className="mx-auto"
-                  >
-                    Upload Here
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* Use PetSittingJobDetailsForm for pet sitting services */}
+          {selectedService === 'petsitting' && (
+            <PetSittingJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+            />
+          )}
 
-            {/* File Previews */}
-            {selectedFiles.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-primary-500 mb-3">
-                  Selected Files ({selectedFiles.length}/10)
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="relative group">
-                      {file.type.startsWith('image/') ? (
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                        />
-                      ) : (
-                        <video
-                          src={URL.createObjectURL(file)}
-                          className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                          muted
-                        />
-                      )}
-                      <Button
-                        type="button"
-                        onClick={() => removeFile(index)}
-                        variant="danger"
-                        size="xs"
-                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-1 truncate" title={file.name}>
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {(file.size / 1024 / 1024).toFixed(1)}MB
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Use CommercialCleaningJobDetailsForm for retail/commercial cleaning services */}
+          {selectedService === 'retail' && (
+            <CommercialCleaningJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+            />
+          )}
 
-          {/* Instructions Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary-500 mb-4">
-              Anything specific we should know? <span className="text-primary-200 font-medium"> (Optional)</span>
-            </h3>
-            <div className="relative">
-              <textarea
-                value={formData.instructions}
-                onChange={(e) => handleInputChange('instructions', e.target.value)}
-                placeholder="Write your instructions here in any..."
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-[10px] focus:outline-none text-sm sm:text-base "
-              />
-            </div>
-          </div>
+          {/* Use HandymanJobDetailsForm for handyman services */}
+          {selectedService === 'handyman' && (
+            <HandymanJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+              selectedFiles={selectedFiles}
+              onDrag={handleDrag}
+              onDrop={handleDrop}
+              dragActive={dragActive}
+              uploadError={uploadError}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
+            />
+          )}
+
+          {/* Use NDISSupportJobDetailsForm for NDIS support services */}
+          {selectedService === 'ndis' && (
+            <NDISSupportJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+            />
+          )}
+
+          {/* Use HousekeepingJobDetailsForm for housekeeping services */}
+          {selectedService === 'housekeeping' && (
+            <HousekeepingJobDetailsForm 
+              formData={formData}
+              onInputChange={handleInputChange}
+            />
+          )}
 
           {/* Continue Button */}
           <div className="flex justify-end">
@@ -1027,10 +814,10 @@ const PostNewJobPage = () => {
   );
 
   const renderFinalDetails = () => (
-    <div className="max-w-md mx-auto px-4 py-6 sm:px-2">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:px-2">
       {/* Header Section */}
       <div className="flex items-center mb-6">
-        <Button onClick={handleBack} variant="ghost" size="sm" className="mr-4 p-0">
+        <Button onClick={handleBack} variant="" size="sm" className="mr-4 pl-0 pr-0">
           <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
         </Button>
         <h1 className="text-xl font-semibold text-primary-500">Post New Job</h1>
@@ -1094,18 +881,120 @@ const PostNewJobPage = () => {
         )}
 
         {/* When do you need the service? */}
-        <div>
-          <FloatingLabelInput
-            id="serviceDate"
-            name="serviceDate"
-            label="When do you need the service?"
-            type="date"
-            value={selectedDate ? new Date(selectedDate).toISOString().split('T')[0] : ''}
-            onChange={handleDatePickerChange}
-            min={new Date().toISOString().split('T')[0]}
-            required
-          />
-        </div>
+        {formData.service === 'Boarding' ? (
+          <div className="space-y-6">
+            {/* Pick-up Date & Time */}
+            <div>
+              <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3">
+                Pick-up Date & Time
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={pickupDate}
+                      onChange={(e) => setPickupDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
+                    Time
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={pickupTime}
+                      onChange={(e) => setPickupTime(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Drop-off Date & Time */}
+            <div>
+              <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3">
+                Drop-off Date & Time
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={dropoffDate}
+                      onChange={(e) => setDropoffDate(e.target.value)}
+                      min={pickupDate || new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
+                    Time
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={dropoffTime}
+                      onChange={(e) => setDropoffTime(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Duration Display */}
+            {boardingDuration !== null && boardingDuration > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm sm:text-base font-medium text-primary-500">
+                    Duration:
+                  </span>
+                  <span className="text-base sm:text-lg font-semibold text-primary-500">
+                    {boardingDuration} {boardingDuration === 1 ? 'Day' : 'Days'}
+                  </span>
+                </div>
+            )}
+          </div>
+        ) : (
+          <div>
+            <FloatingLabelInput
+              id="serviceDate"
+              name="serviceDate"
+              label="When do you need the service?"
+              type="date"
+              value={(() => {
+                try {
+                  if (!selectedDate || selectedDate === 'Aug 20, 2025') return '';
+                  const date = new Date(selectedDate);
+                  if (isNaN(date.getTime())) return '';
+                  return date.toISOString().split('T')[0];
+                } catch (error) {
+                  console.error('Error parsing selectedDate:', error);
+                  return '';
+                }
+              })()}
+              onChange={handleDatePickerChange}
+              min={new Date().toISOString().split('T')[0]}
+              required
+            />
+          </div>
+        )}
 
         {/* Anything specific we should know? */}
         <div className="mb-6">

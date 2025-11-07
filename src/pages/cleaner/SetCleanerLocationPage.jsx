@@ -4,8 +4,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import CurrentLocationIcon from '../../assets/currentLocation.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import { userAPI } from '../../services/api';
-import Button from '../../components/Button';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
+import { Button, FloatingLabelInput } from '../../components';
 
 // Map container style
 const mapContainerStyle = {

@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import Header from '../../components/Header';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import PhoneValidationAlert from '../../components/PhoneValidationAlert';
+import { Header, FloatingLabelInput, ConfirmationModal, PhoneValidationAlert } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import InfoIcon from '../../assets/info.svg';
 import SendIcon from '../../assets/sendChat.svg';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import RatingIcon from '../../assets/rating.svg';
 import Rating2Icon from '../../assets/rating2.svg';

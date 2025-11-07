@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button, PhoneValidationAlert } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import InfoIcon from '../../assets/info.svg';
 import MessageIcon from '../../assets/sendChat.svg';
 import UserIcon from '../../assets/user.svg';
-import PhoneValidationAlert from '../../components/PhoneValidationAlert';
 import { jobsAPI } from '../../services/api';
 import { chatAPI } from '../../services/chatAPI';
 import { socketService } from '../../services/socketService';

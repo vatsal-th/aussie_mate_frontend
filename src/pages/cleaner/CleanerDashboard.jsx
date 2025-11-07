@@ -5,14 +5,13 @@ import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import Header from '../../components/Header'
+import { Header, Button } from '../../components'
 import UrgentIcon from '../../assets/urgent.svg'
 import ScheduleIcon from '../../assets/schedule.svg'
 import EquipmentIcon from '../../assets/equipment.svg'
 import CleanerBG from '../../assets/cleanerBG.jpg'
 import BoldJobIcon from '../../assets/boldJob.svg'
 import Coin3 from '../../assets/coin3.svg'
-import Button from '../../components/Button'
 
 const CleanerDashboard = () => {
   const navigate = useNavigate()

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
-import ConfirmationModal from '../../../components/ConfirmationModal';
+import { Header, ConfirmationModal } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import SearchIcon from '../../../assets/search.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';

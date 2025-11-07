@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
-import ConfirmationModal from '../../components/ConfirmationModal';
+import { Header, Button, ConfirmationModal } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import ThreeDotIcon from '../../assets/3dot.svg';
 import CalendarIcon from '../../assets/Calendar.svg';

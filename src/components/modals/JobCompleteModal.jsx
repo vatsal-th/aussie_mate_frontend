@@ -1,11 +1,28 @@
-  import React, { useEffect } from 'react';
-  import { useNavigate } from 'react-router-dom';
-  import CompleteIcon from '../assets/complete.svg';
-  import CloseIcon from '../assets/close.svg';
-  import Button from './Button';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import CompleteIcon from '../../assets/complete.svg';
+import CloseIcon from '../../assets/close.svg';
+import { Button } from '../form-controls';
 
-  const JobCompleteModal = ({ isOpen, onClose, cleanerName = "John", jobTitle = "Cleaning Service", jobId = "AM10400" }) => {
+  const JobCompleteModal = ({ 
+  isOpen, 
+  onClose, 
+  cleanerName, 
+  jobTitle, 
+  jobId, 
+  status = "pending_customer_confirmation" 
+}) => {
     const navigate = useNavigate();
+    
+    // 🔍 Debug logging
+    useEffect(() => {
+      console.log('🎭 [MODAL] JobCompleteModal rendered');
+      console.log('🔑 isOpen:', isOpen);
+      console.log('📋 jobId:', jobId);
+      console.log('👤 cleanerName:', cleanerName);
+      console.log('📝 jobTitle:', jobTitle);
+      console.log('📊 status:', status);
+    }, [isOpen, jobId, cleanerName, jobTitle, status]);
 
     // Disable scroll when modal is open
     useEffect(() => {
@@ -26,7 +43,21 @@
       navigate(`/job-completed/${jobId}`);
     };
 
-    if (!isOpen) return null;
+    // Validate that required props are provided
+    if (!isOpen || !jobId) return null;
+
+    // Determine modal content based on status
+    const isPendingConfirmation = status === 'pending_customer_confirmation';
+    const modalTitle = isPendingConfirmation ? 'Confirm Job Completion?' : 'Job Complete?';
+    
+    // Use dynamic cleaner name or fallback
+    const displayCleanerName = cleanerName || 'Your cleaner';
+    const displayJobTitle = jobTitle || 'Cleaning Service';
+    
+    const modalDescription = isPendingConfirmation 
+      ? `Your cleaner ${displayCleanerName} has requested confirmation for the completed job. Please review and confirm.`
+      : `Your cleaner ${displayCleanerName} has marked the job as completed. Please confirm.`;
+    const buttonText = isPendingConfirmation ? 'Confirm Completion' : 'Job Complete';
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4" 
@@ -52,12 +83,12 @@
 
             {/* Title */}
             <h2 className="text-xl sm:text-2xl font-bold text-primary-500 mb-3 sm:mb-4">
-              Job Complete?
+              {modalTitle}
             </h2>
 
             {/* Description */}
             <p className="text-sm sm:text-base text-primary-200 font-medium mb-4 sm:mb-6 leading-relaxed px-2">
-              Your cleaner {cleanerName} has marked the job as completed. Please confirm.
+              {modalDescription}
             </p>
 
             {/* Action Button */}
@@ -68,7 +99,7 @@
                 size="lg"
                 className="w-full sm:w-auto text-sm sm:text-base"
               >
-                Job Complete
+                {buttonText}
               </Button>
             </div>
           </div>

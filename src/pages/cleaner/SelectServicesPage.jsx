@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 import CleaningIcon from '../../assets/cleaning2.svg';
 import PetSittingIcon from '../../assets/petSitting2.svg';
 import HousekeepingIcon from '../../assets/housekeeping2.svg';

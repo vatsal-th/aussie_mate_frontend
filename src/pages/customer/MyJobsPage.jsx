@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
+import { Header } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import SearchIcon from '../../assets/search.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -32,9 +32,8 @@ const formatDate = (iso) => {
       return '';
     }
     
-    // Extract date and time directly from the ISO string to avoid timezone conversion
-    const dateStr = d.toISOString().split('T')[0]; // Get YYYY-MM-DD
-    const timeStr = d.toISOString().split('T')[1].split('.')[0]; // Get HH:MM:SS
+    const dateStr = d.toISOString().split('T')[0]; 
+    const timeStr = d.toISOString().split('T')[1].split('.')[0]; 
     
     // Parse the date parts
     const [year, month, day] = dateStr.split('-');
@@ -66,19 +65,18 @@ const getStatusChip = (statusRaw) => {
   if (s === 'completed') {
     return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
   }
-  // Show "Accepted" for accepted jobs
+  if (s === 'pending_customer_confirmation') {
+    return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };
+  }
   if (s === 'accepted') {
     return { label: 'Accepted', className: 'bg-[#D1FAE5] text-[#059669] border border-[#D1FAE5]' };
   }
-  // Show "Quoted" for jobs with quotes
   if (s === 'quoted') {
     return { label: 'Quoted', className: 'bg-[#E0F2FE] text-[#0369A1] border border-[#E0F2FE]' };
   }
-  // Upcoming states (posted/pending) should show as "Pending Quotes"
   if (['posted', 'pending', 'pending_quotes'].includes(s)) {
     return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
   }
-  // Fallback
   return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
 };
 
@@ -158,7 +156,6 @@ const MyJobsPage = () => {
         if (user?.id) {
           setCurrentUserId(user.id);
         } else {
-          // Fetch user profile to get ID
           const userProfile = await userAPI.getProfile();
           const userData = userProfile.data?.user || userProfile.data || userProfile;
           setCurrentUserId(userData?._id || userData?.id);
@@ -182,8 +179,7 @@ const MyJobsPage = () => {
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showCalendar]);
-
-  // Fetch jobs posted by current user only
+    
   useEffect(() => {
     const fetchJobs = async () => {
       if (!currentUserId) return; 
@@ -195,7 +191,6 @@ const MyJobsPage = () => {
         let list = [];
         
         if (activeTab === 'upcoming') {
-          // For upcoming tab, fetch both quoted and accepted jobs
           const [quotedRes, acceptedRes] = await Promise.all([
             jobsAPI.getAllJobs({ status: 'quoted', page: 1, limit: 50 }),
             jobsAPI.getAllJobs({ status: 'accepted', page: 1, limit: 50 })
@@ -204,9 +199,17 @@ const MyJobsPage = () => {
           const quotedJobs = quotedRes?.data?.jobs || quotedRes?.data || [];
           const acceptedJobs = acceptedRes?.data?.jobs || acceptedRes?.data || [];
           list = [...quotedJobs, ...acceptedJobs];
+        } else if (activeTab === 'ongoing') {
+          const [inProgressRes, pendingConfirmationRes] = await Promise.all([
+            jobsAPI.getAllJobs({ status: 'in_progress', page: 1, limit: 50 }),
+            jobsAPI.getAllJobs({ status: 'pending_customer_confirmation', page: 1, limit: 50 })
+          ]);
+          
+          const inProgressJobs = inProgressRes?.data?.jobs || inProgressRes?.data || [];
+          const pendingConfirmationJobs = pendingConfirmationRes?.data?.jobs || pendingConfirmationRes?.data || [];
+          list = [...inProgressJobs, ...pendingConfirmationJobs];
         } else {
           const statusParam = (() => {
-            if (activeTab === 'ongoing') return 'in_progress';
             if (activeTab === 'completed') return 'completed';
             return undefined;
           })();
@@ -215,14 +218,19 @@ const MyJobsPage = () => {
           list = res?.data?.jobs || res?.data || res || [];
         }
 
-        // Filter jobs to only show those posted by current user
         const userJobs = list.filter((j) => {
           const jobCustomerId = j.customerId?._id || j.customerId?.id || j.customer?._id || j.customer?.id || j.postedBy?._id || j.postedBy?.id;
           return jobCustomerId === currentUserId;
         });
 
-        // Normalize into UI shape with message counts
-        const normalized = await Promise.all(userJobs.map(async (j) => {
+        const filteredJobs = activeTab === 'ongoing' 
+          ? userJobs.filter(j => {
+              const jobStatus = (j.status || '').toString().toLowerCase();
+              return jobStatus === 'in_progress' || jobStatus === 'pending_customer_confirmation';
+            })
+          : userJobs;
+
+        const normalized = await Promise.all(filteredJobs.map(async (j) => {
           const status = (j.status || '').toString();
           const address = j.location?.address || j.location?.fullAddress || '';
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
@@ -231,19 +239,16 @@ const MyJobsPage = () => {
           const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
           
           
-          // Count quotes from different possible API response formats (only pending quotes)
           let quoteCount = 0;
           if (j.quotesReceived && j.quotesReceived > 0) {
             quoteCount = j.quotesReceived;
           } else if (j.quotes && Array.isArray(j.quotes)) {
-            // Filter out rejected quotes and count only pending quotes
             quoteCount = j.quotes.filter(quote => quote.status !== 'rejected').length;
           } else if (j.quotes && typeof j.quotes === 'number') {
             quoteCount = j.quotes;
           } else if (j.quoteCount) {
             quoteCount = j.quoteCount;
           } else {
-            // If no quote data in job list, try to fetch individual job details
             try {
               const jobDetails = await jobsAPI.getJobById(j._id || j.jobId || j.id);
               if (jobDetails.success && jobDetails.data) {
@@ -313,14 +318,13 @@ const MyJobsPage = () => {
     const q = query.trim().toLowerCase();
     const mapTab = (status) => {
       const s = (status || '').toLowerCase();
-      if (['in_progress', 'assigned'].includes(s)) return 'ongoing';
+      if (['in_progress', 'assigned', 'pending_customer_confirmation'].includes(s)) return 'ongoing';
       if (['completed', 'done'].includes(s)) return 'completed';
       if (['quoted', 'accepted', 'posted', 'pending', 'pending_quotes'].includes(s)) return 'upcoming';
       if (!s) return 'upcoming';
       return 'upcoming';
     };
     
-    // Use allJobs for filtering when any date is set
     const hasRange = Boolean(startDate || endDate);
     const jobsToFilter = hasRange ? allJobs : jobs;
     
@@ -483,6 +487,8 @@ const MyJobsPage = () => {
               onClick={() => {
                 if (job.status === 'completed') {
                   navigate(`/job-completed/${job.id}`);
+                } else if (job.status === 'pending_customer_confirmation') {
+                  navigate(`/job-completed/${job.id}`);
                 } else if (job.status === 'in_progress') {
                   navigate(`/customer-in-progress-job/${job.id}`);
                 } else {
@@ -494,7 +500,15 @@ const MyJobsPage = () => {
               <div className="flex items-start justify-between">
                 <div className="text-[15px] text-primary-200 font-medium">{job.jobId}</div>
                 {(() => { 
-                  if (job.quotes) {
+                  if (job.status === 'pending_customer_confirmation') {
+                    return (
+                      <div className={`text-[11px] px-2 py-1 rounded-full font-medium ${job.statusClass} text-center`}>
+                        {job.statusLabel}
+                      </div>
+                    );
+                  }
+                  // Show quotes badge only if it's not an active/pending job
+                  else if (job.quotes && !['in_progress', 'pending_customer_confirmation', 'completed'].includes(job.status)) {
                     return (
                       <div className="flex items-center gap-1.5 bg-[#E0F2FE] px-2 py-1 rounded-full">
                         <div className="w-2 h-2 bg-[#0369A1] rounded-full"></div>

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { loginSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { FloatingLabelInput, Button } from '../../components';
 import errorIcon from '../../assets/info.svg';
 
 const LoginPage = () => {
@@ -32,6 +32,9 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+      // Validate using Yup schema
+      await loginSchema.validate(formData, { abortEarly: false });
+
       const response = await login(formData);
 
       // Get user data from response
@@ -47,10 +50,14 @@ const LoginPage = () => {
         navigate('/');
       }
     } catch (error) {
-      // Handle different types of login errors
+      // Handle validation errors
       let errorMessage = 'Login failed. Please check your credentials.';
-      
-      if (error.status === 401) {
+
+      // If it's a Yup validation error
+      if (error.inner) {
+        const firstError = error.inner[0];
+        errorMessage = firstError.message;
+      } else if (error.status === 401) {
         errorMessage = 'Invalid email or password. Please check your credentials and try again.';
       } else if (error.status === 404) {
         errorMessage = 'No account found with this email. Please check your email or sign up for a new account.';
@@ -170,7 +177,7 @@ const LoginPage = () => {
           <div className="text-center mt-6">
             <p className="text-primary-200 font-medium">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">
+              <Link to="/select-role" className="text-primary-500 hover:text-primary-600 font-medium">
                 Sign Up
               </Link>
             </p>

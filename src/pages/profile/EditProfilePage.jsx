@@ -8,9 +8,7 @@ import MailIcon from '../../assets/mail.svg';
 import PhoneIcon from '../../assets/phone.svg';
 import HeaderLocationIcon from '../../assets/headerlocation.svg';
 import InfoIcon from '../../assets/info.svg';
-import Header from '../../components/Header';
-import FloatingLabelInput from '../../components/FloatingLabelInput';
-import Button from '../../components/Button';
+import { Header, FloatingLabelInput, Button } from '../../components';
 import ProfileBG from '../../assets/CardBG7.png';
 
 const EditProfilePage = () => {

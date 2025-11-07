@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
-import Button from '../../../components/Button';
+import { Header, Button } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import StarIcon from '../../../assets/rating.svg';
 import { reviewsAPI } from '../../../services/api';
@@ -175,37 +174,37 @@ const ReviewsPage = () => {
       <Header />
 
       {/* Header */}
-      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4 max-sm:px-3 max-sm:py-3">
+        <div className="flex items-center gap-3 mb-6 max-sm:gap-2 max-sm:mb-4">
           <Button
             onClick={() => navigate(-1)}
             variant=""
             size="sm"
             icon={ArrowLeftIcon}
-            className="p-2"
+            className="p-2 max-sm:p-1.5"
           />
-          <h1 className="text-xl font-semibold text-primary-500">Ratings & Reviews</h1>
+          <h1 className="text-xl font-semibold text-primary-500 max-sm:text-lg">Ratings & Reviews</h1>
         </div>
 
         {/* Overall Rating Card */}
-        <div className="bg-white rounded-2xl shadow-custom p-6 mb-6">
-          <h2 className="text-lg font-semibold text-primary-500 mb-4">Overall Rating</h2>
+        <div className="bg-white rounded-2xl shadow-custom p-6 mb-6 max-sm:p-4 max-sm:rounded-xl">
+          <h2 className="text-lg font-semibold text-primary-500 mb-4 max-sm:text-base max-sm:mb-3">Overall Rating</h2>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 max-sm:gap-3">
             <div className="flex items-center gap-1">
-              {renderStars(overallRating, 'w-6 h-6')}
+              {renderStars(overallRating, 'w-6 h-6 max-sm:w-5 max-sm:h-5')}
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary-500">{overallRating}</div>
+              <div className="text-3xl font-bold text-primary-500 max-sm:text-2xl">{overallRating}</div>
             </div>
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3 max-sm:p-3 max-sm:gap-2">
             <svg 
-              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" 
+              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5 max-sm:w-4 max-sm:h-4" 
               fill="currentColor" 
               viewBox="0 0 20 20"
             >
@@ -216,125 +215,125 @@ const ReviewsPage = () => {
               />
             </svg>
             <div>
-              <h4 className="text-sm font-medium text-red-800">Error</h4>
-              <p className="text-sm text-red-600 mt-1">{error}</p>
+              <h4 className="text-sm font-medium text-red-800 max-sm:text-xs">Error</h4>
+              <p className="text-sm text-red-600 mt-1 max-sm:text-xs">{error}</p>
             </div>
           </div>
         )}
 
         {/* Reviews List */}
         {reviews.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-custom p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <img src={StarIcon} alt="Star" className="w-8 h-8 text-gray-400" />
+          <div className="bg-white rounded-2xl shadow-custom p-8 text-center max-sm:p-6">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 max-sm:w-12 max-sm:h-12 max-sm:mb-3">
+              <img src={StarIcon} alt="Star" className="w-8 h-8 text-gray-400 max-sm:w-6 max-sm:h-6" />
             </div>
-            <h3 className="text-lg font-semibold text-primary-500 mb-2">No Reviews Yet</h3>
-            <p className="text-primary-200 mb-4">
+            <h3 className="text-lg font-semibold text-primary-500 mb-2 max-sm:text-base max-sm:mb-1.5">No Reviews Yet</h3>
+            <p className="text-primary-200 mb-4 max-sm:text-sm max-sm:mb-3">
               You haven't received any reviews yet. Complete some jobs to start building your reputation!
             </p>
             <Button
               onClick={() => navigate('/cleaner/jobs')}
               size="md"
-              className="px-6"
+              className="px-6 max-sm:px-4 max-sm:text-sm"
             >
               View Available Jobs
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {reviews.map((review, index) => (
-              <div key={review._id || review.id || index} className="bg-white rounded-2xl shadow-custom p-6">
-                <div className="flex items-start gap-4">
-                  {/* Customer Avatar */}
-                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    {getCustomerAvatar(review) ? (
-                      <img 
-                        src={getCustomerAvatar(review)} 
-                        alt="Customer" 
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-sm font-semibold text-primary-500">
-                        {getCustomerInitials(review)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Review Content */}
-                  <div className="flex-1">
-                    <div className="flex items-center  mb-2">
-                      <h4 className="font-semibold text-primary-500">
-                        {getCustomerName(review)}
-                      </h4>
+          <div className="bg-white rounded-2xl shadow-custom p-6 max-sm:p-4 max-sm:rounded-xl">
+            <div className="space-y-6 max-sm:space-y-4 ">
+              {reviews.map((review, index) => (
+                <div key={review._id || review.id || index} className="border-b border-[#F3F3F3] pb-4 max-sm:pb-3 last:border-b-0 last:pb-0">
+                  <div className="flex items-start gap-4 max-sm:gap-3">
+                    {/* Customer Avatar */}
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 max-sm:w-10 max-sm:h-10">
+                      {getCustomerAvatar(review) ? (
+                        <img 
+                          src={getCustomerAvatar(review)} 
+                          alt="Customer" 
+                          className="w-12 h-12 rounded-full object-cover max-sm:w-10 max-sm:h-10"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-primary-500 max-sm:text-xs">
+                          {getCustomerInitials(review)}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1">
-                        {renderStars(review.rating || 0)}
+                    {/* Review Content */}
+                    <div className="flex-1">
+                      <div className="flex items-center  mb-2 max-sm:mb-1.5">
+                        <h4 className="font-semibold text-primary-500 text-lg max-sm:text-sm">
+                          {getCustomerName(review)}
+                        </h4>
                       </div>
-                      <span className="text-sm font-medium text-primary-500 font-medium">
-                        {review.rating || 0}
-                      </span>
-                      <span className="text-sm text-primary-200 font-medium w-1 h-1 rounded-full bg-[#6B7280]">
-                        
-                      </span>
-                      <span className="text-sm text-primary-200 font-medium">
-                        {formatDate(review.createdAt || review.timestamp)}
-                      </span>
-                    </div>
 
-                    {/* Review Text */}
-                    {review.comment && (
-                      <p className="text-primary-500 mb-3">
-                        "{review.comment}"
-                      </p>
-                    )}
+                      {/* Rating */}
+                      <div className="flex items-center gap-2 mb-3 max-sm:gap-1.5 max-sm:mb-2 max-sm:flex-wrap">
+                        <div className="flex items-center gap-1 max-sm:gap-0.5">
+                          {renderStars(review.rating || 0, 'w-4 h-4 max-sm:w-3.5 max-sm:h-3.5')}
+                        </div>
+                        <span className="text-base font-semibold text-primary-500 font-medium max-sm:text-xs">
+                          {review.rating || 0}
+                        </span>
+                        <span className="text-sm text-primary-200 font-medium w-1 h-1 rounded-full bg-[#6B7280] max-sm:w-0.5 max-sm:h-0.5">
+                          
+                        </span>
+                        <span className="text-base text-primary-200 font-medium max-sm:text-xs">
+                          {formatDate(review.createdAt || review.timestamp)}
+                        </span>
+                      </div>
 
-                    {/* Feedback */}
-                    {review.feedback && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-primary-500 mb-1">Feedback:</p>
-                        <p className="text-primary-200 font-medium italic">
-                          "{review.feedback}"
+                      {/* Review Text */}
+                      {review.comment && (
+                        <p className="text-primary-500 mb-3 text-base leading-relaxed max-sm:text-sm max-sm:mb-2">
+                          "{review.comment}"
                         </p>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Liked Aspects */}
-                    {review.likedAspects && review.likedAspects.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-primary-500 mb-2">What they liked:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {review.likedAspects.map((aspect, aspectIndex) => (
+                      {/* Feedback */}
+                      {review.feedback && (
+                        <div className="mb-3 max-sm:mb-2">
+                          <p className="text-base text-primary-200 font-medium italic leading-relaxed max-sm:text-xs">
+                            "{review.feedback}"
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Liked Aspects */}
+                      {review.likedAspects && review.likedAspects.length > 0 && (
+                        <div className="mb-3 max-sm:mb-2">
+                          <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
+                            {review.likedAspects.map((aspect, aspectIndex) => (
+                              <span 
+                                key={aspectIndex}
+                                className="px-3 py-1.5 bg-[#EBF2FD] text-[#1F6FEB] text-sm font-medium rounded-full border border-[#9CC0F6] max-sm:px-2 max-sm:py-0.5 max-sm:text-[10px]"
+                              >
+                                {aspect}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tags */}
+                      {review.tags && review.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
+                          {review.tags.map((tag, tagIndex) => (
                             <span 
-                              key={aspectIndex}
-                              className="px-3 py-1 bg-[#EBF2FD] text-[#1F6FEB] text-xs font-medium rounded-full border border-[#9CC0F6]"
+                              key={tagIndex}
+                              className="px-3 py-1.5 bg-blue-100 text-blue-800 text-sm font-medium rounded-full max-sm:px-2 max-sm:py-0.5 max-sm:text-[10px]"
                             >
-                              {aspect}
+                              {tag}
                             </span>
                           ))}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Tags */}
-                    {review.tags && review.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {review.tags.map((tag, tagIndex) => (
-                          <span 
-                            key={tagIndex}
-                            className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 

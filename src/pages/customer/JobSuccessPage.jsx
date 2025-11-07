@@ -1,7 +1,6 @@
 import React, { useState, useEffect }  from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { Header, Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import JobLiveGif from '../../assets/joblive.gif';
 import CardBG6 from '../../assets/CardBG6.png';
@@ -9,7 +8,6 @@ import CardBG7 from '../../assets/CardBG7.png';
 
 const JobSuccessPage = () => {
   const navigate = useNavigate();
-  // Removed gifStopped state to keep animation running continuously
 
   const handleViewMyJob = () => {
     navigate('/my-jobs');

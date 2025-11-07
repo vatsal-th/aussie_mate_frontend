@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../../components/Header';
-import Button from '../../../components/Button';
+import { Header, Button } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import { userAPI } from '../../../services/api';
 import { paymentService, handlePaymentError } from '../../../services/paymentService';
