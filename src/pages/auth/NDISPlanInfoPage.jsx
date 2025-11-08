@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
-import { FloatingLabelInput, Button, FileUploadArea, RadioButtonGroup, Checkbox } from '../../components';
+import { FloatingLabelInput, Button, RadioButtonGroup, Checkbox } from '../../components';
 import backIcon from '../../assets/arrow-left.svg';
 import { ndisPlanInfoSchema } from '../../utils/validationSchemas';
+import { userAPI } from '../../services/api';
 
 const NDISPlanInfoPage = () => {
     const navigate = useNavigate();
@@ -13,7 +14,6 @@ const NDISPlanInfoPage = () => {
         planManagerEmail: '',
         phoneNumber: '',
         planType: 'Plan manager',
-        supportPlan: null,
         agreeToTerms1: false,
         agreeToTerms2: false
     });
@@ -44,39 +44,6 @@ const NDISPlanInfoPage = () => {
         }));
     };
 
-    const handleFileUpload = async (e, fieldName) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                setError('File size must be less than 5MB');
-                return;
-            }
-
-            // Validate file type
-            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-            if (!allowedTypes.includes(file.type)) {
-                setError('Only PDF, JPEG, JPG, and PNG files are allowed');
-                return;
-            }
-
-            try {
-                setFormData(prev => ({
-                    ...prev,
-                    [fieldName]: {
-                        file: file,
-                        fileName: file.name,
-                        fileType: file.type,
-                        fileSize: file.size
-                    }
-                }));
-                setError('');
-            } catch (error) {
-                setError('Failed to process file. Please try again.');
-            }
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -86,16 +53,26 @@ const NDISPlanInfoPage = () => {
             // Validate using Yup schema
             await ndisPlanInfoSchema.validate(formData, { abortEarly: false });
 
-            // TODO: Save NDIS plan info to backend
-            // await saveNDISInfo(formData);
+            const payload = {
+                ndisNumber: formData.ndisNumber.trim(),
+                planManagerName: formData.planManagerName.trim(),
+                planManagerEmail: formData.planManagerEmail.trim(),
+                phoneNumber: formData.phoneNumber.trim(),
+                planType: formData.planType,
+                agreeToTerms1: formData.agreeToTerms1,
+                agreeToTerms2: formData.agreeToTerms2,
+            };
+
+            await userAPI.saveNdisPlanInfo(payload);
 
             // Navigate to location page
             navigate('/location');
         } catch (err) {
             if (err.inner) {
-                // Yup validation errors
                 const firstError = err.inner[0];
                 setError(firstError.message);
+            } else if (err.response && err.response.message) {
+                setError(err.response.message);
             } else {
                 setError(err.message || 'Failed to save information. Please try again.');
             }
@@ -140,6 +117,16 @@ const NDISPlanInfoPage = () => {
                         As an NDIS participant, please provide all the information requested below.
                     </p>
                 </div>
+
+                {/* NDIS Plan Type */}
+                <RadioButtonGroup
+                        name="planType"
+                        title="NDIS Plan Type"
+                        options={planTypeOptions}
+                        selectedValue={formData.planType}
+                        onChange={handleInputChange}
+                    />
+                    
                     {/* NDIS Number */}
                     <FloatingLabelInput
                         id="ndisNumber"
@@ -147,7 +134,10 @@ const NDISPlanInfoPage = () => {
                         label="NDIS Number"
                         type="text"
                         value={formData.ndisNumber}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/[^\d]/g, '').slice(0, 9);
+                            setFormData(prev => ({ ...prev, ndisNumber: value }));
+                        }}
                         required
                     />
 
@@ -155,22 +145,20 @@ const NDISPlanInfoPage = () => {
                     <FloatingLabelInput
                         id="planManagerName"
                         name="planManagerName"
-                        label="Plan manager name"
+                        label="Plan manager name (optional)"
                         type="text"
                         value={formData.planManagerName}
                         onChange={handleInputChange}
-                        required
                     />
                     <div className='grid grid-cols-1 gap-6 sm:gap-4 sm:grid-cols-2'>
                         {/* Plan Manager Email */}
                         <FloatingLabelInput
                             id="planManagerEmail"
                             name="planManagerEmail"
-                            label="Plan manager email"
+                            label="Plan manager email (optional)"
                             type="email"
                             value={formData.planManagerEmail}
                             onChange={handleInputChange}
-                            required
                         />
 
                         {/* Phone Number */}
@@ -183,33 +171,10 @@ const NDISPlanInfoPage = () => {
                                 onChange={handleInputChange}
                                 placeholder="+61 000 000 0000"
                                 className="w-full p-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-1 focus:[#6B7280] focus:border-transparent transition-all duration-200"
-                                required
                             />
                         </div>
                     </div>
-                    {/* NDIS Plan Type */}
-                    <RadioButtonGroup
-                        name="planType"
-                        title="NDIS Plan Type"
-                        options={planTypeOptions}
-                        selectedValue={formData.planType}
-                        onChange={handleInputChange}
-                    />
-
-                    {/* Upload Support Plan */}
-                    <div>
-                        <h3 className="text-base font-semibold text-primary-500 mb-4">Upload Support Plan</h3>
-                        <FileUploadArea
-                            fieldName="supportPlan"
-                            title=""
-                            description=""
-                            placeholder="To Upload File (PDF or JPG)"
-                            onFileSelect={handleFileUpload}
-                            selectedFile={formData.supportPlan}
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            className="mb-0"
-                        />
-                    </div>
+                    
 
                     {/* Checkboxes */}
                     <div className="space-y-4">

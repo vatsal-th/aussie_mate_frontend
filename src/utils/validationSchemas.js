@@ -3,17 +3,21 @@ import * as yup from 'yup';
 // NDIS Plan Info Validation Schema
 export const ndisPlanInfoSchema = yup.object().shape({
   ndisNumber: yup.string()
-    .required('NDIS Number is required'),
+    .required('NDIS Number is required')
+    .matches(/^\d{9}$/, 'NDIS Number must be exactly 9 digits'),
   planManagerName: yup.string()
-    .required('Plan manager name is required'),
+    .transform((value) => (value?.trim() === '' ? null : value.trim()))
+    .nullable(),
   planManagerEmail: yup.string()
-    .email('Please enter a valid email address')
-    .required('Email is required'),
+    .transform((value) => (value?.trim() === '' ? null : value.trim()))
+    .nullable()
+    .email('Please enter a valid email address'),
   phoneNumber: yup.string()
-    .matches(/^\+61\s?\d{9}$/, 'Please enter a valid phone number')
-    .required('Phone number is required'),
+    .transform((value) => (value?.trim() === '' ? null : value.trim()))
+    .nullable()
+    .matches(/^\+61\s?\d{9}$/, 'Please enter a valid phone number'),
   planType: yup.string()
-    .oneOf(['Self-managed', 'Plan-managed'], 'Invalid plan type')
+    .oneOf(['Plan manager', 'Self - managed NDIS'], 'Invalid plan type')
     .required('Plan type is required'),
   agreeToTerms1: yup.boolean()
     .oneOf([true], 'You must agree to the terms'),
