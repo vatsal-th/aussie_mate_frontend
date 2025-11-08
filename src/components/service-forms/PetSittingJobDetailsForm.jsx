@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FloatingLabelInput } from '../form-controls';
+import ServiceCommonSections from './common/ServiceCommonSections';
 
-const PetSittingJobDetailsForm = ({ 
-  formData, 
-  onInputChange
+const PetSittingJobDetailsForm = ({
+  formData,
+  onInputChange,
+  selectedFiles = [],
+  dragActive,
+  onFileInputChange,
+  onRemoveFile
 }) => {
-  const [services, setServices] = useState([
+  const [services] = useState([
     'House Sitting',
     'Walking',
     'Boarding',
@@ -13,9 +18,13 @@ const PetSittingJobDetailsForm = ({
     'Cleaning',
     'Grooming',
   ]);
-  const [selectedService, setSelectedService] = useState('');
+  const [selectedService, setSelectedService] = useState(formData.service || '');
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [frequency, setFrequency] = useState(formData.frequency || 'One-time');
+  const [preferredDays, setPreferredDays] = useState(formData.preferredDays || {});
+  const [customDates, setCustomDates] = useState(formData.customDates || []);
+  const [repeatWeeks, setRepeatWeeks] = useState(formData.repeatWeeks || '');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,10 +42,57 @@ const PetSittingJobDetailsForm = ({
     };
   }, [isServiceDropdownOpen]);
 
+  useEffect(() => {
+    setSelectedService(formData.service || '');
+  }, [formData.service]);
+
+  useEffect(() => {
+    if (formData.frequency) {
+      setFrequency(formData.frequency);
+    }
+  }, [formData.frequency]);
+
+  useEffect(() => {
+    if (formData.preferredDays) {
+      setPreferredDays(formData.preferredDays);
+    }
+  }, [formData.preferredDays]);
+
+  useEffect(() => {
+    if (formData.customDates) {
+      setCustomDates(formData.customDates);
+    }
+  }, [formData.customDates]);
+
+  useEffect(() => {
+    if (formData.repeatWeeks) {
+      setRepeatWeeks(formData.repeatWeeks);
+    }
+  }, [formData.repeatWeeks]);
+
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     setIsServiceDropdownOpen(false);
     onInputChange('service', service);
+  };
+  const handleFrequencyChange = (value) => {
+    setFrequency(value);
+    onInputChange('frequency', value);
+  };
+
+  const handlePreferredDaysChange = (value) => {
+    setPreferredDays(value);
+    onInputChange('preferredDays', value);
+  };
+
+  const handleCustomDatesChange = (dates) => {
+    setCustomDates(dates);
+    onInputChange('customDates', dates);
+  };
+
+  const handleRepeatWeeksChange = (value) => {
+    setRepeatWeeks(value);
+    onInputChange('repeatWeeks', value);
   };
 
   return (
@@ -134,58 +190,40 @@ const PetSittingJobDetailsForm = ({
         </div>
       </div>
 
-      {/* Time Selection Section */}
-      {selectedService !== 'Boarding' && (
-        <div className="mb-4">
-          <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3">
-            Select Time
-          </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {/* Start Time */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                Start time
-              </label>
-              <input
-                type="time"
-                value={formData.startTime || ''}
-                onChange={(e) => onInputChange('startTime', e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer"
-              />
-            </div>
+      
+      <ServiceCommonSections
+        frequencyProps={{
+          frequency,
+          preferredDays,
+          customDates,
+          repeatWeeks,
+          onFrequencyChange: handleFrequencyChange,
+          onPreferredDaysChange: handlePreferredDaysChange,
+          onCustomDatesChange: handleCustomDatesChange,
+          onRepeatWeeksChange: handleRepeatWeeksChange
+        }}
+        fileUploadProps={{
+          fieldName: 'pet-sitting-files',
+          title: 'Upload Photos',
+          description: 'Optional — share photos of your pet or any instructions for their care.',
+          placeholder: dragActive ? 'Drop files here' : 'Select files to upload',
+          onFileSelect: (event) => {
+            if (event?.target?.files?.length) {
+              onFileInputChange?.(event);
+            }
+          },
+          selectedFile: selectedFiles?.[0],
+          accept: '.jpg,.jpeg,.png,.pdf',
+          multiple: true
+        }}
+        selectedFiles={selectedFiles}
+        onRemoveFile={onRemoveFile}
+        instructionsTitle="Task Instructions & Special Requirements"
+        instructionsValue={formData.instructions || ''}
+        onInstructionsChange={(value) => onInputChange('instructions', value)}
+        instructionsPlaceholder="Write your instructions here...."
+      />
 
-            {/* End Time */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                End time
-              </label>
-              <input
-                type="time"
-                value={formData.endTime || ''}
-                onChange={(e) => onInputChange('endTime', e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Instructions Section */}
-      <div>
-        <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3 sm:mb-4">
-          Anything specific we should know? <span className="text-primary-200 font-medium text-xs sm:text-base"> (Optional)</span>
-        </h2>
-        <div className="relative">
-          <textarea
-            value={formData.instructions || ''}
-            onChange={(e) => onInputChange('instructions', e.target.value)}
-            placeholder="Write your instructions here in any..."
-            rows={4}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-[#E5E7EB] rounded-xl! focus:outline-none text-xs sm:text-sm lg:text-base resize-none"
-          />
-        </div>
-      </div>
     </div>
   );
 };

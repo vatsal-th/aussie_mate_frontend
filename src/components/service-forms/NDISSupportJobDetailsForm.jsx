@@ -1,21 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FloatingLabelInput } from '../form-controls';
-import AddTaskModal from './common/AddTaskModal';
-import FrequencySelect from './common/FrequencySelect';
-import plusIcon from '../../assets/plus2.svg';
-import trashIcon from '../../assets/trash-red.svg';
+import ServiceCommonSections from './common/ServiceCommonSections';
 import arrowDownIcon from '../../assets/down2.svg';
 
-const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
+const NDISSupportJobDetailsForm = ({
+    formData,
+    onInputChange,
+    selectedFiles = [],
+    dragActive,
+    onFileInputChange,
+    onRemoveFile
+}) => {
     const [ndisNumber, setNdisNumber] = useState('657 645 546');
     const [supportType, setSupportType] = useState('Cleaning');
-    const [tasks, setTasks] = useState([]);
-    const [customTask, setCustomTask] = useState('');
-    const [frequency, setFrequency] = useState('One-time');
-    const [preferredDays, setPreferredDays] = useState({});
-    const [customDates, setCustomDates] = useState([]);
-    const [instructions, setInstructions] = useState('');
-    const [showTaskModal, setShowTaskModal] = useState(false);
+    const [frequency, setFrequency] = useState(formData.frequency || 'One-time');
+    const [preferredDays, setPreferredDays] = useState(formData.preferredDays || {});
+    const [customDates, setCustomDates] = useState(formData.customDates || []);
+    const [repeatWeeks, setRepeatWeeks] = useState(formData.repeatWeeks || '');
     const [isSupportTypeOpen, setIsSupportTypeOpen] = useState(false);
 
     const supportTypeRef = useRef(null);
@@ -27,7 +28,7 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
     ];
 
     // Close dropdown when clicking outside
-    React.useEffect(() => {
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (supportTypeRef.current && !supportTypeRef.current.contains(event.target)) {
                 setIsSupportTypeOpen(false);
@@ -40,6 +41,30 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (formData.frequency) {
+            setFrequency(formData.frequency);
+        }
+    }, [formData.frequency]);
+
+    useEffect(() => {
+        if (formData.preferredDays) {
+            setPreferredDays(formData.preferredDays);
+        }
+    }, [formData.preferredDays]);
+
+    useEffect(() => {
+        if (formData.customDates) {
+            setCustomDates(formData.customDates);
+        }
+    }, [formData.customDates]);
+
+    useEffect(() => {
+        if (formData.repeatWeeks) {
+            setRepeatWeeks(formData.repeatWeeks);
+        }
+    }, [formData.repeatWeeks]);
+
     // Handle NDIS Number input with formatting
     const handleNdisNumberChange = (e) => {
         let value = e.target.value.replace(/\D/g, '');
@@ -49,53 +74,6 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
             setNdisNumber(formatted);
             onInputChange('ndisNumber', value);
         }
-    };
-
-    // Handle adding custom task
-    const handleOpenTaskModal = () => {
-        setShowTaskModal(true);
-    };
-
-    const handleCloseTaskModal = () => {
-        setShowTaskModal(false);
-        setCustomTask('');
-    };
-
-    const handleTaskInputChange = (e) => {
-        const value = e.target.value;
-        setCustomTask(value);
-
-        // Auto-split on comma for multiple tasks
-        if (value.includes(',')) {
-            const taskList = value.split(',').map(task => task.trim()).filter(task => task);
-            if (taskList.length > 0) {
-                const newTasks = [...tasks, ...taskList];
-                setTasks(newTasks);
-                onInputChange('tasks', newTasks);
-                const lastPart = value.split(',').pop().trim();
-                setCustomTask(lastPart);
-            }
-        }
-    };
-
-    const handleSaveTasks = () => {
-        if (customTask.trim()) {
-            const taskList = customTask.split(',').map(task => task.trim()).filter(task => task);
-            const newTasks = [...tasks, ...taskList];
-            setTasks(newTasks);
-            setCustomTask('');
-            setShowTaskModal(false);
-            onInputChange('tasks', newTasks);
-        } else {
-            setShowTaskModal(false);
-        }
-    };
-
-    // Handle removing task
-    const handleRemoveTask = (index) => {
-        const updatedTasks = tasks.filter((_, i) => i !== index);
-        setTasks(updatedTasks);
-        onInputChange('tasks', updatedTasks);
     };
 
     // Handle support type selection
@@ -123,10 +101,9 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
         onInputChange('customDates', dates);
     };
 
-    // Handle instructions change
-    const handleInstructionsChange = (e) => {
-        setInstructions(e.target.value);
-        onInputChange('instructions', e.target.value);
+    const handleRepeatWeeksChange = (value) => {
+        setRepeatWeeks(value);
+        onInputChange('repeatWeeks', value);
     };
 
     return (
@@ -153,7 +130,7 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
 
             {/* Support Type Section */}
             <div>
-                <h3 className="text-base sm:text-lg font-semibold text-primary-500 mb-3">Support Type</h3>
+                <h3 className="text-base font-medium text-primary-500 mb-3">Support Type</h3>
                 <div className="relative" ref={supportTypeRef}>
                     <div
                         onClick={() => setIsSupportTypeOpen(!isSupportTypeOpen)}
@@ -178,76 +155,40 @@ const NDISSupportJobDetailsForm = ({ formData, onInputChange }) => {
                 </div>
             </div>
 
-            {/* Tasks Section */}
-            <div>
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base sm:text-lg font-semibold text-primary-500">Tasks</h3>
-                    <button
-                        type="button"
-                        onClick={handleOpenTaskModal}
-                        className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium text-sm cursor-pointer"
-                    >
-                        <img src={plusIcon} alt="Add" className="w-4 h-4" />
-                        <span className="text-[#1F6FEB]">Add Custom Task</span>
-                    </button>
-                </div>
-
-                {/* Tasks List */}
-                <div className="space-y-2">
-                    {tasks.map((task, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-gray-900 font-medium">{task}</span>
-                            <button
-                                type="button"
-                                onClick={() => handleRemoveTask(index)}
-                                className="cursor-pointer"
-                            >
-                                <img src={trashIcon} alt="Delete" className="w-5 h-5" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Frequency Section */}
-            <FrequencySelect
-                frequency={frequency}
-                preferredDays={preferredDays}
-                customDates={customDates}
-                onFrequencyChange={handleFrequencyChange}
-                onPreferredDaysChange={handlePreferredDaysChange}
-                onCustomDatesChange={handleCustomDatesChange}
+           
+            <ServiceCommonSections
+                frequencyProps={{
+                    frequency,
+                    preferredDays,
+                    customDates,
+                    onFrequencyChange: handleFrequencyChange,
+                    onPreferredDaysChange: handlePreferredDaysChange,
+                    onCustomDatesChange: handleCustomDatesChange,
+                    repeatWeeks,
+                    onRepeatWeeksChange: handleRepeatWeeksChange
+                }}
+                fileUploadProps={{
+                    fieldName: 'ndis-support-files',
+                    title: 'Supporting Documents / Photos',
+                    description: 'Optional — upload relevant photos or documents for your support worker.',
+                    placeholder: dragActive ? 'Drop files here' : 'Select files to upload',
+                    onFileSelect: (event) => {
+                        if (event?.target?.files?.length) {
+                            onFileInputChange?.(event);
+                        }
+                    },
+                    selectedFile: selectedFiles?.[0],
+                    accept: '.pdf,.jpg,.jpeg,.png',
+                    multiple: true
+                }}
+                selectedFiles={selectedFiles}
+                onRemoveFile={onRemoveFile}
+                instructionsTitle="Task Instructions & Special Requirements"
+                instructionsValue={formData.instructions || ''}
+                onInstructionsChange={(value) => onInputChange('instructions', value)}
+                instructionsPlaceholder="Write your instructions here...."
             />
 
-            {/* Anything Specific Section */}
-            <div>
-                <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-base sm:text-lg font-semibold text-primary-500">
-                        Anything specific we should know?
-                    </h3>
-                    <span className="text-primary-200 font-medium text-sm">(Optional)</span>
-                </div>
-                <textarea
-                    value={instructions}
-                    onChange={handleInstructionsChange}
-                    placeholder="Write your instructions here in any...."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl! focus:outline-none text-primary-500 resize-none"
-                    rows={4}
-                />
-            </div>
-
-            {/* Add Task Modal */}
-            <AddTaskModal
-                isOpen={showTaskModal}
-                onClose={handleCloseTaskModal}
-                onSave={handleSaveTasks}
-                value={customTask}
-                onChange={handleTaskInputChange}
-                title="Add Custom Task"
-                description="List tasks by using a comma (,) between each one. e.g. Task 1, Task 2, Task 3"
-                placeholder="Enter Task"
-                saveButtonText="Add"
-            />
 
         </div>
     );

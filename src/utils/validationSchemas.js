@@ -92,21 +92,36 @@ export const createVerifyDocumentsSchema = (userRole) => {
   // Add TFN validation for Student Cleaner
   if (userRole === 'Student Cleaner') {
     baseSchema.tfnNumber = yup.string()
-      .matches(/^\d{9}$/, 'TFN Number must be exactly 9 digits')
-      .required('TFN Number is required for Student Cleaner');
+      .required('TFN Number is required for Student Cleaner')
+      .matches(/^\d{9}$/, 'TFN Number must be exactly 9 digits');
   } else {
     baseSchema.tfnNumber = yup.string()
-      .matches(/^\d{9}$/, 'TFN Number must be exactly 9 digits')
-      .nullable();
+      .transform((value) => (value && value.trim() === '' ? null : value))
+      .nullable()
+      .test('tfn-length', 'TFN Number must be exactly 9 digits', (value) => {
+        if (!value) return true;
+        return /^\d{9}$/.test(value);
+      });
   }
 
   return yup.object().shape(baseSchema);
 };
 
+// Cleaning Job Service Detail Schema
+export const serviceDetailSchema = yup.string()
+  .transform((value) => (value ? value.trim() : ''))
+  .required('Please specify the type of service you need')
+  .min(1, 'Type of service must be between 1 and 100 characters')
+  .max(100, 'Type of service must be between 1 and 100 characters');
+
+export const cleaningJobDetailsSchema = yup.object().shape({
+  serviceDetail: serviceDetailSchema
+});
+
 // Common Field Validations (reusable)
-export const phoneRegex = /^\d{9}$/; // 9 digits without leading 0
+export const phoneRegex = /^\d{9}$/;
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const australianPhoneRegex = /^\+61\s?\d{9}$/; // +61 followed by 9 digits
+export const australianPhoneRegex = /^\+61\s?\d{9}$/; 
 
 // Helper Functions
 export const validateField = async (schema, data) => {

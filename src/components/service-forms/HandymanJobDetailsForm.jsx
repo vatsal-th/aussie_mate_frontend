@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../form-controls';
+import { Checkbox } from '../form-controls';
 import AddTaskModal from './common/AddTaskModal';
 import PlusIcon from '../../assets/plus2.svg';
 import DeleteIcon from '../../assets/trash-red.svg';
-import uploadIcon from '../../assets/upload-cloud.svg';
+import ServiceCommonSections from './common/ServiceCommonSections';
 
-const HandymanJobDetailsForm = ({ 
-  formData, 
+const HandymanJobDetailsForm = ({
+  formData,
   onInputChange,
   selectedFiles = [],
-  onDrag,
-  onDrop,
-  dragActive,
   uploadError,
   onFileInputChange,
   onRemoveFile
@@ -55,7 +52,7 @@ const HandymanJobDetailsForm = ({
   const handleRequestInputChange = (e) => {
     const value = e.target.value;
     setRequestInput(value);
-    
+
     if (value.includes(',')) {
       const requests = value.split(',').map(request => request.trim()).filter(request => request);
       if (requests.length > 0) {
@@ -83,7 +80,7 @@ const HandymanJobDetailsForm = ({
   const handleServiceTypeSelect = (serviceType) => {
     setSelectedServiceType(serviceType);
     setIsServiceDropdownOpen(false);
-    setSelectedRepairs({}); // Reset selections when changing service type
+    setSelectedRepairs({}); 
     onInputChange('handymanServiceType', serviceType);
   };
 
@@ -160,7 +157,7 @@ const HandymanJobDetailsForm = ({
       {/* Repairs Section */}
       <div>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-base sm:text-lg font-semibold text-primary-500">{selectedServiceType}</h2>
+          <h2 className="text-base font-medium text-primary-500">{selectedServiceType}</h2>
           <button
             type="button"
             onClick={handleAddCustomRequest}
@@ -175,20 +172,31 @@ const HandymanJobDetailsForm = ({
         {/* Predefined Repairs Checkboxes */}
         <div className="space-y-3">
           {predefinedRepairs.map((repair, index) => (
-            <div key={index} className="flex items-center">
-              <input
-                type="checkbox"
-                id={`repair-${index}`}
+            <div
+              key={index}
+              role="button"
+              tabIndex={0}
+              className="flex items-center cursor-pointer focus:outline-none"
+              onClick={(e) => {
+                if (e.target.closest('input') || e.target.closest('label')) return;
+                handleRepairToggle(repair);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleRepairToggle(repair);
+                }
+              }}
+            >
+              <Checkbox
+                name={`repair-${index}`}
                 checked={selectedRepairs[repair] || false}
                 onChange={() => handleRepairToggle(repair)}
-                className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500 border-gray-300 rounded cursor-pointer"
+                label={repair}
+                className="items-center"
+                labelClassName="ml-3 text-xs sm:text-sm lg:text-base text-primary-500 font-medium"
+                checkboxSize="w-4 h-4 sm:w-5 sm:h-5"
               />
-              <label
-                htmlFor={`repair-${index}`}
-                className="ml-3 text-xs sm:text-sm lg:text-base text-primary-500 font-medium cursor-pointer"
-              >
-                {repair}
-              </label>
             </div>
           ))}
         </div>
@@ -212,109 +220,30 @@ const HandymanJobDetailsForm = ({
         )}
       </div>
 
-      {/* Upload Section */}
-      <div>
-        <h3 className="text-base sm:text-lg font-medium text-primary-500 mb-3 sm:mb-4">
-          Upload Photos <span className="text-primary-200 font-medium text-xs sm:text-base"> (Optional)</span>
-        </h3>
-
-        {uploadError && (
-          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm">
-            {uploadError}
-          </div>
-        )}
-
-        <div
-          className={`border-2 border-dashed rounded-lg p-4 sm:p-6 lg:p-8 text-center transition-colors cursor-pointer ${
-            dragActive ? 'border-primary-500 bg-primary-50' : 'border-[#D1D3D8] hover:border-primary-500'
-          }`}
-          onDragEnter={onDrag}
-          onDragLeave={onDrag}
-          onDragOver={onDrag}
-          onDrop={onDrop}
-          onClick={() => document.getElementById('handymanFileInput').click()}
-        >
-          <input
-            id="handymanFileInput"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onFileInputChange}
-            className="hidden"
-          />
-          
-          <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-            <div className={`rounded-full p-3 sm:p-4 ${dragActive ? 'bg-primary-500' : 'bg-primary-200'}`}>
-              <img
-                src={uploadIcon}
-                alt="Upload"
-                className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10"
-              />
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm lg:text-base text-primary-500 font-medium mb-2">
-                {dragActive ? 'Drop files here' : 'Select photos to upload'}
-              </p>
-              <button
-                type="button"
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-500 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-primary-600 transition-colors"
-              >
-                Click Here to Upload
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {selectedFiles.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-xs sm:text-sm font-medium text-primary-500 mb-2 sm:mb-3">
-              Selected Files ({selectedFiles.length}/10)
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-20 sm:h-24 object-cover rounded-lg border border-gray-200"
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => onRemoveFile(index)}
-                    variant="danger"
-                    size="xs"
-                    className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ×
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-1 truncate" title={file.name}>
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {(file.size / 1024 / 1024).toFixed(1)}MB
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-       {/* Instructions Section */}
-       <div>
-        <h3 className="text-base sm:text-lg font-medium text-primary-500 mb-3 sm:mb-4">
-          Anything specific we should know? <span className="text-primary-200 font-medium text-xs sm:text-base"> (Optional)</span>
-        </h3>
-        <div className="relative">
-          <textarea
-            value={formData.instructions || ''}
-            onChange={(e) => onInputChange('instructions', e.target.value)}
-            placeholder="Write your instructions here in any...."
-            rows={4}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-[#E5E7EB] rounded-xl! focus:outline-none text-xs sm:text-sm lg:text-base resize-none"
-          />
-        </div>
-      </div>
+      {/* Instructions Section */}
+      <ServiceCommonSections
+        fileUploadProps={{
+          fieldName: 'handyman-files',
+          title: 'Upload Photos',
+          description: 'Optional — share reference photos or documents to help your handyman prepare.',
+          placeholder: 'Select files to upload',
+          onFileSelect: (event) => {
+            if (event?.target?.files?.length) {
+              onFileInputChange?.(event);
+            }
+          },
+          selectedFile: selectedFiles?.[0],
+          accept: 'image/*',
+          multiple: true
+        }}
+        uploadError={uploadError}
+        selectedFiles={selectedFiles}
+        onRemoveFile={onRemoveFile}
+        instructionsTitle="Task Instructions & Special Requirements"
+        instructionsValue={formData.instructions || ''}
+        onInstructionsChange={(value) => onInputChange('instructions', value)}
+        instructionsPlaceholder="Write your instructions here...."
+      />
 
       {/* Add Request Modal */}
       <AddTaskModal

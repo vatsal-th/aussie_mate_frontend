@@ -78,14 +78,17 @@ const JobDetailsPage = () => {
       }) : 'Date not specified',
       location: apiJob.location?.address || 'Location not specified',
       description: apiJob.instructions || 'No specific instructions provided.',
-      propertySize: `${apiJob.propertySize}`,
+      serviceDetail: apiJob.serviceDetail || '',
+      frequency: apiJob.frequency || 'One-time',
+      preferredDays: apiJob.preferredDays || {},
+      customDates: Array.isArray(apiJob.customDates) ? apiJob.customDates : [],
+      repeatWeeks: apiJob.repeatWeeks || '',
       customerName: apiJob.customerId?.firstName || apiJob.customerId?.lastName || apiJob.customer?.firstName || apiJob.customer?.name || apiJob.customerName || apiJob.postedBy || 'Customer',
-      customerPhone: '+61 412 345 678', // Will be updated when customer data is available
+      customerPhone: '+61 412 345 678', 
       images: apiJob.photos?.map(photo => photo.url) || [],
-      budget: 'Price not specified', // Will be updated when budget is available
+      budget: 'Price not specified', 
       status: apiJob.status || 'posted',
       serviceType: apiJob.serviceType || 'general',
-      addons: apiJob.addons || {},
       isUrgent: apiJob.isUrgent || false,
       coordinates: apiJob.location?.coordinates || null
     };
@@ -94,7 +97,6 @@ const JobDetailsPage = () => {
   const jobData = job ? transformJobData(job) : null;
 
   const handleChatWithCustomer = () => {
-    // Navigate to chat page
     navigate(`/chat/${jobId}`);
   };
 
@@ -202,32 +204,45 @@ const JobDetailsPage = () => {
               </p>
             </div>
 
-            {/* Property Size */}
-            <div className="mb-3">
-              <h3 className="text-lg font-semibold text-primary-500">Property Size</h3>
-              <p className="text-sm text-primary-200 font-medium">
-                {jobData.propertySize}
-              </p>
-            </div>
-
-            {/* Add-ons */}
-            {jobData.addons && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-primary-500 mb-2">Add-ons</h3>
-                <div className="space-y-2">
-                  {Object.entries(jobData.addons).map(([key, value]) => (
-                    value && (
-                      <div key={key} className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-primary-200 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                      </div>
-                    )
-                  ))}
-                </div>
+            {jobData.serviceDetail && (
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-primary-500">Type of Service</h3>
+                <p className="text-sm text-primary-200 font-medium">
+                  {jobData.serviceDetail}
+                </p>
               </div>
             )}
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-primary-500 mb-2">Schedule</h3>
+              <div className="space-y-2">
+                <div className="text-sm text-primary-200 font-medium">
+                  Frequency: {jobData.frequency}
+                </div>
+                {jobData.frequency === 'Weekly' && (
+                  <div className="text-sm text-primary-200 font-medium">
+                    Preferred Days:{' '}
+                    {Object.entries(jobData.preferredDays)
+                      .filter(([, selected]) => selected)
+                      .map(([day]) => day)
+                      .join(', ') || 'Any'}
+                  </div>
+                )}
+                {jobData.frequency === 'Custom' && jobData.customDates.length > 0 && (
+                  <div className="text-sm text-primary-200 font-medium">
+                    Selected Dates:{' '}
+                    {jobData.customDates
+                      .map(date => new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }))
+                      .join(', ')}
+                  </div>
+                )}
+                {jobData.repeatWeeks && jobData.frequency === 'Weekly' && (
+                  <div className="text-sm text-primary-200 font-medium">
+                    Repeat for {jobData.repeatWeeks} week(s)
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}

@@ -18,7 +18,12 @@ const RadioButtonGroup = ({
   selectedValue,
   onChange,
   className = "",
-  gridCols = "grid-cols-1 sm:grid-cols-2"
+  gridCols = "grid-cols-1 sm:grid-cols-2",
+  disabled = false,
+  optionClassName = "",
+  optionLabelClassName = "text-gray-900 font-medium",
+  getOptionClass,
+  getOptionLabelClass
 }) => {
   return (
     <div className={className}>
@@ -26,26 +31,39 @@ const RadioButtonGroup = ({
         <h3 className="text-base font-semibold text-primary-500 mb-4">{title}</h3>
       )}
       <div className={`grid gap-6 sm:gap-4 ${gridCols}`}>
-        {options.map((option) => (
-          <label
-            key={option.value}
-            className={`flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all flex-1 ${
-              selectedValue === option.value
-                ? 'border-[#1F6FEB] bg-blue-50'
-                : 'border-gray-300 bg-white hover:bg-gray-50'
-            }`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={selectedValue === option.value}
-              onChange={onChange}
-              className="w-5 h-5 accent-[#1F6FEB] cursor-pointer"
-            />
-            <span className="ml-3 text-gray-900 font-medium">{option.label}</span>
-          </label>
-        ))}
+        {options.map((option) => {
+          const isSelected = selectedValue === option.value;
+          const baseClass = 'flex items-center p-4 border-2 rounded-2xl cursor-pointer transition-all flex-1';
+          const defaultStateClass = isSelected
+            ? 'border-[#1F6FEB] bg-blue-50'
+            : 'border-gray-300 bg-white hover:bg-gray-50';
+          const computedClass = getOptionClass
+            ? `${baseClass} ${getOptionClass(option.value, isSelected)}`
+            : `${baseClass} ${defaultStateClass} ${optionClassName}`;
+
+          const labelBaseClass = optionLabelClassName;
+          const computedLabelClass = getOptionLabelClass
+            ? `${labelBaseClass} ${getOptionLabelClass(option.value, isSelected)}`
+            : labelBaseClass;
+
+          return (
+            <label
+              key={option.value}
+              className={computedClass.trim()}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={isSelected}
+                onChange={onChange}
+                disabled={disabled}
+                className="w-5 h-5 flex-shrink-0 block accent-[#1F6FEB] cursor-pointer disabled:cursor-not-allowed"
+              />
+              <span className={`ml-3 ${computedLabelClass.trim()}`}>{option.label}</span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );

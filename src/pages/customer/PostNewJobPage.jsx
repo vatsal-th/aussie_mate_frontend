@@ -37,16 +37,15 @@ const PostNewJobPage = () => {
   // Job details form data
   const [formData, setFormData] = useState({
     serviceType: '',
+    serviceDetail: '',
     propertyType: '',
     bedrooms: 1,
     bathrooms: 1,
-    propertySize: '',
-    addons: {
-      carpetCleaning: false,
-      windowCleaning: false,
-      ovenCleaning: false
-    },
-    instructions: ''
+    instructions: '',
+    frequency: 'One-time',
+    preferredDays: {},
+    customDates: [],
+    repeatWeeks: ''
   });
 
   // File upload states
@@ -58,24 +57,6 @@ const PostNewJobPage = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [finalInstructions, setFinalInstructions] = useState('');
   const [isUrgent, setIsUrgent] = useState(true);
-  
-  // Boarding specific fields
-  const [pickupDate, setPickupDate] = useState('');
-  const [pickupTime, setPickupTime] = useState('');
-  const [dropoffDate, setDropoffDate] = useState('');
-  const [dropoffTime, setDropoffTime] = useState('');
-
-  // Calculate duration in days for boarding
-  const calculateDuration = () => {
-    if (!pickupDate || !dropoffDate) return null;
-    const pickup = new Date(pickupDate);
-    const dropoff = new Date(dropoffDate);
-    const diffTime = Math.abs(dropoff - pickup);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const boardingDuration = calculateDuration();
   
   const [selectedLocation, setSelectedLocation] = useState({
     address: 'Location not set',
@@ -270,16 +251,6 @@ const PostNewJobPage = () => {
     return selected ? selected.label : 'Select property type';
   };
 
-  const handleAddonChange = (addon) => {
-    setFormData(prev => ({
-      ...prev,
-      addons: {
-        ...prev.addons,
-        [addon]: !prev.addons[addon]
-      }
-    }));
-  };
-
   // File validation
   const validateFile = (file) => {
     const maxSize = 50 * 1024 * 1024; // 50MB
@@ -466,14 +437,14 @@ const PostNewJobPage = () => {
       return;
     }
 
-    if (!formData.propertySize || formData.propertySize.trim() === '') {
-      setError('Property size is required');
+    if (!formData.serviceDetail || formData.serviceDetail.trim() === '') {
+      setError('Please specify the type of service you need');
       setIsLoading(false);
       return;
     }
 
-    if (formData.propertySize.length < 1 || formData.propertySize.length > 100) {
-      setError('Property size must be between 1 and 100 characters');
+    if (formData.serviceDetail.trim().length < 1 || formData.serviceDetail.trim().length > 100) {
+      setError('Type of service must be between 1 and 100 characters');
       setIsLoading(false);
       return;
     }
@@ -530,11 +501,14 @@ const PostNewJobPage = () => {
 
       const jobData = {
         serviceType: formData.serviceType,
+        serviceDetail: formData.serviceDetail,
         propertyType: formData.propertyType,
-        propertySize: formData.propertySize,
         bedrooms: formData.bedrooms,
         bathrooms: formData.bathrooms,
-        addons: formData.addons,
+        frequency: formData.frequency || 'One-time',
+        preferredDays: formData.preferredDays || {},
+        customDates: formData.customDates || [],
+        repeatWeeks: formData.repeatWeeks || '',
         scheduledDate,
         instructions: finalInstructions || formData.instructions,
         isUrgent,
@@ -735,7 +709,6 @@ const PostNewJobPage = () => {
               onInputChange={handleInputChange}
               onPropertyTypeSelect={handlePropertyTypeSelect}
               selectedPropertyTypeLabel={getSelectedPropertyType()}
-              onAddonChange={handleAddonChange}
               selectedFiles={selectedFiles}
               onDrag={handleDrag}
               onDrop={handleDrop}
@@ -753,17 +726,25 @@ const PostNewJobPage = () => {
 
           {/* Use PetSittingJobDetailsForm for pet sitting services */}
           {selectedService === 'petsitting' && (
-            <PetSittingJobDetailsForm 
+            <PetSittingJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}
+              selectedFiles={selectedFiles}
+              dragActive={dragActive}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
             />
           )}
 
           {/* Use CommercialCleaningJobDetailsForm for retail/commercial cleaning services */}
           {selectedService === 'retail' && (
-            <CommercialCleaningJobDetailsForm 
+            <CommercialCleaningJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}
+              selectedFiles={selectedFiles}
+              dragActive={dragActive}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
             />
           )}
 
@@ -773,9 +754,6 @@ const PostNewJobPage = () => {
               formData={formData}
               onInputChange={handleInputChange}
               selectedFiles={selectedFiles}
-              onDrag={handleDrag}
-              onDrop={handleDrop}
-              dragActive={dragActive}
               uploadError={uploadError}
               onFileInputChange={handleFileInputChange}
               onRemoveFile={removeFile}
@@ -784,17 +762,24 @@ const PostNewJobPage = () => {
 
           {/* Use NDISSupportJobDetailsForm for NDIS support services */}
           {selectedService === 'ndis' && (
-            <NDISSupportJobDetailsForm 
+            <NDISSupportJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}
+              selectedFiles={selectedFiles}
+              dragActive={dragActive}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
             />
           )}
 
           {/* Use HousekeepingJobDetailsForm for housekeeping services */}
           {selectedService === 'housekeeping' && (
-            <HousekeepingJobDetailsForm 
+            <HousekeepingJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}
+              selectedFiles={selectedFiles}
+              onFileInputChange={handleFileInputChange}
+              onRemoveFile={removeFile}
             />
           )}
 
@@ -881,120 +866,28 @@ const PostNewJobPage = () => {
         )}
 
         {/* When do you need the service? */}
-        {formData.service === 'Boarding' ? (
-          <div className="space-y-6">
-            {/* Pick-up Date & Time */}
-            <div>
-              <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3">
-                Pick-up Date & Time
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={pickupDate}
-                      onChange={(e) => setPickupDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                    Time
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="time"
-                      value={pickupTime}
-                      onChange={(e) => setPickupTime(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Drop-off Date & Time */}
-            <div>
-              <h2 className="text-base sm:text-lg font-medium text-primary-500 mb-3">
-                Drop-off Date & Time
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={dropoffDate}
-                      onChange={(e) => setDropoffDate(e.target.value)}
-                      min={pickupDate || new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-primary-500 mb-2">
-                    Time
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="time"
-                      value={dropoffTime}
-                      onChange={(e) => setDropoffTime(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 cursor-pointer pr-10"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Duration Display */}
-            {boardingDuration !== null && boardingDuration > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm sm:text-base font-medium text-primary-500">
-                    Duration:
-                  </span>
-                  <span className="text-base sm:text-lg font-semibold text-primary-500">
-                    {boardingDuration} {boardingDuration === 1 ? 'Day' : 'Days'}
-                  </span>
-                </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            <FloatingLabelInput
-              id="serviceDate"
-              name="serviceDate"
-              label="When do you need the service?"
-              type="date"
-              value={(() => {
-                try {
-                  if (!selectedDate || selectedDate === 'Aug 20, 2025') return '';
-                  const date = new Date(selectedDate);
-                  if (isNaN(date.getTime())) return '';
-                  return date.toISOString().split('T')[0];
-                } catch (error) {
-                  console.error('Error parsing selectedDate:', error);
-                  return '';
-                }
-              })()}
-              onChange={handleDatePickerChange}
-              min={new Date().toISOString().split('T')[0]}
-              required
-            />
-          </div>
-        )}
+        <div>
+          <FloatingLabelInput
+            id="serviceDate"
+            name="serviceDate"
+            label="When do you need the service?"
+            type="date"
+            value={(() => {
+              try {
+                if (!selectedDate || selectedDate === 'Aug 20, 2025') return '';
+                const date = new Date(selectedDate);
+                if (isNaN(date.getTime())) return '';
+                return date.toISOString().split('T')[0];
+              } catch (error) {
+                console.error('Error parsing selectedDate:', error);
+                return '';
+              }
+            })()}
+            onChange={handleDatePickerChange}
+            min={new Date().toISOString().split('T')[0]}
+            required
+          />
+        </div>
 
         {/* Anything specific we should know? */}
         <div className="mb-6">

@@ -19,7 +19,8 @@ const Checkbox = ({
   onChange,
   className = "",
   checkboxSize = "w-5 h-5",
-  labelClassName = "text-sm text-[#374151] font-medium"
+  labelClassName = "text-sm text-[#374151] font-medium",
+  required = false
 }) => {
   return (
     <div className={`flex items-start ${className}`}>
@@ -29,6 +30,7 @@ const Checkbox = ({
           name={name}
           checked={checked}
           onChange={onChange}
+          required={required}
           className="sr-only peer"
           id={`checkbox-${name}`}
         />

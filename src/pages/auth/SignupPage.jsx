@@ -5,7 +5,7 @@ import { signupSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
-import { FloatingLabelInput, Button } from '../../components';
+import { FloatingLabelInput, Button, Checkbox } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 
 
@@ -22,7 +22,6 @@ const SignupPage = () => {
     agreeToTerms: false,
     isNDISParticipant: false
   });
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -315,26 +314,23 @@ const SignupPage = () => {
             </div>
 
             {/* Terms & Conditions Checkbox */}
-            <div className="flex items-center space-x-2 sm:space-x-3 mt-4 sm:mt-6">
-              <div className="flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="w-4 h-4 text-primary-500 bg-white border-gray-300 rounded focus:outline-none accent-primary-500 cursor-pointer"
-                  required
-                />
-              </div>
-              <div className="text-xs sm:text-base leading-relaxed">
-                <label className="cursor-pointer text-primary-200 font-medium" >
+            <Checkbox
+              name="agreeToTerms"
+              checked={formData.agreeToTerms}
+              onChange={handleInputChange}
+              className="mt-4 sm:mt-6"
+              checkboxSize="w-4 h-4 sm:w-5 sm:h-5"
+              labelClassName="text-xs sm:text-base leading-relaxed text-primary-200 font-medium"
+              required
+              label={
+                <>
                   I agree to the{' '}
                   <Link to="/terms" className="text-primary-500 hover:text-primary-600 font-medium underline cursor-pointer">
                     Terms & Conditions
                   </Link>
-                </label>
-              </div>
-            </div>
+                </>
+              }
+            />
 
             <Button
               type="submit"

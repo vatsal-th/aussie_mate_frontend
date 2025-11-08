@@ -1,5 +1,6 @@
 import React from 'react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
+import uploadIcon from '../../assets/upload.svg';
 
 /**
  * Reusable File Upload Component
@@ -12,6 +13,7 @@ import UploadCloudIcon from '../../assets/upload-cloud.svg';
  * @param {object} selectedFile - Currently selected file object (with fileName or name property)
  * @param {string} accept - Accepted file types (default: ".pdf,.jpg,.jpeg,.png")
  * @param {string} className - Additional CSS classes for the container
+ * @param {boolean} multiple - Allow selecting multiple files (default false)
  */
 const FileUploadArea = ({ 
   fieldName, 
@@ -21,10 +23,14 @@ const FileUploadArea = ({
   onFileSelect,
   selectedFile = null,
   accept = ".pdf,.jpg,.jpeg,.png",
-  className = ""
+  className = "",
+  multiple = false
 }) => {
   const handleClick = () => {
-    document.getElementById(`${fieldName}-file`)?.click();
+    const input = document.getElementById(`${fieldName}-file`);
+    if (input) {
+      input.click();
+    }
   };
 
   const handleFileChange = (e) => {
@@ -36,7 +42,7 @@ const FileUploadArea = ({
   return (
     <div className={`mb-6 ${className}`}>
       {title && (
-        <h3 className="text-sm font-semibold text-primary-500 mb-1">{title}</h3>
+        <h3 className="text-base font-medium text-primary-500 mb-1">{title}</h3>
       )}
       {description && (
         <p className="text-xs text-primary-200 font-medium mb-3">{description}</p>
@@ -51,11 +57,19 @@ const FileUploadArea = ({
           </div>
           <p className="text-sm font-medium text-primary-500 mb-1 mt-2">Click Here</p>
           <p className="text-xs text-primary-200 font-medium">{placeholder}</p>
+          <button
+            type="button"
+            className="mt-3 inline-flex items-center gap-2 bg-primary-500 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg! cursor-pointer"
+          >
+            Upload Here
+            <img src={uploadIcon} alt="upload" className="w-4 h-4" />
+          </button>
         </div>
         <input
           id={`${fieldName}-file`}
           type="file"
           accept={accept}
+          multiple={multiple}
           onChange={handleFileChange}
           className="hidden"
         />
@@ -70,4 +84,3 @@ const FileUploadArea = ({
 };
 
 export default FileUploadArea;
-

@@ -47,6 +47,7 @@ import CustomerInProgressJobDetailsPage from './pages/customer/CustomerInProgres
 import JobDetailsCompletedPage from './pages/customer/JobDetailsCompletedPage'
 import CompleteJobPage from './pages/cleaner/CompleteJobPage'
 import StripeSuccessPage from './pages/StripeSuccessPage'
+import ProviderComplianceQuizPage from './pages/cleaner/ProviderComplianceQuizPage'
 import { ProtectedRoute } from './components'
 
 function App() {
@@ -231,6 +232,11 @@ function App() {
         <Route path="/cleaner/complete-job/:jobId" element={
           <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
             <CompleteJobPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/cleaner/compliance-quiz" element={
+          <ProtectedRoute allowedRoles={['Professional Cleaner', 'Student Cleaner', 'NDIS Assistant', 'Retail Auditor', 'Pet Sitter', 'Housekeeper']}>
+            <ProviderComplianceQuizPage />
           </ProtectedRoute>
         } />
         <Route path="/customer-in-progress-job/:jobId" element={
