@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, ConfirmationModal } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { ConfirmationModal, PageHeader } from '../../../components';
 import SearchIcon from '../../../assets/search.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
 import ThreeDotIcon from '../../../assets/3dot.svg';
@@ -186,16 +185,13 @@ const InvoicesPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-            <Header />
-
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
-                {/* Top Bar */}
-                <div className="flex items-center gap-3 mb-4">
-                    <button onClick={handleBack} className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                        <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-                    </button>
-                    <h1 className="text-lg sm:text-xl font-semibold text-primary-500">Invoices & Payment History</h1>
-                </div>
+                <PageHeader
+                    title="Invoices & Payment History"
+                    onBack={handleBack}
+                    className="mb-4"
+                    titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
+                />
 
                 {/* Search + Calendar */}
                 <div className="flex items-center gap-3 mb-4">

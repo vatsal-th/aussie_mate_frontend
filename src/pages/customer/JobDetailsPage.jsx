@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { PageHeader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import ChatIcon from '../../assets/message2.svg';
@@ -79,6 +78,9 @@ const JobDetailsPage = () => {
       location: apiJob.location?.address || 'Location not specified',
       description: apiJob.instructions || 'No specific instructions provided.',
       serviceDetail: apiJob.serviceDetail || '',
+      petType: apiJob.petType || '',
+      petBreed: apiJob.petBreed || '',
+      numberOfPets: apiJob.numberOfPets || '',
       frequency: apiJob.frequency || 'One-time',
       preferredDays: apiJob.preferredDays || {},
       customDates: Array.isArray(apiJob.customDates) ? apiJob.customDates : [],
@@ -103,16 +105,13 @@ const JobDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-      </div>
+      <div className="min-h-screen bg-gray-50" />
     );
   }
 
   if (error || !jobData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="text-center py-8">
@@ -132,25 +131,13 @@ const JobDetailsPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 sm:py-4" >
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-primary-500 truncate">
-                {jobData.title}
-              </h1>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title={jobData.title}
+          onBack={() => navigate(-1)}
+          className="px-4 sm:px-6 lg:px-8 py-2 sm:py-4"
+          titleClassName="text-lg sm:text-xl font-semibold text-primary-500 truncate"
+        />
 
         <div className="px-4 sm:px-6 lg:px-8 pb-6">
           {/* Job Overview */}
@@ -210,6 +197,17 @@ const JobDetailsPage = () => {
                 <p className="text-sm text-primary-200 font-medium">
                   {jobData.serviceDetail}
                 </p>
+              </div>
+            )}
+
+            {(jobData.petType || jobData.petBreed || jobData.numberOfPets) && (
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-primary-500">Pet Details</h3>
+                <div className="space-y-1 text-sm text-primary-200 font-medium">
+                  {jobData.petType && <div>Pet Type: {jobData.petType}</div>}
+                  {jobData.petBreed && <div>Breed: {jobData.petBreed}</div>}
+                  {jobData.numberOfPets && <div>Number of Pets: {jobData.numberOfPets}</div>}
+                </div>
               </div>
             )}
 

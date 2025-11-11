@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import RatingIcon from '../../assets/rating.svg';
 import Rating2Icon from '../../assets/rating2.svg';
@@ -265,7 +265,6 @@ const JobDetailsCompletedPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg text-gray-600">Loading job details...</div>
@@ -278,7 +277,6 @@ const JobDetailsCompletedPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg text-red-600 mb-4">{error}</div>
@@ -292,7 +290,6 @@ const JobDetailsCompletedPage = () => {
   if (!jobData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg text-gray-600">Job not found</div>
@@ -305,8 +302,6 @@ const JobDetailsCompletedPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-7xl mx-auto min-h-screen">
         {/* Header */}
         <div className="flex items-center p-4 ">
@@ -439,7 +434,7 @@ const JobDetailsCompletedPage = () => {
             <div className="">
               <div className="flex ">
                 <span className="text-primary-200 font-medium mr-2">Total Paid:</span>
-                <span className="font-bold text-[#1F6FEB]">${jobData.payment.totalPaid}</span>
+                <span className="font-bold text-primary-600">${jobData.payment.totalPaid}</span>
               </div>
               <div className="flex ">
                 <span className="text-primary-200 font-medium mr-2">Payment Mode:</span>
@@ -578,7 +573,7 @@ const JobDetailsCompletedPage = () => {
                     {selectedTags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3 py-1 rounded-full text-sm font-medium bg-[#EBF2FD] text-[#1F6FEB] border border-[#9CC0F6]"
+                        className="px-3 py-1 rounded-full text-sm font-medium bg-[#EBF2FD] text-primary-600 border border-[#9CC0F6]"
                       >
                         {tag}
                       </span>
@@ -644,7 +639,7 @@ const JobDetailsCompletedPage = () => {
                     onClick={() => handleTagSelect(tag)}
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                       selectedTags.includes(tag)
-                        ? 'bg-[#EBF2FD] text-[#1F6FEB] border border-[#9CC0F6]'
+                        ? 'bg-[#EBF2FD] text-primary-600 border border-[#9CC0F6]'
                         : 'bg-[#F9FAFB] text-[#374151] border border-[#E5E7EB]'
                     }`}
                   >

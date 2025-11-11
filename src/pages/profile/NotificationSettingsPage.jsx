@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
-import SwitchIcon from '../../assets/Switch.svg';
+import { PageHeader } from '../../components';
 import { useAuth } from '../../contexts/AuthContext';
 
 const NotificationSettingsPage = () => {
@@ -129,21 +127,13 @@ const NotificationSettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header Section */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Notification Settings
-          </h1>
-        </div>
+        <PageHeader
+          title="Notification Settings"
+          onBack={handleBack}
+          className="mb-6"
+          titleClassName="text-lg sm:text-xl font-semibold text-gray-900"
+        />
         {/* Notification Settings - Show for all users except customers */}
         {user?.role !== 'Customer' && (
           <div className="bg-white rounded-2xl border border-gray-200">

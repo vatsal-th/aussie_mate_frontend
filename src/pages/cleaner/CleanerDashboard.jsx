@@ -5,7 +5,7 @@ import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { Header, Button } from '../../components'
+import { Button } from '../../components'
 import UrgentIcon from '../../assets/urgent.svg'
 import ScheduleIcon from '../../assets/schedule.svg'
 import EquipmentIcon from '../../assets/equipment.svg'
@@ -155,8 +155,6 @@ const CleanerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
         {/* Top Greeting + Availability */}
         <div className="flex flex-row sm:items-center justify-between pt-3 sm:pt-4 gap-3 sm:gap-0">
@@ -214,7 +212,7 @@ const CleanerDashboard = () => {
             </div>
              <button 
                onClick={() => navigate('/cleaner-jobs')}
-               className="text-xs sm:text-sm md:text-lg text-[#1F6FEB] font-medium flex items-center cursor-pointer"
+               className="text-xs sm:text-sm md:text-lg text-primary-600 font-medium flex items-center cursor-pointer"
              >
                <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> 3 Jobs Found</button>
           </div>
@@ -322,7 +320,7 @@ const CleanerDashboard = () => {
                           variant="secondary"
                           size="sm"
                           fullWidth
-                          className="py-1 sm:py-1.5 md:py-2 rounded-xl border text-[#1F6FEB] font-medium hover:bg-primary-50 shadow-custom text-xs sm:text-sm"
+                          className="py-1 sm:py-1.5 md:py-2 rounded-xl border text-primary-600 font-medium hover:bg-primary-50 shadow-custom text-xs sm:text-sm"
                           onClick={() => navigate('/cleaner-jobs')}
                         >
                           Open Job

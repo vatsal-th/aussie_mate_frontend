@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import customerIcon from '../../assets/customer.svg';
-import housekeepingIcon from '../../assets/Housekeeping.png';
+import housekeepingIcon from '../../assets/Cleaning.png';
 import { Button, RadioCard } from '../../components';
 
 const RoleSelectionPage = () => {

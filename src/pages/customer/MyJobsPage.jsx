@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import dayjs from 'dayjs';
+import { PageHeader, PaginationRanges, Checkbox, FiltersDrawer } from '../../components';
 import SearchIcon from '../../assets/search.svg';
+import { SlidersHorizontal, X } from 'lucide-react';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import UserIcon from '../../assets/user.svg';
@@ -19,38 +20,34 @@ const tabs = [
   { id: 'completed', label: 'Completed' }
 ];
 
+const categoryOptions = [
+  { id: 'cleaning', label: 'Cleaning' },
+  { id: 'housekeeping', label: 'Housekeeping' },
+  { id: 'retail', label: 'Commercial Cleaning' },
+  { id: 'petsitting', label: 'Pet Sitter' },
+  { id: 'handyman', label: 'Handyman' },
+  { id: 'ndis', label: 'Support Service' }
+];
+
 // Helpers
+const dateFormatter = new Intl.DateTimeFormat('en-AU', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
+
 const formatDate = (iso) => {
   if (!iso) return '';
-  
+
   try {
     const d = new Date(iso);
-    
-    // Check if date is valid
-    if (isNaN(d.getTime())) {
+
+    if (Number.isNaN(d.getTime())) {
       console.warn('Invalid date:', iso);
       return '';
     }
-    
-    const dateStr = d.toISOString().split('T')[0]; 
-    const timeStr = d.toISOString().split('T')[1].split('.')[0]; 
-    
-    // Parse the date parts
-    const [year, month, day] = dateStr.split('-');
-    const [hours, minutes] = timeStr.split(':');
-    
-    // Convert month number to month name
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthName = monthNames[parseInt(month) - 1];
-    
-    // Format time in 12-hour format
-    const hour24 = parseInt(hours);
-    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-    const ampm = hour24 >= 12 ? 'PM' : 'AM';
-    const timeFormatted = `${hour12}:${minutes} ${ampm}`;
-    
-    return `${day} ${monthName} ${year}, ${timeFormatted}`;
+
+    return dateFormatter.format(d);
   } catch (error) {
     console.error('Error formatting date:', iso, error);
     return '';
@@ -138,16 +135,69 @@ const MyJobsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [jobs, setJobs] = useState([]);
-  const [allJobs, setAllJobs] = useState([]); // Store original jobs
+  const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [bondCleaningFilter, setBondCleaningFilter] = useState(false);
+  const [draftCategories, setDraftCategories] = useState([]);
+  const [draftBondCleaning, setDraftBondCleaning] = useState(false);
+  const [draftDate, setDraftDate] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
-  const calendarRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const statusFilter = useMemo(() => {
+    switch (activeTab) {
+      case 'upcoming':
+        return 'quoted,accepted';
+      case 'ongoing':
+        return 'in_progress,pending_customer_confirmation';
+      case 'completed':
+        return 'completed';
+      default:
+        return undefined;
+    }
+  }, [activeTab]);
+
+  const isFiltersApplied = selectedCategories.length > 0 || bondCleaningFilter || Boolean(filterDate);
+  const isDateRangeApplied = Boolean(startDate || endDate);
+
+  const applyFilters = useCallback((jobList) => {
+    let filtered = jobList;
+
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter((job) => {
+        const serviceType = (job.originalJob?.serviceType || job.serviceType || '').toLowerCase();
+        return selectedCategories.includes(serviceType);
+      });
+    }
+
+    if (bondCleaningFilter) {
+      filtered = filtered.filter((job) => Boolean(job.originalJob?.isBondCleaning));
+    }
+
+    if (filterDate) {
+      filtered = filtered.filter((job) => {
+        const dateSource = job.scheduledDate || job.createdAt;
+        if (!dateSource) return false;
+        return dayjs(dateSource).format('YYYY-MM-DD') === filterDate;
+      });
+    }
+
+    return filtered;
+  }, [selectedCategories, bondCleaningFilter, filterDate]);
+
+  useEffect(() => {
+    setJobs(applyFilters(allJobs));
+  }, [allJobs, applyFilters]);
 
   // Get current user ID
   useEffect(() => {
@@ -169,202 +219,182 @@ const MyJobsPage = () => {
     getCurrentUserId();
   }, [user]);
 
-  // Close calendar when clicking outside
   useEffect(() => {
-    const handleOutside = (e) => {
-      if (showCalendar && calendarRef.current && !calendarRef.current.contains(e.target)) {
-        setShowCalendar(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [showCalendar]);
-    
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [query]);
+
+  const toggleDraftCategory = (categoryId) => {
+    setDraftCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setDraftCategories([]);
+    setDraftBondCleaning(false);
+    setDraftDate('');
+    setSelectedCategories([]);
+    setBondCleaningFilter(false);
+    setFilterDate('');
+    setStartDate('');
+    setEndDate('');
+    setPage(1);
+    setShowFilters(false);
+  };
+
+  const handleApplyFilters = () => {
+    setSelectedCategories(draftCategories);
+    setBondCleaningFilter(draftBondCleaning);
+    setFilterDate(draftDate);
+
+    if (draftDate) {
+      setStartDate(draftDate);
+      setEndDate(draftDate);
+    } else {
+      setStartDate('');
+      setEndDate('');
+    }
+
+    setPage(1);
+    setShowFilters(false);
+  };
+
+  useEffect(() => {
+    if (showFilters) {
+      setDraftCategories(selectedCategories);
+      setDraftBondCleaning(bondCleaningFilter);
+      setDraftDate(filterDate);
+    }
+  }, [showFilters, selectedCategories, bondCleaningFilter, filterDate]);
+
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!currentUserId) return; 
+      if (!currentUserId) return;
+
+      setLoading(true);
+      setError('');
 
       try {
-        setLoading(true);
-        setError('');
+        const params = {
+          page,
+          limit: 10,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        };
 
-        let list = [];
-        
-        if (activeTab === 'upcoming') {
-          const [quotedRes, acceptedRes] = await Promise.all([
-            jobsAPI.getAllJobs({ status: 'quoted', page: 1, limit: 50 }),
-            jobsAPI.getAllJobs({ status: 'accepted', page: 1, limit: 50 })
-          ]);
-          
-          const quotedJobs = quotedRes?.data?.jobs || quotedRes?.data || [];
-          const acceptedJobs = acceptedRes?.data?.jobs || acceptedRes?.data || [];
-          list = [...quotedJobs, ...acceptedJobs];
-        } else if (activeTab === 'ongoing') {
-          const [inProgressRes, pendingConfirmationRes] = await Promise.all([
-            jobsAPI.getAllJobs({ status: 'in_progress', page: 1, limit: 50 }),
-            jobsAPI.getAllJobs({ status: 'pending_customer_confirmation', page: 1, limit: 50 })
-          ]);
-          
-          const inProgressJobs = inProgressRes?.data?.jobs || inProgressRes?.data || [];
-          const pendingConfirmationJobs = pendingConfirmationRes?.data?.jobs || pendingConfirmationRes?.data || [];
-          list = [...inProgressJobs, ...pendingConfirmationJobs];
-        } else {
-          const statusParam = (() => {
-            if (activeTab === 'completed') return 'completed';
-            return undefined;
-          })();
-          
-          const res = await jobsAPI.getAllJobs(statusParam ? { status: statusParam, page: 1, limit: 50 } : { page: 1, limit: 50 });
-          list = res?.data?.jobs || res?.data || res || [];
+        if (statusFilter) {
+          params.status = statusFilter;
+        }
+        if (debouncedQuery) {
+          params.search = debouncedQuery;
+        }
+        if (startDate) {
+          params.startDate = startDate;
+        }
+        if (endDate) {
+          params.endDate = endDate;
         }
 
-        const userJobs = list.filter((j) => {
-          const jobCustomerId = j.customerId?._id || j.customerId?.id || j.customer?._id || j.customer?.id || j.postedBy?._id || j.postedBy?.id;
-          return jobCustomerId === currentUserId;
-        });
+        const response = await jobsAPI.getCustomerJobs(currentUserId, params);
+        const jobList = response?.data || [];
+        const paginationMeta = response?.pagination;
+        if (paginationMeta) {
+          setTotalPages(paginationMeta.totalPages || 1);
+        } else {
+          setTotalPages(1);
+        }
 
-        const filteredJobs = activeTab === 'ongoing' 
-          ? userJobs.filter(j => {
-              const jobStatus = (j.status || '').toString().toLowerCase();
-              return jobStatus === 'in_progress' || jobStatus === 'pending_customer_confirmation';
-            })
-          : userJobs;
+        const normalized = await Promise.all(
+          jobList.map(async (job) => {
+            const statusRaw = (job.status || '').toString();
+            const statusLower = statusRaw.toLowerCase();
+            const statusChip = getStatusChip(statusRaw);
 
-        const normalized = await Promise.all(filteredJobs.map(async (j) => {
-          const status = (j.status || '').toString();
-          const address = j.location?.address || j.location?.fullAddress || '';
-          const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
-          
-          const dateLabel = formatDate(j.scheduledDate || j.createdAt);
-          const paymentAmount = j.payment?.amount ? `$${j.payment.amount}` : null;
-          
-          
-          let quoteCount = 0;
-          if (j.quotesReceived && j.quotesReceived > 0) {
-            quoteCount = j.quotesReceived;
-          } else if (j.quotes && Array.isArray(j.quotes)) {
-            quoteCount = j.quotes.filter(quote => quote.status !== 'rejected').length;
-          } else if (j.quotes && typeof j.quotes === 'number') {
-            quoteCount = j.quotes;
-          } else if (j.quoteCount) {
-            quoteCount = j.quoteCount;
-          } else {
-            try {
-              const jobDetails = await jobsAPI.getJobById(j._id || j.jobId || j.id);
-              if (jobDetails.success && jobDetails.data) {
-                const jobData = jobDetails.data;
-                if (jobData.quotes && Array.isArray(jobData.quotes)) {
-                  quoteCount = jobData.quotes.filter(quote => quote.status !== 'rejected').length;
-                } else if (jobData.quotesReceived && jobData.quotesReceived > 0) {
-                  quoteCount = jobData.quotesReceived;
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching job details for quotes:', error);
+            const address = job.location?.address || job.location?.fullAddress || '';
+            const dateLabel = formatDate(job.scheduledDate || job.createdAt);
+            const paymentAmount = job.payment?.amount ? `$${job.payment.amount}` : job.payment || null;
+
+            let quoteCount = 0;
+            if (typeof job.quotesCount === 'number') {
+              quoteCount = job.quotesCount;
+            } else if (Array.isArray(job.quotesCount)) {
+              quoteCount = job.quotesCount.length;
+            } else if (job.quotesReceived && job.quotesReceived > 0) {
+              quoteCount = job.quotesReceived;
             }
-          }
-          
-          const shouldShowQuotes = quoteCount > 0 && status !== 'accepted' && status !== 'in_progress' && status !== 'completed';
-          const quotes = shouldShowQuotes ? `${quoteCount} Quotes Received` : null;
-          const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
-          const statusChip = getStatusChip(status);
-          
-          // Get message count for this job
-          const messageCount = await getMessageCountForJob(j._id || j.jobId || j.id);
-          
-          return {
-            id: j._id || j.jobId || j.id || `job-${Math.random()}`,   
-            status: status, 
-            statusLabel: statusChip.label,  
-            statusClass: statusChip.className,
-            jobId: j.jobId, 
-            title,
-            dateLabel,  
-            address,
-            payment: paymentAmount,
-            quotes,
-            assignedTo,
-            scheduledDate: j.scheduledDate,
-            createdAt: j.createdAt,
-            messageCount: messageCount,
-            originalJob: j 
-          };
-        }));
-        
-        // Sort by scheduled date (latest first), fallback to creation date
+
+            const shouldShowQuotes = quoteCount > 0 && !['accepted', 'in_progress', 'completed', 'pending_customer_confirmation'].includes(statusLower);
+            const quotes = shouldShowQuotes ? `${quoteCount} Quotes Received` : null;
+
+            const jobIdentifier = job._id?.toString?.() || job.id || job.jobId || `job-${Math.random()}`;
+            const messageCount = await getMessageCountForJob(jobIdentifier);
+
+            const assignedCleanerName = (() => {
+              if (!job.assignedCleaner) return null;
+              const { firstName, lastName, name, fullName } = job.assignedCleaner;
+              const composed = `${firstName || ''} ${lastName || ''}`.trim();
+              return composed || name || fullName || null;
+            })();
+
+            const title = job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, (c) => c.toUpperCase())}`.trim();
+
+            return {
+              id: jobIdentifier,
+              status: statusRaw,
+              statusLabel: statusChip.label,
+              statusClass: statusChip.className,
+              jobId: job.jobId,
+              title,
+              dateLabel,
+              address,
+              payment: paymentAmount,
+              quotes,
+              assignedTo: assignedCleanerName,
+              scheduledDate: job.scheduledDate,
+              createdAt: job.createdAt,
+              messageCount,
+              originalJob: job,
+            };
+          })
+        );
+
         const sortedJobs = normalized.sort((a, b) => {
           const dateA = a.scheduledDate || a.createdAt;
           const dateB = b.scheduledDate || b.createdAt;
-          
+
           if (!dateA && !dateB) return 0;
           if (!dateA) return 1;
           if (!dateB) return -1;
           return new Date(dateB) - new Date(dateA);
         });
-        
-        setJobs(sortedJobs);
+
         setAllJobs(sortedJobs);
-      } catch (e) {
-        console.error('Error fetching jobs:', e);
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
         setError('Failed to load your jobs');
+        setAllJobs([]);
+        setJobs([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchJobs();
-  }, [activeTab, currentUserId]);
 
-  const filteredJobs = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const mapTab = (status) => {
-      const s = (status || '').toLowerCase();
-      if (['in_progress', 'assigned', 'pending_customer_confirmation'].includes(s)) return 'ongoing';
-      if (['completed', 'done'].includes(s)) return 'completed';
-      if (['quoted', 'accepted', 'posted', 'pending', 'pending_quotes'].includes(s)) return 'upcoming';
-      if (!s) return 'upcoming';
-      return 'upcoming';
-    };
-    
-    const hasRange = Boolean(startDate || endDate);
-    const jobsToFilter = hasRange ? allJobs : jobs;
-    
-    return jobsToFilter.filter((job) => {
-      const matchesQuery = !q || job.title.toLowerCase().includes(q) || (job.id || '').toLowerCase().includes(q) || (job.address || '').toLowerCase().includes(q);
-      const tab = mapTab(job.status);
-      const matchesTab = activeTab === 'all' || activeTab === tab;
-      
-      // Date range filtering (inclusive) - use scheduledDate if available, otherwise createdAt
-      let matchesDate = true;
-      if (hasRange) {
-        const jobDate = job.scheduledDate || job.createdAt;
-        if (!jobDate) {
-          matchesDate = false;
-        } else {
-          const jobTime = new Date(jobDate);
-          const jobDayStart = new Date(jobTime.getFullYear(), jobTime.getMonth(), jobTime.getDate()).getTime();
-          const startTs = startDate ? new Date(startDate).getTime() : null;
-          const endTs = endDate ? new Date(endDate).getTime() : null;
-          if (startTs !== null && jobDayStart < startTs) matchesDate = false;
-          if (endTs !== null && jobDayStart > endTs) matchesDate = false;
-        }
-      }
-      
-      return matchesQuery && matchesTab && matchesDate;
-    });
-  }, [query, activeTab, jobs, allJobs, startDate, endDate]);
+    fetchJobs();
+  }, [currentUserId, statusFilter, debouncedQuery, startDate, endDate, page]);
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <Header />
-
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
-        {/* Top Bar */}
-        <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-lg bg-white border border-gray-200 cursor-pointer">
-            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">My Jobs</h1>
-        </div>
+        <PageHeader
+          title="My Jobs"
+          onBack={() => navigate(-1)}
+          className="mb-4"
+        />
 
         {/* Search + Calendar */}
         <div className="flex items-center gap-3 mb-4">
@@ -380,75 +410,28 @@ const MyJobsPage = () => {
             />
           </div>
           <button
-            onClick={() => setShowCalendar((v) => !v)}
-            className={`p-2 sm:p-3 rounded-xl! border cursor-pointer ${
-              startDate || endDate ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
+            onClick={() => setShowFilters(true)}
+            className={`p-2 sm:p-3 rounded-xl! border cursor-pointer transition ${
+              isFiltersApplied || isDateRangeApplied
+                ? 'bg-blue-50 border-blue-300 text-primary-500'
+                : 'bg-white border-gray-200 text-gray-600'
             }`}
-            title="Filter by date range"
+            title="Filters"
           >
-            <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 sm:w-5 sm:h-5" />
+            <SlidersHorizontal className="w-5 h-5" />
           </button>
           {(startDate || endDate) && (
             <button
               onClick={() => { setStartDate(''); setEndDate(''); }}
-              className="p-2 sm:p-3 rounded-xl! bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors"
+              className="p-2 sm:p-3 rounded-xl! bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
               title="Clear date filter"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           )}
         </div>
 
-        {/* Calendar Panel */}
-        {showCalendar && (
-          <div ref={calendarRef} className="mb-4 bg-white rounded-2xl border border-gray-200 shadow-custom p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Filter by Date</h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setStartDate(''); setEndDate(''); }}
-                  className="px-3 py-2 text-sm rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => setShowCalendar(false)}
-                  className="px-3 py-2 text-sm rounded-xl bg-[#1F6FEB] text-white hover:opacity-90 cursor-pointer"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Start date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">End date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none"
-                />
-              </div>
-            </div>
-            {(startDate || endDate) && (
-              <div className="mt-3 text-sm text-gray-600">
-                Showing: {startDate || '—'} to {endDate || '—'}
-              </div>
-            )}
-          </div>
-        )}
-
+  
         {/* Tabs */}
         <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
           {tabs.map((t) => (
@@ -456,7 +439,7 @@ const MyJobsPage = () => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-[8px]! text-sm font-medium whitespace-nowrap cursor-pointer ${
-                activeTab === t.id ? 'bg-[#EBF2FD] text-[#1F6FEB]' : 'bg-white text-gray-600 border border-gray-200  focus:outline-none'
+                activeTab === t.id ? 'bg-[#EBF2FD] text-primary-600' : 'bg-white text-gray-600 border border-gray-200  focus:outline-none'
               }`}
             >
               {t.label}
@@ -474,14 +457,14 @@ const MyJobsPage = () => {
         {(!loading && error) && (
           <div className="text-sm text-red-600">{error}</div>
         )}
-        {currentUserId && !loading && !error && filteredJobs.length === 0 && (
+        {currentUserId && !loading && !error && jobs.length === 0 && (
           <div className="text-center py-8">
             <div className="text-sm text-gray-500 mb-2">No jobs found</div>
             <div className="text-xs text-gray-400">You haven't posted any jobs yet.</div>
           </div>
         )}
         <div className="space-y-3">
-          {filteredJobs.map((job) => (
+          {jobs.map((job) => (
             <div 
               key={job.id} 
               onClick={() => {
@@ -539,7 +522,7 @@ const MyJobsPage = () => {
               </div>
 
               {/* Assigned cleaner */}
-              {(['in_progress', 'completed'].includes(job.status) && job.assignedTo) && (
+              {(['in_progress'].includes(job.status) && job.assignedTo) && (
                 <div className="mt-1 flex items-center text-xs text-primary-200 font-medium">
                   <img src={UserIcon} alt="Assigned" className="w-4 h-4 mr-2" />
                   Assigned to: {job.assignedTo}
@@ -555,7 +538,7 @@ const MyJobsPage = () => {
                     const rest = amount ? job.payment.slice(match[0].length) : '';
                     return (
                       <div className="text-[11px] sm:text-xs text-primary-200 font-medium">
-                        Payment: {amount ? (<><span className="text-[#1F6FEB] font-semibold">{amount}</span>{rest}</>) : job.payment}
+                        Payment: {amount ? (<><span className="text-primary-600 font-semibold">{amount}</span>{rest}</>) : job.payment}
                       </div>
                     );
                   })() : <span />}
@@ -601,7 +584,7 @@ const MyJobsPage = () => {
                           console.error('Error fetching job details for chat:', error);
                         }
                       }}
-                      className="text-[#1F6FEB] px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
+                      className="text-primary-600 px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
                     >
                       <img src={ChatIcon} alt="Chat" className="w-4 h-4" />
                       Chat with Cleaner
@@ -612,11 +595,30 @@ const MyJobsPage = () => {
             </div>
           ))}
         </div>
+        <PaginationRanges
+          count={totalPages}
+          page={page}
+          onChange={(_, value) => setPage(value)}
+          siblingCount={1}
+          boundaryCount={1}
+          stackProps={{ className: 'mt-6' }}
+        />
       </div>
+      <FiltersDrawer
+        open={showFilters}
+        onClose={() => setShowFilters(false)}
+        categories={categoryOptions}
+        draftCategories={draftCategories}
+        onToggleCategory={toggleDraftCategory}
+        draftBondCleaning={draftBondCleaning}
+        onToggleBondCleaning={() => setDraftBondCleaning((prev) => !prev)}
+        draftDate={draftDate}
+        onDateChange={(value) => setDraftDate(value)}
+        onClear={handleClearFilters}
+        onApply={handleApplyFilters}
+      />
     </div>
   );
 };
 
 export default MyJobsPage;
-
-

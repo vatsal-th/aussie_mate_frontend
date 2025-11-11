@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Header } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { PageHeader } from '../../../components';
 import CopyIcon from '../../../assets/copy.svg';
 import JobLiveGif from '../../../assets/joblive.gif';
 import CardBG7 from '../../../assets/CardBG7.png';
@@ -83,9 +82,16 @@ const RewardSuccessPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-md mx-auto px-4 py-6">
+        <PageHeader
+          title="Reward Redeemed"
+          subtitle={reward?.title || '$10 Discount Voucher'}
+          onBack={handleBackToRewards}
+          className="mb-4"
+          titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
+          subtitleClassName="text-sm text-primary-200 font-medium"
+          backLabel="Back to Rewards"
+        />
         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom mt-5 relative overflow-hidden">
           {/* Background Image - Top Right */}
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-56 sm:h-56">
@@ -184,13 +190,14 @@ const RewardSuccessPage = () => {
 
           {/* Back to Rewards */}
           <div className="text-center">
-            <button
+            <Button
               onClick={handleBackToRewards}
-              className="flex items-center justify-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors mx-auto"
+              variant="outline"
+              size="sm"
+              className="text-primary-500 border-primary-200"
             >
-              <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-              <span className="font-medium text-primary-500 text-lg cursor-pointer">Back to Rewards</span>
-            </button>
+              Back to Rewards
+            </Button>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { userAPI, jobsAPI, matePointsAPI } from '../../services/api';
-import { Button, Header } from '../../components';
+import { Button } from '../../components';
 import EditIcon from '../../assets/edit.svg';
 import HelpIcon from '../../assets/help.svg';
 import InvoiceIcon from '../../assets/invoice.svg';
@@ -14,7 +14,6 @@ import PhoneIcon from '../../assets/phone.svg';
 import StarIcon from '../../assets/star.svg';
 import WalletIcon from '../../assets/wallet.svg';
 import RightIcon from '../../assets/right.svg';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import ProfileBG from '../../assets/CardBG7.png';
 import ProfileIcon from '../../assets/profileEdit.svg';
 import ProfileCalendarIcon from '../../assets/profileAvailability.svg';
@@ -192,23 +191,27 @@ const ProfilePage = () => {
         );
     }
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <Header />
-
-            {/* My Profile Header */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center h-16">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                        >
-                            <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-                        </button>
-                        <h1 className="text-xl ml-4 font-semibold text-gray-900">My Profile</h1>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageHeader
+          title="My Profile"
+          onBack={() => navigate(-1)}
+          className="h-16"
+          titleClassName="text-xl font-semibold text-gray-900"
+          rightSlot={
+            <Button
+              onClick={() => navigate('/edit-profile')}
+              variant=""
+              size="sm"
+              icon={EditIcon}
+              className="px-3 py-2 text-sm font-medium text-primary-500 border border-primary-200 rounded-lg hover:bg-primary-50"
+            >
+              Edit Profile
+            </Button>
+          }
+        />
+      </div>
 
             <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 pt-0! px-4 sm:px-6 lg:px-8">
                 {/* Profile and Statistics Container */}

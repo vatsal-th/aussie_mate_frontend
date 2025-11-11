@@ -12,7 +12,7 @@ const HousekeepingJobDetailsForm = ({
   onFileInputChange,
   onRemoveFile
 }) => {
-  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedServices, setSelectedServices] = useState(formData.housekeepingServiceType || []);
   const [customServices, setCustomServices] = useState([]);
   const [frequency, setFrequency] = useState(formData.frequency || 'One-time');
   const [preferredDays, setPreferredDays] = useState(formData.preferredDays || {});
@@ -70,6 +70,12 @@ const HousekeepingJobDetailsForm = ({
       setRepeatWeeks(formData.repeatWeeks);
     }
   }, [formData.repeatWeeks]);
+
+  useEffect(() => {
+    if (Array.isArray(formData.housekeepingServiceType)) {
+      setSelectedServices(formData.housekeepingServiceType);
+    }
+  }, [formData.housekeepingServiceType]);
 
   // Handle housekeeping service type toggle (multi-select)
   const handleServiceTypeToggle = (option) => {
@@ -245,7 +251,7 @@ const HousekeepingJobDetailsForm = ({
               {/* Add New Service Option */}
               <div
                 onClick={handleOpenServiceModal}
-                className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer text-[#1F6FEB] font-medium text-sm sm:text-base border-t border-gray-200"
+                className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer text-primary-600 font-medium text-sm sm:text-base border-t border-gray-200"
               >
                 <img src={plusIcon} alt="Add" className="w-4 h-4 mr-2" />
                 <span >Add New Service</span>
@@ -260,7 +266,7 @@ const HousekeepingJobDetailsForm = ({
             {selectedServices.map((service, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 px-3 py-1.5  bg-blue-50 border border-blue-200 rounded-lg text-[#1F6FEB]"
+                className="flex items-center gap-2 px-3 py-1.5  bg-blue-50 border border-blue-200 rounded-lg text-primary-600"
               >
                 <span className="text-sm text-primary-700 font-medium experimentation">{service}</span>
                 <button

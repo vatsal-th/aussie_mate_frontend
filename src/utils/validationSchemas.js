@@ -114,12 +114,42 @@ export const createVerifyDocumentsSchema = (userRole) => {
 // Cleaning Job Service Detail Schema
 export const serviceDetailSchema = yup.string()
   .transform((value) => (value ? value.trim() : ''))
-  .required('Please specify the type of service you need')
-  .min(1, 'Type of service must be between 1 and 100 characters')
-  .max(100, 'Type of service must be between 1 and 100 characters');
+  .required('Please specify the type of service you need');
 
 export const cleaningJobDetailsSchema = yup.object().shape({
   serviceDetail: serviceDetailSchema
+});
+
+export const petSittingSchema = yup.object().shape({
+  petType: yup.string().trim().required('Please enter your pet type'),
+  petBreed: yup.string().trim().nullable(),
+  numberOfPets: yup
+    .number()
+    .typeError('Number of pets must be a number')
+    .integer('Number of pets must be an integer')
+    .min(1, 'Please enter the number of pets')
+    .required('Please enter the number of pets'),
+  service: yup.string().required('Please select a pet sitting service')
+});
+
+export const housekeepingSchema = yup.object().shape({
+  housekeepingServiceType: yup
+    .array()
+    .of(yup.string().trim())
+    .min(1, 'Please select at least one housekeeping service')
+    .required('Please select at least one housekeeping service')
+});
+
+export const handymanSchema = yup.object().shape({
+  handymanServiceType: yup.string().required('Please select a handyman service type')
+});
+
+export const ndisJobSchema = yup.object().shape({
+  ndisNumber: yup
+    .string()
+    .required('NDIS number is required')
+    .matches(/^\d{9}$/, 'NDIS number must be exactly 9 digits'),
+  supportType: yup.string().required('Please select an NDIS support type')
 });
 
 // Common Field Validations (reusable)

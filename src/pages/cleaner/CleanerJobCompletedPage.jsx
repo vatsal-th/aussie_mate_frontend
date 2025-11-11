@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -126,7 +126,6 @@ const CleanerJobCompletedPage = () => {
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         </div>
@@ -137,7 +136,6 @@ const CleanerJobCompletedPage = () => {
   if (error || !jobData) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-red-500">{error || 'Job not found'}</div>
         </div>
@@ -147,8 +145,6 @@ const CleanerJobCompletedPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4">
         {/* Top Navigation */}
         <div className="flex items-center gap-3 py-4">
@@ -221,7 +217,7 @@ const CleanerJobCompletedPage = () => {
                     {customerReview.review.likedAspects.map((aspect, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 bg-[#EBF2FD] text-[#1F6FEB] text-xs font-medium rounded-full border border-[#9CC0F6]"
+                        className="px-3 py-1 bg-[#EBF2FD] text-primary-600 text-xs font-medium rounded-full border border-[#9CC0F6]"
                       >
                         {aspect}
                       </span>

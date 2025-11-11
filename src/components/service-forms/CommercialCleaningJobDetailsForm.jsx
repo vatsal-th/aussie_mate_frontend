@@ -74,7 +74,7 @@ const CommercialCleaningJobDetailsForm = ({
           value={formData.serviceDetail || ''}
           onChange={(e) => onInputChange('serviceDetail', e.target.value)}
           placeholder='e.g. "Floor Cleaning"'
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-full focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
         />
       </div>
 

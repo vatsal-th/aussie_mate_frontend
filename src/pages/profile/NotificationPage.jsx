@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Header } from '../../components'
 import SettingsIcon from '../../assets/settings.svg'
-import ArrowLeftIcon from '../../assets/arrow-left.svg'
+import { PageHeader } from '../../components'
 
 const NotificationPage = () => {
   const navigate = useNavigate()
@@ -81,24 +80,18 @@ const NotificationPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate(-1)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
+        <PageHeader
+          title="Notifications"
+          onBack={() => navigate(-1)}
+          className="mb-4 sm:mb-6"
+          titleClassName="text-xl sm:text-2xl font-bold text-gray-900"
+          rightSlot={
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <img src={SettingsIcon} alt="Settings" className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Notifications</h1>
-          </div>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <img src={SettingsIcon} alt="Settings" className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
+          }
+        />
 
         {/* Tab Navigation */}
         <div className="mb-4 sm:mb-6">
@@ -110,7 +103,7 @@ const NotificationPage = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 sm:px-4 py-2 rounded-lg! text-sm sm:text-base font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-[#EBF2FD] text-[#1F6FEB]'
+                      ? 'bg-[#EBF2FD] text-primary-600'
                       : 'bg-white text-primary-200 font-medium border-[#F3F3F3]'
                   }`}
                 >
@@ -153,7 +146,7 @@ const NotificationPage = () => {
                       <div className="flex items-center justify-between">
                         <button
                           onClick={(e) => handleActionClick(notification, e)}
-                          className="text-[#1F6FEB] hover:text-[#0088FF] text-xs sm:text-sm font-medium cursor-pointer"
+                          className="text-primary-600 hover:text-[#0088FF] text-xs sm:text-sm font-medium cursor-pointer"
                         >
                           {notification.action}
                         </button>

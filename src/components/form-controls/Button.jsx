@@ -20,13 +20,13 @@ const Button = ({
   // Variant classes
   const variantClasses = {
     primary: 'bg-[#1F6FEB] hover:bg-[#1F6FEB] text-white ',
-    secondary: 'bg-white border border-[#9CC0F6] text-[#1F6FEB] shadow-custom',
+    secondary: 'bg-white border border-[#9CC0F6] text-primary-600 shadow-custom',
     outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 ',
     ghost: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
     danger: 'bg-[#FFE4E4] hover:text-[#B80A34] text-[#EF4444]',
     success: 'bg-[#E4FBED] hover:text-[#00832D] text-[#1EB154]',
     warning: 'bg-yellow-500 hover:bg-yellow-600 text-white ',
-    link: 'bg-transparent text-[#1F6FEB] hover:underline  p-0'
+    link: 'bg-transparent text-primary-600 hover:underline  p-0'
   };
   
   // Size classes

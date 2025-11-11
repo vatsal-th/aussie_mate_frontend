@@ -11,8 +11,8 @@ const NDISSupportJobDetailsForm = ({
     onFileInputChange,
     onRemoveFile
 }) => {
-    const [ndisNumber, setNdisNumber] = useState('657 645 546');
-    const [supportType, setSupportType] = useState('Cleaning');
+    const [ndisNumber, setNdisNumber] = useState(formData.ndisNumber ? formData.ndisNumber.replace(/(\d{3})(?=\d)/g, '$1 ') : '');
+    const [supportType, setSupportType] = useState(formData.supportType || 'Cleaning');
     const [frequency, setFrequency] = useState(formData.frequency || 'One-time');
     const [preferredDays, setPreferredDays] = useState(formData.preferredDays || {});
     const [customDates, setCustomDates] = useState(formData.customDates || []);
@@ -64,6 +64,19 @@ const NDISSupportJobDetailsForm = ({
             setRepeatWeeks(formData.repeatWeeks);
         }
     }, [formData.repeatWeeks]);
+
+    useEffect(() => {
+        if (formData.ndisNumber) {
+            const formatted = formData.ndisNumber.replace(/(\d{3})(?=\d)/g, '$1 ');
+            setNdisNumber(formatted);
+        }
+    }, [formData.ndisNumber]);
+
+    useEffect(() => {
+        if (formData.supportType) {
+            setSupportType(formData.supportType);
+        }
+    }, [formData.supportType]);
 
     // Handle NDIS Number input with formatting
     const handleNdisNumberChange = (e) => {

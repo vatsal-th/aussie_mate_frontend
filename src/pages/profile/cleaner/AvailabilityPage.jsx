@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { PageHeader } from '../../../components';
 import MapPinIcon from '../../../assets/map-pin 1.png';
 import { userAPI } from '../../../services/api';
 import CurrentLocationIcon from '../../../assets/currentLocation.svg';
@@ -278,8 +277,13 @@ const AvailabilityPage = () => {
     if (initialLoading) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <Header />
                 <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
+                    <PageHeader
+                        title="Availability & Work Radius"
+                        onBack={() => navigate(-1)}
+                        className="mb-4 sm:mb-6"
+                        titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
+                    />
                     <div className="flex items-center justify-center h-64">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
@@ -293,16 +297,13 @@ const AvailabilityPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
-
-            <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
-                {/* Page title with back */}
-                <div className="mb-4 sm:mb-6 flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
-                        <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                    <h1 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500">Availability & Geo-fencing</h1>
-                </div>
+            <div className="mx-auto w/full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
+                <PageHeader
+                    title="Availability & Geo-fencing"
+                    onBack={() => navigate(-1)}
+                    className="mb-4 sm:mb-6"
+                    titleClassName="text-base sm:text-lg md:text-xl font-semibold text-primary-500"
+                />
 
                 {/* Error/Success Message */}
                 {error && (
@@ -387,7 +388,7 @@ const AvailabilityPage = () => {
                         <button
                             onClick={handleUseCurrentLocation}
                             disabled={loading}
-                            className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-3 sm:px-4 border border-[#1F6FEB] rounded-xl text-[#1F6FEB] font-medium text-xs sm:text-sm hover:bg-primary-50 transition-colors mb-4 sm:mb-6 disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-3 sm:px-4 border border-[#1F6FEB] rounded-xl text-primary-600 font-medium text-xs sm:text-sm hover:bg-primary-50 transition-colors mb-4 sm:mb-6 disabled:opacity-50"
                         >
                             {loading ? (
                                 <div className="animate-spin rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-[#1F6FEB]"></div>

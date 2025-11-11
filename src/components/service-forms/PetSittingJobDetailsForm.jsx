@@ -43,7 +43,11 @@ const PetSittingJobDetailsForm = ({
   }, [isServiceDropdownOpen]);
 
   useEffect(() => {
-    setSelectedService(formData.service || '');
+    const svc = formData.service || '';
+    setSelectedService(svc);
+    if (svc && (!formData.serviceDetail || formData.serviceDetail !== svc)) {
+      onInputChange('serviceDetail', svc);
+    }
   }, [formData.service]);
 
   useEffect(() => {
@@ -70,10 +74,19 @@ const PetSittingJobDetailsForm = ({
     }
   }, [formData.repeatWeeks]);
 
+useEffect(() => {
+  const svc = formData.service || '';
+  setSelectedService(svc);
+  if (svc && formData.serviceDetail !== svc) {
+    onInputChange('serviceDetail', svc);
+  }
+}, [formData.service, formData.serviceDetail, onInputChange]);
+
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     setIsServiceDropdownOpen(false);
     onInputChange('service', service);
+    onInputChange('serviceDetail', service);
   };
   const handleFrequencyChange = (value) => {
     setFrequency(value);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button, MapWithPolyline } from '../../components';
+import { Button, MapWithPolyline } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -309,7 +309,6 @@ const InProgressJobDetailsPage = () => {
     if (loading) {
         return (
             <div className="bg-gray-50">
-                <Header />
                 <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
                     <div className="bg-white rounded-2xl p-6 animate-pulse">
                         <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -328,7 +327,6 @@ const InProgressJobDetailsPage = () => {
     if (error || !job) {
         return (
             <div className="bg-gray-50">
-                <Header />
                 <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
                     <div className="bg-white rounded-2xl p-6 text-center">
                         <p className="text-red-500">{error || 'Job not found'}</p>
@@ -421,8 +419,6 @@ const InProgressJobDetailsPage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen">
-            <Header />
-
             <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                 {/* Top Navigation */}
                 <div className="flex items-center justify-between py-4 px-4">
@@ -589,7 +585,7 @@ const InProgressJobDetailsPage = () => {
                             <div className="flex items-center justify-between">
                                 <button
                                     onClick={handleGetDirections}
-                                    className="flex items-center text-[#1F6FEB] text-sm font-medium cursor-pointer"
+                                    className="flex items-center text-primary-600 text-sm font-medium cursor-pointer"
                                 >
                                     <img src={MapPinIcon1} alt="Directions" className="w-4 h-4 mr-1" />
                                     {showMap ? 'Hide Map' : 'Show Route'}
@@ -620,7 +616,7 @@ const InProgressJobDetailsPage = () => {
                             <div className="bg-white rounded-2xl p-4 shadow-sm">
                                 <div className="mb-2">
                                     <span className="text-sm text-gray-600">Amount: </span>
-                                    <span className="text-lg font-semibold text-[#1F6FEB]">${acceptedQuote.price}</span>
+                                    <span className="text-lg font-semibold text-primary-600">${acceptedQuote.price}</span>
                                 </div>
                                 {acceptedQuote.description && (
                                     <p className="text-sm text-gray-600">{acceptedQuote.description}</p>
@@ -635,7 +631,7 @@ const InProgressJobDetailsPage = () => {
                         <div className="bg-white rounded-2xl p-4 shadow-sm">
                             <div className="mb-2">
                                 <span className="text-sm text-primary-200 font-medium">Quoted Price: </span>
-                                <span className="text-lg font-semibold text-[#1F6FEB]">${acceptedQuote?.price || job.estimatedPrice || '0'}</span>
+                                <span className="text-lg font-semibold text-primary-600">${acceptedQuote?.price || job.estimatedPrice || '0'}</span>
                             </div>
 
                             <div className="mb-2">

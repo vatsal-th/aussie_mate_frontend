@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button, JobCompleteModal, MapWithPolyline } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, JobCompleteModal, MapWithPolyline, PageHeader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone2.svg?react';
@@ -365,7 +364,6 @@ const CustomerInProgressJobDetailsPage = () => {
   if (loading) {
     return (
       <div className="bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -384,7 +382,6 @@ const CustomerInProgressJobDetailsPage = () => {
   if (error || !job) {
     return (
       <div className="bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 text-center">
             <p className="text-red-500">{error || 'Job not found'}</p>
@@ -433,23 +430,13 @@ const CustomerInProgressJobDetailsPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between py-4 px-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-            </button>
-            <h1 className="text-lg font-semibold text-primary-500 truncate">
-              #{job.jobId || job._id?.slice(-6)} - {job.title}
-            </h1>
-          </div>
-        </div>
+        <PageHeader
+          title={`#${job.jobId || job._id?.slice(-6)} - ${job.title}`}
+          onBack={() => navigate(-1)}
+          className="py-4 px-4"
+          titleClassName="text-lg font-semibold text-primary-500 truncate"
+        />
 
         <div className="px-4">
           {/* Job Details Card */}
@@ -614,7 +601,7 @@ const CustomerInProgressJobDetailsPage = () => {
                   <button
                     type="button"
                     onClick={handleGetDirections}
-                    className="flex items-center text-[#1F6FEB] text-sm font-medium cursor-pointer"
+                    className="flex items-center text-primary-600 text-sm font-medium cursor-pointer"
                   >
                     <img src={MapPinIcon} alt="Directions" className="w-4 h-4 mr-1" />
                     {showMap ? 'Hide Tracking' : 'Track Cleaner'}
@@ -653,7 +640,7 @@ const CustomerInProgressJobDetailsPage = () => {
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <div className="mb-2">
                 <span className="text-sm text-primary-200 font-medium">Quoted Price: </span>
-                <span className="text-lg font-semibold text-[#1F6FEB]">${acceptedQuote?.price || job.estimatedPrice || '0'}</span>
+                <span className="text-lg font-semibold text-primary-600">${acceptedQuote?.price || job.estimatedPrice || '0'}</span>
               </div>
 
               <div className="mb-2">

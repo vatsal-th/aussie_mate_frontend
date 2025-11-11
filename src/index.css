@@ -124,7 +124,7 @@ button {
 }
 
 .text-primary-600 {
-  color: #1d4ed8 !important;
+  color: #1F6FEB !important;
 }
   
 .border-primary-500\/20 {
@@ -134,16 +134,6 @@ button {
 .focus\:ring-primary-500:focus {
   --tw-ring-color: #1F6FEB !important;
 }
-
-/* Custom checkbox styling */
-/* input[type="checkbox"] {
-  accent-color: #1F6FEB !important;
-}
-
-input[type="checkbox"]:checked {
-  background-color: #1F6FEB !important;
-  border-color: #1F6FEB !important;
-} */
 
 /* Custom shadow classes */
 .shadow-custom {

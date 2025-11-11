@@ -1,10 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../../components';
+import { PageHeader } from '../../../components';
 import PdfIcon from '../../../assets/pdf.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
 import InfoIcon from '../../../assets/info.svg';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import { userAPI } from '../../../services/api';
 
 const Pill = ({ label, tone = 'gray' }) => {
@@ -57,7 +56,7 @@ const DocumentRow = ({ name, status, uploadedAt, expiry, tone, actionText = 'Rep
                 <button 
                     type="button" 
                     onClick={handleReplaceClick}
-                    className="text-sm font-medium text-[#1F6FEB] hover:text-[#1d4ed8] underline cursor-pointer self-start"
+                    className="text-sm font-medium text-primary-600 hover:text-[#1d4ed8] underline cursor-pointer self-start"
                 >
                     {actionText}
                 </button>
@@ -162,16 +161,13 @@ const VerificationStatusPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
-
             <div className="mx-auto w-full max-w-2xl px-4 py-6">
-                {/* Page title with back */}
-                <div className="mb-4 flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
-                        <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-                    </button>
-                    <h1 className="text-lg sm:text-xl font-semibold text-primary-500">Verification & Documents</h1>
-                </div>
+                <PageHeader
+                    title="Verification & Documents"
+                    onBack={() => navigate(-1)}
+                    className="mb-4"
+                    titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
+                />
 
                 {/* Common rounded container */}
                 <div className="bg-white rounded-2xl border border-[#F3F3F3] p-4 sm:p-5 space-y-6">

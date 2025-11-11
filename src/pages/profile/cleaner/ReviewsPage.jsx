@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { Button, PageHeader } from '../../../components';
 import StarIcon from '../../../assets/rating.svg';
 import { reviewsAPI } from '../../../services/api';
 
@@ -29,7 +28,7 @@ const ReviewsPage = () => {
         if (reviewsData.length > 0) {
           const totalRating = reviewsData.reduce((sum, review) => sum + (review.rating || 0), 0);
           const averageRating = totalRating / reviewsData.length;
-          setOverallRating(Math.round(averageRating * 10) / 10); // Round to 1 decimal
+          setOverallRating(Math.round(averageRating * 10) / 10);
           setTotalReviews(reviewsData.length);
         }
       } else {
@@ -107,17 +106,6 @@ const ReviewsPage = () => {
     return 'Anonymous Customer';
   };
 
-  // Get job title
-  const getJobTitle = (review) => {
-    if (review.job?.serviceType) {
-      return review.job.serviceType.charAt(0).toUpperCase() + review.job.serviceType.slice(1);
-    }
-    if (review.jobTitle) {
-      return review.jobTitle;
-    }
-    return 'Cleaning Service';
-  };
-
   // Get customer avatar
   const getCustomerAvatar = (review) => {
     if (review.customer?.profilePhoto?.url) {
@@ -145,19 +133,14 @@ const ReviewsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4">
-          <div className="flex items-center gap-3 mb-6">
-            <Button
-              onClick={() => navigate(-1)}
-              variant=""
-              size="sm"
-              icon={ArrowLeftIcon}
-              className="p-2"
-            />
-            <h1 className="text-xl font-semibold text-primary-500">Ratings & Reviews</h1>
-          </div>
-          
+          <PageHeader
+            title="Ratings & Reviews"
+            onBack={() => navigate(-1)}
+            className="mb-6"
+            titleClassName="text-xl font-semibold text-primary-500"
+          />
+
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
@@ -171,20 +154,13 @@ const ReviewsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      {/* Header */}
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4 max-sm:px-3 max-sm:py-3">
-        <div className="flex items-center gap-3 mb-6 max-sm:gap-2 max-sm:mb-4">
-          <Button
-            onClick={() => navigate(-1)}
-            variant=""
-            size="sm"
-            icon={ArrowLeftIcon}
-            className="p-2 max-sm:p-1.5"
-          />
-          <h1 className="text-xl font-semibold text-primary-500 max-sm:text-lg">Ratings & Reviews</h1>
-        </div>
+        <PageHeader
+          title="Ratings & Reviews"
+          onBack={() => navigate(-1)}
+          className="mb-6 max-sm:mb-4"
+          titleClassName="text-xl font-semibold text-primary-500 max-sm:text-lg"
+        />
 
         {/* Overall Rating Card */}
         <div className="bg-white rounded-2xl shadow-custom p-6 mb-6 max-sm:p-4 max-sm:rounded-xl">
@@ -307,7 +283,7 @@ const ReviewsPage = () => {
                             {review.likedAspects.map((aspect, aspectIndex) => (
                               <span 
                                 key={aspectIndex}
-                                className="px-3 py-1.5 bg-[#EBF2FD] text-[#1F6FEB] text-sm font-medium rounded-full border border-[#9CC0F6] max-sm:px-2 max-sm:py-0.5 max-sm:text-[10px]"
+                                className="px-3 py-1.5 bg-[#EBF2FD] text-primary-600 text-sm font-medium rounded-full border border-[#9CC0F6] max-sm:px-2 max-sm:py-0.5 max-sm:text-[10px]"
                               >
                                 {aspect}
                               </span>

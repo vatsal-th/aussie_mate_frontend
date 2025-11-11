@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button, PageHeader } from '../../components';
 import { paymentService, handlePaymentError } from '../../services/paymentService';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import StarIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
 import GoldBadgeIcon from '../../assets/goldBadge.svg';
@@ -127,20 +126,13 @@ const ConfirmYourCleanerPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      {/* Header */}
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4">
-        <div className="flex items-center gap-3 mb-6">
-          <Button
-            onClick={() => navigate(-1)}
-            variant=""
-            size="sm"
-            icon={ArrowLeftIcon}
-            className="p-2"
-          />
-          <h1 className="text-xl font-semibold text-primary-500">Confirm Your Cleaner</h1>
-        </div>
+        <PageHeader
+          title="Confirm Your Cleaner"
+          onBack={() => navigate(-1)}
+          className="mb-6"
+          titleClassName="text-xl font-semibold text-primary-500"
+        />
 
         {/* Cleaner Information Card */}
         <div className="bg-white rounded-2xl shadow-custom p-4 sm:p-6 mb-6">
@@ -210,7 +202,7 @@ const ConfirmYourCleanerPage = () => {
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-primary-200 font-medium">
-                Add-ons: <span className="text-[#1F6FEB] font-semibold">+${finalCleanerData.addOns}</span> ({finalCleanerData.addOnName})
+                Add-ons: <span className="text-primary-600 font-semibold">+${finalCleanerData.addOns}</span> ({finalCleanerData.addOnName})
               </span>
             </div>
             
@@ -261,7 +253,7 @@ const ConfirmYourCleanerPage = () => {
                     }}
                     variant="link"
                     size="sm"
-                    className="flex items-center gap-1 mt-2 text-sm text-[#1F6FEB] font-medium"
+                    className="flex items-center gap-1 mt-2 text-sm text-primary-600 font-medium"
                   >
                     View Breakdown
                     <svg 
@@ -328,7 +320,7 @@ const ConfirmYourCleanerPage = () => {
                     }}
                     variant="link"
                     size="sm"
-                    className="flex items-center gap-1 mt-2 text-sm text-[#1F6FEB] font-medium"
+                    className="flex items-center gap-1 mt-2 text-sm text-primary-600 font-medium"
                   >
                     View Breakdown
                     <svg 
@@ -365,7 +357,7 @@ const ConfirmYourCleanerPage = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-primary-200 font-medium">Available Balance:</span>
-              <span className="text-sm font-semibold text-[#1F6FEB]">${walletBalance}</span>
+              <span className="text-sm font-semibold text-primary-600">${walletBalance}</span>
             </div>
             
             <div className="flex items-center gap-3">
@@ -374,7 +366,7 @@ const ConfirmYourCleanerPage = () => {
                 id="useWallet"
                 checked={useWalletBalance}
                 onChange={(e) => setUseWalletBalance(e.target.checked)}
-                className="w-4 h-4 text-[#1F6FEB] border-gray-300 rounded focus:ring-[#1F6FEB]"
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-[#1F6FEB]"
               />
               <label htmlFor="useWallet" className="text-sm text-primary-500 font-medium cursor-pointer">
                 Use Wallet Balance

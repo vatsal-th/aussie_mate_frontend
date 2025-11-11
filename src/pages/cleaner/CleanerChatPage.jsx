@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Header, FloatingLabelInput, ConfirmationModal, PhoneValidationAlert } from '../../components';
+import { FloatingLabelInput, ConfirmationModal, PhoneValidationAlert } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import InfoIcon from '../../assets/info.svg';
 import SendIcon from '../../assets/sendChat.svg';
@@ -614,7 +614,6 @@ const CleanerChatPage = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <Header />
                 <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                     <div className="p-4 sm:p-6 lg:p-8">
                         <div className="animate-pulse space-y-4">
@@ -634,7 +633,6 @@ const CleanerChatPage = () => {
     if (error || !job) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <Header />
                 <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                     <div className="p-4 sm:p-6 lg:p-8">
                         <div className="text-center py-8">
@@ -654,8 +652,6 @@ const CleanerChatPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
-
             {/* Chat Header */}
             <div className="max-w-6xl mx-auto py-4 px-1">
                 <div className="flex items-center space-x-3">

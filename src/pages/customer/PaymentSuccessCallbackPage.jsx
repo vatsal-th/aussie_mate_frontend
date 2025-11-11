@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { paymentService } from '../../services/paymentService';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 
 const PaymentSuccessCallbackPage = () => {
   const navigate = useNavigate();
@@ -81,8 +81,6 @@ const PaymentSuccessCallbackPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-2xl mx-auto px-4 py-8">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">

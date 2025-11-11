@@ -1,8 +1,9 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import AppLayout from './AppLayout'
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+const ProtectedRoute = ({ children, allowedRoles = [], showHeader = true }) => {
   const { user, loading } = useAuth()
   const location = useLocation()
 
@@ -40,7 +41,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
   }
 
-  return children
+  return <AppLayout showHeader={showHeader}>{children}</AppLayout>
 }
 
 export default ProtectedRoute

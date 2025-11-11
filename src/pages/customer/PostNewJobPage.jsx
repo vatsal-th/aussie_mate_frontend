@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Header,
   Button,
   FloatingLabelInput,
+  PageHeader,
   CleaningJobDetailsForm,
   PetSittingJobDetailsForm,
   CommercialCleaningJobDetailsForm,
@@ -20,9 +20,10 @@ import HousekeepingImage from '../../assets/Housekeeping.png';
 import PetSittingImage from '../../assets/Pet Sitting.png';
 import NDISSupportImage from '../../assets/NDIS Support.png';
 import CommercialCleaningImage from '../../assets/commercialCleaning.svg';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import { jobsAPI, userAPI } from '../../services/api';
+import { format } from 'date-fns';
+import Calendar from '../../components/form-controls/Calendar';
 
 const PostNewJobPage = () => {
   const navigate = useNavigate();
@@ -42,6 +43,16 @@ const PostNewJobPage = () => {
     bedrooms: 1,
     bathrooms: 1,
     instructions: '',
+    petType: '',
+    petBreed: '',
+    numberOfPets: '',
+    service: '',
+    housekeepingServiceType: [],
+    handymanServiceType: '',
+    handymanSelectedRepairs: [],
+    handymanCustomRequests: [],
+    ndisNumber: '',
+    supportType: '',
     frequency: 'One-time',
     preferredDays: {},
     customDates: [],
@@ -157,7 +168,15 @@ const PostNewJobPage = () => {
         
         // Restore final details
         if (formState.selectedDate) {
-          setSelectedDate(formState.selectedDate);
+          const storedDate = formState.selectedDate;
+          if (/^\d{4}-\d{2}-\d{2}$/.test(storedDate)) {
+            setSelectedDate(storedDate);
+          } else {
+            const parsed = new Date(storedDate);
+            if (!isNaN(parsed.getTime())) {
+              setSelectedDate(format(parsed, 'yyyy-MM-dd'));
+            }
+          }
         }
         if (formState.finalInstructions) {
           setFinalInstructions(formState.finalInstructions);
@@ -329,14 +348,12 @@ const PostNewJobPage = () => {
   };
 
   // Final details handlers
-  const handleDatePickerChange = (e) => {
-    const date = new Date(e.target.value);
-    const formattedDate = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-    setSelectedDate(formattedDate);
+  const handleDateChange = (newValue) => {
+    if (newValue instanceof Date && !isNaN(newValue.getTime())) {
+      setSelectedDate(format(newValue, 'yyyy-MM-dd'));
+    } else {
+      setSelectedDate('');
+    }
   };
 
   const handleFinalInstructionsChange = (e) => {
@@ -425,10 +442,13 @@ const PostNewJobPage = () => {
       return;
     }
 
-    if (!formData.propertyType) {
-      setError('Please select a property type');
-      setIsLoading(false);
-      return;
+    const propertyRequiredServices = ['cleaning', 'retail'];
+    if (propertyRequiredServices.includes(formData.serviceType)) {
+      if (!formData.propertyType || formData.propertyType.trim() === '') {
+        setError('Please select a property type');
+        setIsLoading(false);
+        return;
+      }
     }
 
     if (!selectedDate) {
@@ -437,16 +457,65 @@ const PostNewJobPage = () => {
       return;
     }
 
-    if (!formData.serviceDetail || formData.serviceDetail.trim() === '') {
-      setError('Please specify the type of service you need');
-      setIsLoading(false);
-      return;
+    const serviceDetailRequiredServices = ['cleaning', 'retail'];
+    if (serviceDetailRequiredServices.includes(formData.serviceType)) {
+      if (!formData.serviceDetail || formData.serviceDetail.trim() === '') {
+        setError('Please specify the type of service you need');
+        setIsLoading(false);
+        return;
+      }
     }
 
-    if (formData.serviceDetail.trim().length < 1 || formData.serviceDetail.trim().length > 100) {
-      setError('Type of service must be between 1 and 100 characters');
-      setIsLoading(false);
-      return;
+    switch (formData.serviceType) {
+      case 'petsitting': {
+        if (!formData.petType?.trim()) {
+          setError('Please enter your pet type');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.numberOfPets || Number(formData.numberOfPets) <= 0) {
+          setError('Please enter the number of pets');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.service) {
+          setError('Please select a pet sitting service');
+          setIsLoading(false);
+          return;
+        }
+        break;
+      }
+      case 'housekeeping': {
+        if (!Array.isArray(formData.housekeepingServiceType) || formData.housekeepingServiceType.length === 0) {
+          setError('Please select at least one housekeeping service');
+          setIsLoading(false);
+          return;
+        }
+        break;
+      }
+      case 'handyman': {
+        if (!formData.handymanServiceType) {
+          setError('Please select a handyman service type');
+          setIsLoading(false);
+          return;
+        }
+        break;
+      }
+      case 'ndis': {
+        if (!formData.ndisNumber || !/^\d{9}$/.test(formData.ndisNumber)) {
+          setError('NDIS number must be exactly 9 digits');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.supportType) {
+          setError('Please select an NDIS support type');
+          setIsLoading(false);
+          return;
+        }
+        break;
+      }
+      default:
+        break;
     }
 
     let effectiveLocation = selectedLocation;
@@ -492,23 +561,58 @@ const PostNewJobPage = () => {
     }
 
     try { 
-      const scheduledDate = new Date(selectedDate).toISOString();
+      const scheduledDate = selectedDate
+        ? new Date(`${selectedDate}T00:00:00`).toISOString()
+        : null;
 
       const userStr = localStorage.getItem('user');
 
       const user = userStr ? JSON.parse(userStr) : null;
       const customerId = user?.id || user?._id;
 
+      const resolvedServiceDetail = (() => {
+        const trimmed = formData.serviceDetail?.trim();
+        if (trimmed) return trimmed;
+
+        if (formData.serviceType === 'handyman') {
+          const repairs = Array.isArray(formData.handymanSelectedRepairs) ? formData.handymanSelectedRepairs : [];
+          const custom = Array.isArray(formData.handymanCustomRequests) ? formData.handymanCustomRequests : [];
+          const parts = [formData.handymanServiceType, ...repairs, ...custom].filter(Boolean);
+          return parts.join(', ');
+        }
+
+        if (formData.serviceType === 'petsitting') {
+          return formData.service || '';
+        }
+
+        if (formData.serviceType === 'housekeeping' && Array.isArray(formData.housekeepingServiceType)) {
+          const detail = formData.housekeepingServiceType.join(', ');
+          return detail || formData.service || 'Housekeeping';
+        }
+
+        return formData.service || formData.serviceType || '';
+      })();
+
+      const propertyRequiredServices = ['cleaning', 'retail'];
+      const propertyTypeForPayload = propertyRequiredServices.includes(formData.serviceType)
+        ? formData.propertyType
+        : (formData.propertyType || 'house');
+
+      const isHousekeeping = formData.serviceType === 'housekeeping';
+      const isHandyman = formData.serviceType === 'handyman';
+      const isPetSitting = formData.serviceType === 'petsitting';
+      const isNdis = formData.serviceType === 'ndis';
+
       const jobData = {
         serviceType: formData.serviceType,
-        serviceDetail: formData.serviceDetail,
-        propertyType: formData.propertyType,
-        bedrooms: formData.bedrooms,
-        bathrooms: formData.bathrooms,
+        serviceDetail: resolvedServiceDetail,
+        propertyType: propertyTypeForPayload,
+
         frequency: formData.frequency || 'One-time',
         preferredDays: formData.preferredDays || {},
         customDates: formData.customDates || [],
         repeatWeeks: formData.repeatWeeks || '',
+        isBondCleaning,
         scheduledDate,
         instructions: finalInstructions || formData.instructions,
         isUrgent,
@@ -519,6 +623,34 @@ const PostNewJobPage = () => {
         },
         customerId,
       };
+
+      if (isPetSitting) {
+        jobData.petType = formData.petType || '';
+        jobData.petBreed = formData.petBreed || '';
+        jobData.numberOfPets = formData.numberOfPets ? Number(formData.numberOfPets) : null;
+        jobData.petService = formData.service || '';
+      }
+
+      if (isHousekeeping) {
+        jobData.housekeepingServiceType = Array.isArray(formData.housekeepingServiceType)
+          ? formData.housekeepingServiceType
+          : [];
+      }
+
+      if (isHandyman) {
+        jobData.handymanServiceType = formData.handymanServiceType || '';
+        jobData.handymanRepairs = Array.isArray(formData.handymanSelectedRepairs)
+          ? formData.handymanSelectedRepairs
+          : [];
+        jobData.handymanCustomRequests = Array.isArray(formData.handymanCustomRequests)
+          ? formData.handymanCustomRequests
+          : [];
+      }
+
+      if (isNdis) {
+        jobData.ndisNumber = formData.ndisNumber || '';
+        jobData.supportType = formData.supportType || '';
+      }
 
       const files = {
         photos: selectedFiles,
@@ -573,13 +705,12 @@ const PostNewJobPage = () => {
 
   const renderServiceSelection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      {/* Header Section */}
-      <div className="flex items-center mb-6">
-        <Link to="/customer-dashboard" className="mr-4">
-          <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-        </Link>
-        <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
-      </div>
+      <PageHeader
+        title="Post New Job"
+        onBack={() => navigate('/customer-dashboard')}
+        className="mb-6"
+        titleClassName="text-xl sm:text-2xl font-semibold text-primary-500"
+      />
 
       {/* Main Content */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom">
@@ -691,13 +822,12 @@ const PostNewJobPage = () => {
 
   const renderJobDetails = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      {/* Header Section */}
-      <div className="flex items-center mb-6">
-        <Button onClick={handleBack} variant="" size="sm" className="mr-4 pl-0 pr-0">
-          <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-        </Button>
-        <h1 className="text-xl sm:text-2xl font-semibold text-primary-500">Post New Job</h1>
-      </div>
+      <PageHeader
+        title="Post New Job"
+        onBack={handleBack}
+        className="mb-6"
+        titleClassName="text-xl sm:text-2xl font-semibold text-primary-500"
+      />
 
       {/* Main Content */}
       <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-custom">
@@ -800,13 +930,12 @@ const PostNewJobPage = () => {
 
   const renderFinalDetails = () => (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:px-2">
-      {/* Header Section */}
-      <div className="flex items-center mb-6">
-        <Button onClick={handleBack} variant="" size="sm" className="mr-4 pl-0 pr-0">
-          <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-        </Button>
-        <h1 className="text-xl font-semibold text-primary-500">Post New Job</h1>
-      </div>
+      <PageHeader
+        title="Post New Job"
+        onBack={handleBack}
+        className="mb-6"
+        titleClassName="text-xl font-semibold text-primary-500"
+      />
 
       {/* Main Content */}
       <div className="space-y-6 bg-white rounded-2xl p-6 sm:p-8 shadow-custom">
@@ -867,26 +996,28 @@ const PostNewJobPage = () => {
 
         {/* When do you need the service? */}
         <div>
-          <FloatingLabelInput
-            id="serviceDate"
-            name="serviceDate"
+          <Calendar
             label="When do you need the service?"
-            type="date"
-            value={(() => {
-              try {
-                if (!selectedDate || selectedDate === 'Aug 20, 2025') return '';
-                const date = new Date(selectedDate);
-                if (isNaN(date.getTime())) return '';
-                return date.toISOString().split('T')[0];
-              } catch (error) {
-                console.error('Error parsing selectedDate:', error);
-                return '';
-              }
-            })()}
-            onChange={handleDatePickerChange}
-            min={new Date().toISOString().split('T')[0]}
-            required
+            value={selectedDate ? new Date(`${selectedDate}T00:00:00`) : null}
+            onChange={handleDateChange}
+            minDate={new Date()}
+            disablePast
+            format="DD/MM/YYYY"
+            textFieldProps={{
+              required: true,
+              sx: {
+                '& .MuiInputBase-root': {
+                  borderRadius: '16px',
+                },
+              },
+            }}
           />
+          {selectedDate && (
+            <p className="mt-2 text-sm text-primary-200 font-medium">
+              Selected Date:{' '}
+              {format(new Date(`${selectedDate}T00:00:00`), 'dd/MM/yyyy')}
+            </p>
+          )}
         </div>
 
         {/* Anything specific we should know? */}
@@ -940,7 +1071,6 @@ const PostNewJobPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       {renderStepContent()}
     </div>
   );

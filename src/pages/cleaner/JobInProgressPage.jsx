@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader } from '../../components';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 
@@ -27,7 +26,7 @@ const CompleteJobPage = () => {
           serviceType: 'Bond Clean',
           estimatedPrice: 220,
           paymentMethod: 'Cash',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
         });
       } catch (error) {
         console.error('Error fetching job:', error);
@@ -77,20 +76,6 @@ const CompleteJobPage = () => {
     setSelectedFiles(files);
   };
 
-  const handleUploadPhotos = () => {
-    if (selectedFiles.length > 0) {
-      // TODO: Upload files to server
-      const newPhotos = selectedFiles.map((file, index) => ({
-        id: Date.now() + index,
-        file,
-        url: URL.createObjectURL(file),
-        name: file.name,
-      }));
-      setUploadedPhotos(prev => [...prev, ...newPhotos]);
-      setSelectedFiles([]);
-    }
-  };
-
   const handleSubmitPhoto = (photoId) => {
   };
 
@@ -101,7 +86,6 @@ const CompleteJobPage = () => {
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -120,7 +104,6 @@ const CompleteJobPage = () => {
   if (!job) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 text-center">
             <p className="text-red-500">Job not found</p>
@@ -141,26 +124,18 @@ const CompleteJobPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between py-4 px-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-            </button>
-            <h1 className="text-lg font-semibold text-primary-500 truncate">
-              {job.title}
-            </h1>
-          </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-green-500 text-white">
-            Paid
-          </span>
-        </div>
+        <PageHeader
+          title={job.title}
+          onBack={() => navigate(-1)}
+          className="py-4 px-4"
+          titleClassName="text-lg font-semibold text-primary-500 truncate"
+          rightSlot={
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-green-500 text-white">
+              Paid
+            </span>
+          }
+        />
 
         <div className="px-4 space-y-4">
           {/* Job Overview */}

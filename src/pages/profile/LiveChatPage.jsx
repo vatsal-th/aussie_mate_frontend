@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { PageHeader } from '../../components';
 import SearchIcon from '../../assets/search.svg';
 import HelpUserIcon from '../../assets/helpUser.svg';
 import CardBG7 from '../../assets/CardBG7.png';
@@ -37,21 +36,13 @@ const LiveChatPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header Section */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Live Chat Support
-          </h1>
-        </div>
+        <PageHeader
+          title="Live Chat Support"
+          onBack={handleBack}
+          className="mb-6"
+          titleClassName="text-lg sm:text-xl font-semibold text-gray-900"
+        />
 
         {/* Question Input Field */}
         <div className="bg-white rounded-xl p-6 md:p-8 border-2 border-[#8B92A620] relative overflow-hidden">
@@ -121,7 +112,7 @@ const LiveChatPage = () => {
               <button
                 key={index}
                 onClick={() => handleSuggestedQuestion(questionText)}
-                className="text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
+                className="text-left bg-white text-primary-600 border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
               >
                 <p className="font-medium text-sm">
                   {questionText}
@@ -136,7 +127,7 @@ const LiveChatPage = () => {
             <button
               key={index + 2}
               onClick={() => handleSuggestedQuestion(questionText)}
-              className="w-full text-left bg-white text-[#1F6FEB] border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
+              className="w-full text-left bg-white text-primary-600 border border-[#DDEAFF] shadow-custom rounded-xl px-4 py-3 transition-colors z-10 hover:bg-gray-50 cursor-pointer"
             >
               <p className="font-medium text-sm">
                 {questionText}

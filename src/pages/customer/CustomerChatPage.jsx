@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Header, Button, PhoneValidationAlert } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader, PhoneValidationAlert } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 import MessageIcon from '../../assets/sendChat.svg';
 import UserIcon from '../../assets/user.svg';
@@ -326,20 +325,13 @@ const CustomerChatPage = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      {/* Chat Header */}
-      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3 flex items-center">
-        <Button
-          onClick={() => navigate(-1)}
-          variant=""
-          size="sm"
-          icon={ArrowLeftIcon}
-          className="mr-2 sm:mr-3 p-1"
+      <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3">
+        <PageHeader
+          title={`Cleaner #${cleanerId || '1047'}`}
+          onBack={() => navigate(-1)}
+          titleClassName="text-base sm:text-lg font-semibold text-gray-900"
+          backButtonClassName="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer mr-2 sm:mr-3"
         />
-        <h1 className="text-base sm:text-lg font-semibold text-gray-900">
-          Cleaner #{cleanerId || '1047'}
-        </h1>
       </div>
       
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl bg-white rounded-xl shadow-custom pt-1 overflow-x-hidden">
@@ -508,7 +500,7 @@ const CustomerChatPage = () => {
         {/* Add-ons */}
         {quoteData.addons && quoteData.addons.length > 0 && quoteData.addons.map((addon, index) => (
           <div key={index} className="flex justify-between items-center py-1">
-            <span className="text-xs sm:text-sm text-primary-200 font-medium">Add-on: +$ <span className="text-[#1F6FEB] font-bold">{addon.price}</span> ({addon.name})</span>
+            <span className="text-xs sm:text-sm text-primary-200 font-medium">Add-on: +$ <span className="text-primary-600 font-bold">{addon.price}</span> ({addon.name})</span>
           </div>
         ))}
         

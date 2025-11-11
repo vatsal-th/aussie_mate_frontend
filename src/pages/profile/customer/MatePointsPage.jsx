@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { PageHeader } from '../../../components';
 import ArrowDownIcon from '../../../assets/arrow-down.svg';
 import ArrowUpIcon from '../../../assets/arrow-up.svg';
 import Coin2Icon from '../../../assets/Coin2.svg';
@@ -146,20 +145,14 @@ const MatePointsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
-
       {/* Back Button */}
       <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-          </button>
-          <h1 className="ml-4 text-xl font-semibold text-gray-900">MatePoints Rewards</h1>
-        </div>
+        <PageHeader
+          title="MatePoints Rewards"
+          onBack={() => navigate(-1)}
+          className="mb-6"
+          titleClassName="text-xl font-semibold text-gray-900"
+        />
 
         {/* Error / Loading */}
         {error && (

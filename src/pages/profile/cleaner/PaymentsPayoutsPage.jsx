@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../../components';
-import ArrowLeftIcon from '../../../assets/arrow-left.svg';
+import { Button, PageHeader } from '../../../components';
 import { userAPI } from '../../../services/api';
 import { paymentService, handlePaymentError } from '../../../services/paymentService';
 
@@ -100,16 +99,13 @@ const PaymentsPayoutsPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
-
             <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
-                {/* Page title with back */}
-                <div className="mb-4 sm:mb-6 flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="p-1 -ml-1 cursor-pointer">
-                        <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                    <h1 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500">Payments & Payouts</h1>
-                </div>
+                <PageHeader
+                    title="Payments & Payouts"
+                    onBack={() => navigate(-1)}
+                    className="mb-4 sm:mb-6"
+                    titleClassName="text-base sm:text-lg md:text-xl font-semibold text-primary-500"
+                />
 
                 {/* Error Message */}
                 {error && (

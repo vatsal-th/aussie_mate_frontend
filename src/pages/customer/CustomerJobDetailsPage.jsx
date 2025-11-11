@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Header, Button, ConfirmationModal } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, ConfirmationModal, PageHeader } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -64,14 +63,12 @@ const CustomerJobDetailsPage = () => {
       try {
         const chatResponse = await chatAPI.getChatRooms();
         if (chatResponse.success) {
-          // Filter chat rooms for this specific job
           const jobChatRooms = chatResponse.data.filter(room => 
             room.jobId._id === jobId || room.jobId === jobId
           );
           setChatRooms(jobChatRooms);
         }
       } catch (err) {
-        // Don't show error for chat rooms, just continue without them
       }
     };
 
@@ -81,7 +78,6 @@ const CustomerJobDetailsPage = () => {
     }
   }, [jobId]);
 
-  // Handle outside clicks to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -98,8 +94,7 @@ const CustomerJobDetailsPage = () => {
   const getJobTitle = (job) => {
     if (!job) return 'Job Details';
     const serviceType = job.serviceType?.charAt(0).toUpperCase() + job.serviceType?.slice(1) || 'Service';
-    const propertyType = job.propertyType?.charAt(0).toUpperCase() + job.propertyType?.slice(1) || 'Property';
-    return `${serviceType} - ${job.bedrooms || 0} Bed, ${job.bathrooms || 0} Bath ${propertyType}`;
+    return `${serviceType} `;
   };
 
   const formatDate = (dateString) => {
@@ -159,7 +154,7 @@ const CustomerJobDetailsPage = () => {
         const updatedQuotes = cleanerQuotes.map(quote => 
           quote._id === quoteToAccept._id 
             ? { ...quote, status: 'accepted' }
-            : { ...quote, status: 'rejected' } // Reject all other quotes
+            : { ...quote, status: 'rejected' } 
         );
         setCleanerQuotes(updatedQuotes);
         
@@ -301,24 +296,10 @@ const CustomerJobDetailsPage = () => {
     };
   };
 
-  // Helper function to check if there's an accepted quote
-  const getAcceptedQuote = () => {
-    return cleanerQuotes.find(quote => quote.status === 'accepted');
-  };
-
-  // Helper function to get accepted cleaner data
-  const getAcceptedCleaner = () => {
-    const acceptedQuote = getAcceptedQuote();
-    if (acceptedQuote) {
-      return formatCleanerData(acceptedQuote);
-    }
-    return null;
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="animate-pulse space-y-4">
@@ -338,7 +319,6 @@ const CustomerJobDetailsPage = () => {
   if (error || !job) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="text-center py-8">
@@ -359,50 +339,40 @@ const CustomerJobDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <div className="max-w-6xl mx-auto py-3 sm:py-4 px-3 sm:px-4 md:px-4">
+        <PageHeader
+          title={`Job Details - ${job.serviceType || 'Cleaning'}`}
+          onBack={() => navigate(-1)}
+          titleClassName="text-sm sm:text-base md:text-lg font-semibold text-primary-500 truncate"
+          backButtonClassName="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+          rightSlot={
+            <div className="relative" ref={dropdownRef}>
+              <Button
+                onClick={handleDropdownToggle}
+                variant=""
+                size="sm"
+                icon={ThreeDotIcon}
+                className="p-1 sm:p-2"
+              />
 
-      {/* Job Details Header */}
-      <div className="max-w-6xl mx-auto py-3 sm:py-4 px-3 sm:px-4 md:px-6">
-        <div className="flex items-center justify-between">
-          <Button
-            onClick={() => navigate(-1)}
-            variant=""
-            size="sm"
-            icon={ArrowLeftIcon}
-            className="p-0"
-          >
-            <h1 className="text-sm sm:text-base md:text-lg font-semibold text-primary-500 truncate">
-              Job Details - {job.serviceType || 'Cleaning'}
-            </h1>
-          </Button>
-          <div className="relative" ref={dropdownRef}>
-            <Button 
-              onClick={handleDropdownToggle}
-              variant=""
-              size="sm"
-              icon={ThreeDotIcon}
-              className="p-1 sm:p-2"
-            />
-            
-            {/* Dropdown Menu */}
-            {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-                <div className="py-2">
-                  {/* Cancel Job Option */}
-                  <Button
-                    onClick={handleCancelJob}
-                    variant=""
-                    size="sm"
-                    icon={CloseIcon}
-                    className="w-full justify-start px-4 py-3 text-gray-700"
-                  >
-                    Cancel Job
-                  </Button>
+              {showDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                  <div className="py-2">
+                    <Button
+                      onClick={handleCancelJob}
+                      variant=""
+                      size="sm"
+                      icon={CloseIcon}
+                      className="w-full justify-start px-4 py-3 text-gray-700"
+                    >
+                      Cancel Job
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
+              )}
+            </div>
+          }
+        />
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
@@ -423,7 +393,7 @@ const CustomerJobDetailsPage = () => {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <img src={CalendarIcon} alt="Calendar" className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                {formatDate(job.scheduledDate)} – {formatTime(job.scheduledTime)}
+                {formatDate(job.scheduledDate)}
               </span>
             </div>
 
@@ -507,7 +477,7 @@ const CustomerJobDetailsPage = () => {
                         {/* Quote details */}
                         <div className="space-y-1">
                           <div className="text-xs sm:text-sm text-[#374151] font-medium">
-                            Quote Amount: <span className="font-bold text-[#1F6FEB]">${cleaner.quoteAmount}</span>
+                            Quote Amount: <span className="font-bold text-primary-600">${cleaner.quoteAmount}</span>
                             {cleaner.estimatedDuration && (
                               <span className="text-xs text-gray-500 ml-2">({cleaner.estimatedDuration})</span>
                             )}

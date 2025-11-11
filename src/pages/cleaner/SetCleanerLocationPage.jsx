@@ -361,7 +361,7 @@ const SetCleanerLocationPage = () => {
               }}
               variant="link"
               size="sm"
-              className="text-sm text-[#1F6FEB] font-semibold hover:text-blue-700"
+              className="text-sm text-primary-600 font-semibold hover:text-blue-700"
             >
               Change
             </Button>
@@ -447,7 +447,7 @@ const SetCleanerLocationPage = () => {
             size="md"
             icon={CurrentLocationIcon}
             fullWidth
-            className="border-2 border-primary-500 text-[#1F6FEB] hover:bg-primary-50"
+            className="border-2 border-primary-500 text-primary-600 hover:bg-primary-50"
           >
             Use Current Location
           </Button>

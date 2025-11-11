@@ -1,6 +1,3 @@
-// Main Components Export File
-// This allows importing components from a single location
-
 // Form Controls
 export * from './form-controls';
 
@@ -22,4 +19,8 @@ export { default as PetSittingJobDetailsForm } from './service-forms/PetSittingJ
 export { default as AddTaskModal } from './service-forms/common/AddTaskModal';
 export { default as AlertModal } from './service-forms/common/AlertModal';
 export { default as FrequencySelect } from './service-forms/common/FrequencySelect';
+
+// Common Components
+export { default as PaginationRanges } from './common/PaginationRanges';
+export { default as FiltersDrawer } from './common/FiltersDrawer';
 

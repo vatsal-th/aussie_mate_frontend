@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 import CleaningIcon from '../../assets/cleaning2.svg';
 import PetSittingIcon from '../../assets/petSitting2.svg';
 import HousekeepingIcon from '../../assets/housekeeping2.svg';
@@ -94,8 +94,6 @@ const SelectServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-xl mx-auto px-4 py-6 sm:px-6 lg:px-8 bg-white rounded-2xl shadow-custom mt-6">
         {/* Header Section */}
         <div className="mb-8">

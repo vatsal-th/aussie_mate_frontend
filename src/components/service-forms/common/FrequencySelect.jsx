@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import AlertModal from './AlertModal';
-import { Checkbox, CustomSelect } from '../../form-controls';
+import { Calendar, Checkbox, CustomSelect } from '../../form-controls';
 
 const FrequencySelect = ({
   frequency,
@@ -119,7 +120,7 @@ const FrequencySelect = ({
                   onRepeatWeeksChange?.(value);
                 }}
                 placeholder='e.g "1"'
-                className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none text-sm text-gray-900"
               />
             </div>
           </div>
@@ -129,14 +130,38 @@ const FrequencySelect = ({
         {frequency === 'Custom' && (
           <div className="mt-4">
             <label className="block text-sm font-medium text-primary-500 mb-3">
-              Select Dates (Current Month Only)
+              Select Dates
             </label>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <input
-                type="date"
-                value={dateInput}
-                onChange={(e) => setDateInput(e.target.value)}
-                className="flex-1 rounded-full border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none"
+              <Calendar
+                label=""
+                value={dateInput || null}
+                onChange={(date) => {
+                  if (!date) {
+                    setDateInput('');
+                    return;
+                  }
+                  const formatted = dayjs(date).format('YYYY-MM-DD');
+                  setDateInput(formatted);
+                }}
+                format="DD/MM/YYYY"
+                textFieldProps={{
+                  InputLabelProps: {
+                    shrink: false,
+                  },
+                  placeholder: 'DD/MM/YYYY',
+                  sx: {
+                    '& .MuiInputBase-root': {
+                      borderRadius: '9999px',
+                      paddingRight: '14px',
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      padding: '12px 14px',
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                    },
+                  },
+                }}
               />
               <button
                 type="button"
@@ -145,7 +170,7 @@ const FrequencySelect = ({
                   setDateInput('');
                 }}
                 disabled={!dateInput}
-                className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition cursor-pointer ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-6 py-3 text-sm font-semibold transition cursor-pointer w-full sm:w-auto ${
                   dateInput
                     ? 'bg-primary-500 text-white hover:bg-primary-600'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
@@ -161,15 +186,15 @@ const FrequencySelect = ({
                   {customDates.map((date, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-[#1F6FEB]"
+                      className="flex items-center gap-2 px-3 py-1 bg-[#F3F3F3] rounded-full text-primary-500 "
                     >
-                      <span className="text-sm text-[#1F6FEB] font-medium">
+                      <span className="text-sm text-primary-500 font-medium">
                         {new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveDate(date)}
-                        className="text-primary-600 hover:text-primary-800 cursor-pointer"
+                        className="text-primary-500 hover:text-primary-800 cursor-pointer"
                       >
                         <span className="text-lg leading-none">×</span>
                       </button>

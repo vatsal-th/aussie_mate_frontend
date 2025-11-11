@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { userAPI } from '../../services/api';
 import EditIcon from '../../assets/edit.svg';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import MailIcon from '../../assets/mail.svg';
 import PhoneIcon from '../../assets/phone.svg';
 import HeaderLocationIcon from '../../assets/headerlocation.svg';
 import InfoIcon from '../../assets/info.svg';
-import { Header, FloatingLabelInput, Button } from '../../components';
+import { FloatingLabelInput, Button, PageHeader } from '../../components';
 import ProfileBG from '../../assets/CardBG7.png';
 
 const EditProfilePage = () => {
@@ -306,21 +305,14 @@ const EditProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
-
-      {/* Edit Profile Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-            </button>
-            <h1 className="ml-4 text-xl font-semibold text-gray-900">Edit Profile</h1>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageHeader
+          title="Edit Profile"
+          onBack={() => navigate(-1)}
+          className="h-16"
+          titleClassName="text-xl font-semibold text-gray-900"
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 pt-0!">
         {/* Hidden file input for photo upload */}
@@ -509,7 +501,7 @@ const EditProfilePage = () => {
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-[#1F6FEB] hover:text-primary-600 font-medium text-sm sm:text-base transition-colors cursor-pointer"
+              className="text-primary-600 hover:text-primary-600 font-medium text-sm sm:text-base transition-colors cursor-pointer"
             >
               Change
             </button>

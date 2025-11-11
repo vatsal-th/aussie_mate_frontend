@@ -5,7 +5,7 @@ import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { Header, Button, JobCompleteModal } from '../../components';
+import { Button, JobCompleteModal } from '../../components';
 import { jobsAPI } from '../../services/api';
 import { socketService } from '../../services/socketService';
 import CardBG2 from '../../assets/CardBG2.png';
@@ -249,9 +249,6 @@ const CustomerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Component */}
-      <Header />
-
       {/* Main Content Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Search Section */}

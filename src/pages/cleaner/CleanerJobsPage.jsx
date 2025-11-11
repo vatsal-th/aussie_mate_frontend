@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import DownIcon from '../../assets/down2.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -553,8 +552,6 @@ const CleanerJobsPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         {/* Top Navigation */}
         <div className="flex items-center justify-between py-4">
@@ -572,7 +569,7 @@ const CleanerJobsPage = () => {
               onClick={() => navigate('/set-cleaner-location', { state: { from: 'cleaner-jobs' } })}
             >
               <img src={CurrentLocationIcon} alt="Location" className="w-5 h-5" />
-              <span className="text-sm text-[#1F6FEB] font-medium ">
+              <span className="text-sm text-primary-600 font-medium ">
                 {userLocation.address}, {userLocation.city}
               </span>
             </div>
@@ -623,7 +620,7 @@ const CleanerJobsPage = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2.5 rounded-xl! text-sm font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${activeTab === tab.id
-                      ? 'bg-[#EBF2FD] text-[#1F6FEB] shadow-sm font-semibold border-none'
+                      ? 'bg-[#EBF2FD] text-primary-600 shadow-sm font-semibold border-none'
                       : 'bg-[#F9FAFB] text-gray-600 border border-[#F3F3F3] hover:bg-gray-50'
                     }`}
                 >
@@ -749,7 +746,7 @@ const CleanerJobsPage = () => {
                       {activeTab === 'my-bids' && job.myQuote && (
                         <div className="flex items-center">
                           <span className="text-sm font-semibold text-primary-500">
-                            My Quote: <span className="ml-1 text-[#1F6FEB]">${job.myQuote.price}</span>
+                            My Quote: <span className="ml-1 text-primary-600">${job.myQuote.price}</span>
                           </span>
                         </div>
                       )}
@@ -763,7 +760,7 @@ const CleanerJobsPage = () => {
                             e.stopPropagation(); // Prevent job card click
                             navigate(`/chat/${job.id}`);
                           }}
-                          className="text-[#1F6FEB] px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
+                          className="text-primary-600 px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
                         >
                           <img src={ChatIcon} alt="Chat" className="w-5 h-5 " />
                           Chat with Customer
@@ -779,7 +776,7 @@ const CleanerJobsPage = () => {
                             e.stopPropagation(); // Prevent job card click
                             handleInProgressJobClick(job.id);
                           }}
-                          className="text-[#1F6FEB] px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
+                          className="text-primary-600 px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
                         >
                           View Details
                         </button>

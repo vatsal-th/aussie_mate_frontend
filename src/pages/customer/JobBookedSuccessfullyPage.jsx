@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import MessageIcon from '../../assets/message2.svg';
@@ -191,7 +191,6 @@ const JobBookedSuccessfullyPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -205,7 +204,6 @@ const JobBookedSuccessfullyPage = () => {
   if (error || !job) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-8">
           <div className="text-center">
             <div className="text-red-500 text-lg font-medium mb-4">{error || 'Job not found'}</div>
@@ -220,8 +218,6 @@ const JobBookedSuccessfullyPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       {/* Full Screen Animation Overlay - Shows once then disappears */}
       {showAnimation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white animate-fadeIn">
@@ -270,7 +266,7 @@ const JobBookedSuccessfullyPage = () => {
 
           {/* Payment Information */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-[#1F6FEB] mb-2">Payment Summary</h3>
+            <h3 className="text-sm font-semibold text-primary-600 mb-2">Payment Summary</h3>
             <div className="space-y-2">
               <div className="flex text-sm">
                 <span className="text-primary-200 font-medium mr-2">Total Amount:</span>
@@ -297,7 +293,7 @@ const JobBookedSuccessfullyPage = () => {
                   {job?.cashAmount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-primary-200">Pay Cash After Job (90%):</span>
-                      <span className="font-medium text-[#1F6FEB]">${job?.cashAmount}</span>
+                      <span className="font-medium text-primary-600">${job?.cashAmount}</span>
                     </div>
                   )}
                 </>

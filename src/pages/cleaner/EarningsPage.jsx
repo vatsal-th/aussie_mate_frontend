@@ -5,7 +5,6 @@ import ExportIcon from '../../assets/export.svg';
 import BusinessIcon from '../../assets/business.svg';
 import DollarIcon from '../../assets/dollar.svg';
 import TimeIcon from '../../assets/time.svg';
-import { Header } from '../../components';
 
 const EarningsPage = () => {
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ const EarningsPage = () => {
     weeklyChart: [
       { day: 'Mon', amount: 1200 },
       { day: 'Tue', amount: 1800 },
-      { day: 'Wed', amount: 87455 }, // High value as shown in image
+      { day: 'Wed', amount: 87455 }, 
       { day: 'Thu', amount: 2200 },
       { day: 'Fri', amount: 1500 },
       { day: 'Sat', amount: 1900 },
@@ -86,10 +85,6 @@ const EarningsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-            <Header />
-      
-
       {/* Edit Profile Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">

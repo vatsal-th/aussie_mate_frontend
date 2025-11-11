@@ -210,15 +210,22 @@ export const jobsAPI = {
       ...jobData,
     };
 
-    Object.keys(jobPayload).forEach(key => {
-      if (jobPayload[key] !== null && jobPayload[key] !== undefined) {
-        if (typeof jobPayload[key] === 'object') {
-          const stringified = JSON.stringify(jobPayload[key]);
-          formData.append(key, stringified);
-        } else {
-          formData.append(key, jobPayload[key]);
-        }
+    Object.entries(jobPayload).forEach(([key, value]) => {
+      if (value === null || value === undefined) {
+        return;
       }
+
+      if (value instanceof Date) {
+        formData.append(key, value.toISOString());
+        return;
+      }
+
+      if (Array.isArray(value) || typeof value === 'object') {
+        formData.append(key, JSON.stringify(value));
+        return;
+      }
+
+      formData.append(key, value);
     });
 
     // Add photo files
@@ -269,8 +276,15 @@ export const jobsAPI = {
   },
 
   // Get customer's jobs
-  getCustomerJobs: async (customerId) => {
-    return apiRequest(`/jobs/customer/${customerId}`);
+  getCustomerJobs: async (customerId, params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.set(key, value);
+      }
+    });
+    const qs = query.toString();
+    return apiRequest(`/jobs/customer/${customerId}${qs ? `?${qs}` : ''}`);
   },
 
   // Get all jobs (supports backend pagination/filters)
@@ -280,7 +294,7 @@ export const jobsAPI = {
     if (serviceType) params.set('serviceType', serviceType);
     if (page) params.set('page', String(page));
     if (limit) params.set('limit', String(limit));
-    if (location) params.set('location', location); // "lng,lat"
+    if (location) params.set('location', location);
     const qs = params.toString();
     return apiRequest(`/jobs${qs ? `?${qs}` : ''}`);
   },

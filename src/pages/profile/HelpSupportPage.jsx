@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { PageHeader } from '../../components';
 import MessageIcon from '../../assets/message.svg';
 import RightIcon from '../../assets/right.svg';
 import QuestionMarkIcon from '../../assets/questionMark.svg';
@@ -20,21 +19,13 @@ const HelpSupportPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header Section */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Help & Support
-          </h1>
-        </div>
+        <PageHeader
+          title="Help & Support"
+          onBack={handleBack}
+          className="mb-6"
+          titleClassName="text-lg sm:text-xl font-semibold text-gray-900"
+        />
 
         {/* Need Help Section */}
         <div className="mb-6 rounded-2xl shadow-custom">

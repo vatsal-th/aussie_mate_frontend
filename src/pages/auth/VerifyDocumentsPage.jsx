@@ -454,7 +454,9 @@ const VerifyDocumentsPage = () => {
                 size="md"
                 className="px-2 sm:px-4"
               >
-                Submit Documents & Set Availability
+                {userRole === 'NDIS Assistant'
+                  ? 'Submit Documents & Start Quiz'
+                  : 'Submit Documents & Set Availability'}
               </Button>
             </div>
           </form>

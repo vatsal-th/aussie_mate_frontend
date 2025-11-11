@@ -1,7 +1,6 @@
 import React, { useState, useEffect }  from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Header, Button } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader } from '../../components';
 import JobLiveGif from '../../assets/joblive.gif';
 import CardBG6 from '../../assets/CardBG6.png';
 import CardBG7 from '../../assets/CardBG7.png';
@@ -19,9 +18,15 @@ const JobSuccessPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <div className="max-w-md mx-auto px-4 py-6">
+        <PageHeader
+          title="Job Posted Successfully"
+          subtitle="Your job request is live"
+          onBack={() => navigate(-1)}
+          className="mb-4"
+          titleClassName="text-lg font-semibold text-primary-500"
+          subtitleClassName="text-sm text-primary-200 font-medium"
+        />
         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom mt-5 relative overflow-hidden">
           {/* Background Image - Left Bottom */}
           <div className="absolute bottom-0 left-0 w-60 h-60">

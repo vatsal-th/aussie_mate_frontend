@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Button, FloatingLabelInput, ConfirmationModal } from '../../../components';
+import { Button, FloatingLabelInput, ConfirmationModal, PageHeader } from '../../../components';
 import ArrowLeftIcon from '../../../assets/arrow-left.svg';
 import ChevronRightIcon from '../../../assets/chevron-right.svg';
 import ThreeDotIcon from '../../../assets/3dot.svg';
@@ -536,21 +536,13 @@ const WalletPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
-
-      {/* Wallet Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16">
-          <Button
-            onClick={() => navigate(-1)}
-            variant=""
-            size="sm"
-            icon={ArrowLeftIcon}
-            className="p-2"
-          />
-          <h1 className="ml-4 text-xl font-semibold text-gray-900">Wallet & Payments</h1>
-        </div>
+        <PageHeader
+          title="Wallet & Payments"
+          onBack={() => navigate(-1)}
+          className="h-16"
+          titleClassName="text-xl font-semibold text-gray-900"
+        />
       </div>
 
       <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 pt-0!">
@@ -650,7 +642,7 @@ const WalletPage = () => {
                 onClick={() => setShowAddBankModal(true)}
                 variant="link"
                 size="sm"
-                className="text-[#1F6FEB] font-medium text-sm sm:text-base text-left"
+                className="text-primary-600 font-medium text-sm sm:text-base text-left"
               >
                 Add Another Bank Account
               </Button>

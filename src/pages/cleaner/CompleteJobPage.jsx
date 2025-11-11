@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header, Button } from '../../components';
+import { Button } from '../../components';
 import ArrowLeftIcon from '../../assets/arrow-left.svg';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
@@ -270,7 +270,6 @@ const CompleteJobPage = () => {
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -289,7 +288,6 @@ const CompleteJobPage = () => {
   if (!job) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        <Header />
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
           <div className="bg-white rounded-2xl p-6 text-center">
             {error ? (
@@ -322,8 +320,6 @@ const CompleteJobPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
-
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         {/* Top Navigation */}
         <div className="flex items-center justify-between py-4 px-4">
