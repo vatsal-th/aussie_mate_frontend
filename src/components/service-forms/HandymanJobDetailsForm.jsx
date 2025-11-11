@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
 import { Checkbox } from '../form-controls';
 import AddTaskModal from './common/AddTaskModal';
 import PlusIcon from '../../assets/plus2.svg';
@@ -184,14 +185,10 @@ const HandymanJobDetailsForm = ({
             className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 flex items-center justify-between cursor-pointer"
           >
             <span>{selectedServiceType}</span>
-            <svg
+            <ChevronDown
               className={`w-4 h-4 transition-transform ${isServiceDropdownOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+              strokeWidth={2}
+            />
           </button>
 
           {/* Dropdown */}
@@ -206,9 +203,7 @@ const HandymanJobDetailsForm = ({
                 >
                   <span className="text-primary-500">{serviceType}</span>
                   {selectedServiceType === serviceType && (
-                    <svg className="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
+                    <Check className="w-4 h-4 text-primary-500" strokeWidth={2} />
                   )}
                 </button>
               ))}

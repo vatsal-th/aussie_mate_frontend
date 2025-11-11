@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, PageHeader } from '../../components';
+import { Button, Loader, PageHeader } from '../../components';
+import { Check, X } from 'lucide-react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
@@ -13,7 +14,7 @@ const CompleteJobPage = () => {
   const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(300);
   const [needExtraTime, setNeedExtraTime] = useState(false);
   const [uploadedPhotos, setUploadedPhotos] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -270,14 +271,8 @@ const CompleteJobPage = () => {
     return (
       <div className="bg-gray-50 min-h-screen">
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
-          <div className="bg-white rounded-2xl p-6 animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-            <div className="space-y-4">
-              <div className="h-20 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-24 bg-gray-200 rounded"></div>
-            </div>
+          <div className="bg- hite rounded-2xl p-6 animate-pulse">
+            <Loader message="Loading job details..." />
           </div>
         </div>
       </div>
@@ -330,9 +325,7 @@ const CompleteJobPage = () => {
           {successMessage && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="w-3 h-3 text-white" strokeWidth={2} />
               </div>
               <p className="text-green-700 font-medium">{successMessage}</p>
             </div>
@@ -342,9 +335,7 @@ const CompleteJobPage = () => {
           {uploadError && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
               <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-3 h-3 text-white" strokeWidth={2} />
               </div>
               <p className="text-red-700 font-medium">{uploadError}</p>
             </div>
@@ -461,9 +452,7 @@ const CompleteJobPage = () => {
                           onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== index))}
                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X className="w-3 h-3" strokeWidth={2} />
                         </button>
                       </div>
                     ))}
@@ -549,9 +538,7 @@ const CompleteJobPage = () => {
                           onClick={() => setSelectedAfterFiles(selectedAfterFiles.filter((_, i) => i !== index))}
                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X className="w-3 h-3" strokeWidth={2} />
                         </button>
                       </div>
                     ))}

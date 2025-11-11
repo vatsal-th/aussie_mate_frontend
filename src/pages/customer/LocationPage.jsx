@@ -243,9 +243,6 @@ const LocationPage = () => {
         }
       };
       try {
-        // Update location in backend
-        const response = await userAPI.updateLocation(locationData);
-
         window.dispatchEvent(new CustomEvent('locationUpdated'));
       } catch (error) {
         console.error('Error updating location in backend:', error);

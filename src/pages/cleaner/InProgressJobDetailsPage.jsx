@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, MapWithPolyline } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, MapWithPolyline, PageHeader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import MapPinIcon1 from '../../assets/location.svg';
@@ -377,20 +376,7 @@ const InProgressJobDetailsPage = () => {
     };
 
     // Helper functions for payment display
-    const getPaymentMethod = () => {
-        // Find payment for this job from payment history (try different field names)
-        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
-            payment.jobId === jobId ||
-            payment.jobId === job?.jobId ||
-            payment.jobId === job?._id ||
-            payment._id === jobId
-        );
-
-        if (jobPayment?.paymentMethod === 'online') {
-            return 'Online';
-        }
-        return 'Cash';
-    };
+    const getPaymentMethod = () => 'Online';
 
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
@@ -403,36 +389,22 @@ const InProgressJobDetailsPage = () => {
             payment._id === jobId
         );
 
-        if (jobPayment?.paymentMethod === 'online') {
-            // For online payments, show the breakdown
-            const paidAmount = jobPayment?.amount || totalAmount;
-            const cleanerAmount = jobPayment?.cleanerAmount;
+        const paidAmount = jobPayment?.amount ?? totalAmount;
+        const cleanerAmount = jobPayment?.cleanerAmount ?? Math.round(paidAmount * 0.9);
 
-            return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
-        } else {
-            // For cash payments, show the breakdown
-            const onlineAmount = Math.round(totalAmount * 0.1); // 10%
-            const cashAmount = totalAmount - onlineAmount; // 90%
-            return `Customer paid $${onlineAmount} (10%) online to platform. $${cashAmount} (90%) will be paid cash after job.`;
-        }
+        return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
     };
+
+    const headerTitle = job.title || job.serviceType || 'Job Details';
 
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-                {/* Top Navigation */}
-                <div className="flex items-center justify-between py-4 px-4">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-                        </button>
-                        <h1 className="text-lg font-semibold text-primary-500 truncate">
-                            {job.title || `${job.serviceType}`}
-                        </h1>
-                    </div>
+                <div className="px-4 py-4">
+                    <PageHeader
+                        title={headerTitle}
+                        onBack={() => navigate(-1)}
+                    />
                 </div>
 
                 <div className="px-4">

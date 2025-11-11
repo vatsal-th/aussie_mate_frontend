@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { PageHeader } from '../../../components';
 import ArrowDownIcon from '../../../assets/arrow-down.svg';
 import ArrowUpIcon from '../../../assets/arrow-up.svg';
@@ -338,9 +339,7 @@ const MatePointsPage = () => {
                 onClick={closeRedeemModal}
                 className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-6 h-6" strokeWidth={2} />
               </button>
             </div>
 

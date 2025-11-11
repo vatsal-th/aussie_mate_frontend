@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Info } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import customerIcon from '../../assets/customer.svg';
 import housekeepingIcon from '../../assets/Cleaning.png';
@@ -27,14 +28,17 @@ const RoleSelectionPage = () => {
     }
   ];
 
-  const providerRoleOptions = [
-    'Student Cleaner',
-    'Professional Cleaner',
-    'NDIS Assistant',
-    'Retail Auditor',
-    'Pet Sitter',
-    'Housekeeper'
-  ];
+  const providerRoleOptions = useMemo(
+    () => [
+      'Student Cleaner',
+      'Professional Cleaner',
+      'NDIS Assistant',
+      'Retail Auditor',
+      'Pet Sitter',
+      'Housekeeper'
+    ],
+    []
+  );
 
   const handleContinue = () => {
     // For Customer, no specific role needed
@@ -104,16 +108,11 @@ const RoleSelectionPage = () => {
                 <span className={selectedProviderRole ? 'text-gray-900' : 'text-gray-500'}>
                   {selectedProviderRole || 'Select your cleaner role'}
                 </span>
-                <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                <ChevronDown
+                  className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
                     showRoleDropdown ? 'rotate-180' : ''
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                />
               </div>
 
               {/* Dropdown Options */}
@@ -133,6 +132,21 @@ const RoleSelectionPage = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {selectedRole === 'Service Provider' && selectedProviderRole === 'Student Cleaner' && (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <Info className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-amber-700">Student work limits</h3>
+                <p className="mt-1 text-sm text-amber-600">
+                  As a Student Cleaner you’re permitted to work up to 20 hours per week in line with Australian visa
+                  regulations. Please plan your availability accordingly.
+                </p>
+              </div>
             </div>
           )}
 

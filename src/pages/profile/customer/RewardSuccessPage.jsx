@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Check } from 'lucide-react';
 import { PageHeader } from '../../../components';
 import CopyIcon from '../../../assets/copy.svg';
 import JobLiveGif from '../../../assets/joblive.gif';
@@ -111,9 +112,7 @@ const RewardSuccessPage = () => {
               />
             ) : (
               <div className="w-32 h-32 sm:w-40 sm:h-40 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-16 h-16 sm:w-20 sm:h-20 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="w-16 h-16 sm:w-20 sm:h-20 text-green-500" strokeWidth={2} />
               </div>
             )}
           </div>
@@ -151,9 +150,7 @@ const RewardSuccessPage = () => {
                 title={copySuccess ? 'Copied!' : 'Copy voucher code'}
               >
                 {copySuccess ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-4 h-4" strokeWidth={2} />
                 ) : (
                   <img src={CopyIcon} alt="Copy" className="w-4 h-4" />
                 )}

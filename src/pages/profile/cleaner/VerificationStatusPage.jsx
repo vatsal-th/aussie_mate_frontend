@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { PageHeader, Loader } from '../../../components';
 import PdfIcon from '../../../assets/pdf.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
@@ -275,18 +276,7 @@ const VerificationStatusPage = () => {
                     <div className="mt-6 p-4 bg-yellow-50 shadow-custom border border-yellow-200 rounded-xl">
                         <div className="flex items-start gap-3">
                             <div className="w-5 h-5 flex-shrink-0 text-yellow-800">
-                                <svg width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                                    <g clipPath="url(#clip0_233_17022)">
-                                        <path d="M9 16.5C13.1421 16.5 16.5 13.1421 16.5 9C16.5 4.85786 13.1421 1.5 9 1.5C4.85786 1.5 1.5 4.85786 1.5 9C1.5 13.1421 4.85786 16.5 9 16.5Z" stroke="currentColor" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                                        <path d="M9 12V9" stroke="currentColor" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                                        <path d="M9 6H9.0075" stroke="currentColor" strokeWidth="1.125" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </g>
-                                    <defs>
-                                        <clipPath id="clip0_233_17022">
-                                            <rect width="18" height="18" fill="white"/>
-                                        </clipPath>
-                                    </defs>
-                                </svg>
+                                <AlertCircle className="w-full h-full" strokeWidth={2} />
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-yellow-800">

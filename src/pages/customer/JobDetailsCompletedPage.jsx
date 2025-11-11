@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Check, UserRound, X } from 'lucide-react';
 import { Button, PageHeader, Loader } from '../../components';
 import RatingIcon from '../../assets/rating.svg';
 import Rating2Icon from '../../assets/rating2.svg';
@@ -300,9 +301,7 @@ const JobDetailsCompletedPage = () => {
         {successMessage && (
           <div className="mx-4 mt-2 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
             <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-3 h-3 text-white" strokeWidth={2} />
             </div>
             <p className="text-green-700 font-medium">{successMessage}</p>
           </div>
@@ -312,9 +311,7 @@ const JobDetailsCompletedPage = () => {
         {errorMessage && (
           <div className="mx-4 mt-2 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
             <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-3 h-3 text-white" strokeWidth={2} />
             </div>
             <p className="text-red-700 font-medium">{errorMessage}</p>
           </div>
@@ -335,9 +332,7 @@ const JobDetailsCompletedPage = () => {
           <div className="flex items-center space-x-3">
             {/* Avatar */}
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
+              <UserRound className="w-6 h-6 text-gray-400" strokeWidth={2} />
             </div>
             
             <div className="flex-1">

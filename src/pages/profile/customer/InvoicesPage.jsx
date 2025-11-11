@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { ConfirmationModal, PageHeader } from '../../../components';
 import SearchIcon from '../../../assets/search.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
@@ -220,9 +221,7 @@ const InvoicesPage = () => {
                             className="p-2 sm:p-3 rounded-xl! bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors"
                             title="Clear date filter"
                         >
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
                         </button>
                     )}
                 </div>
