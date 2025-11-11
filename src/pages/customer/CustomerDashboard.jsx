@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, JobCompleteModal, Loader } from '../../components';
+import { Button, Loader } from '../../components';
 import { jobsAPI } from '../../services/api';
-import { socketService } from '../../services/socketService';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
 import CardBG4 from '../../assets/CardBG4.png';
@@ -29,8 +28,6 @@ const CustomerDashboard = () => {
   const [ongoingJobs, setOngoingJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showJobCompleteModal, setShowJobCompleteModal] = useState(false);
-  const [completedJobInfo, setCompletedJobInfo] = useState(null);
   const swiperRef = useRef(null);
   const navigate = useNavigate();
 
@@ -59,18 +56,18 @@ const CustomerDashboard = () => {
   const getStatusChip = (statusRaw) => {
     const s = (statusRaw || '').toString().toLowerCase();
     if (s === 'in_progress') {
-      return { label: 'In Progress', className: 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500' };
+      return { label: 'In Progress', className: 'bg-yellow-500 text-yellow-500 border border-yellow-500' };
     }
     if (s === 'completed') {
-      return { label: 'Completed', className: 'bg-[#DBF9E7] text-green-500 border border-green-500' };
+      return { label: 'Completed', className: 'bg-green-500 text-green-500 border border-green-500' };
     }
     if (s === 'pending_customer_confirmation') {
-      return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };
+      return { label: 'Pending Confirmation', className: 'bg-orange-500 text-orange-500 border border-orange-500' };
     }
     if (['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) {
-      return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+      return { label: 'Pending Quotes', className: 'bg-blue-500 text-blue-500 border border-blue-500' };
     }
-    return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
+    return { label: 'Pending Quotes', className: 'bg-blue-500 text-blue-500 border border-blue-500' };
   };
 
   const getActionText = (status) => {
@@ -85,92 +82,6 @@ const CustomerDashboard = () => {
   const handleViewRewards = () => {
     navigate('/rewards');
   };
-
-  const handleCloseJobCompleteModal = () => {
-    setShowJobCompleteModal(false);
-    setCompletedJobInfo(null);
-  };
-
-  useEffect(() => {
-    const checkCompletedJobs = () => {
-      const completedJob = localStorage.getItem('recentlyCompletedJob');
-      if (completedJob) {
-        try {
-          const jobData = JSON.parse(completedJob);
-          setCompletedJobInfo(jobData);
-          setShowJobCompleteModal(true);
-          localStorage.removeItem('recentlyCompletedJob');
-        } catch (error) {
-          console.error('Error parsing completed job data:', error);
-        }
-      }
-    };
-
-    checkCompletedJobs();
-  }, []);
-        
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    
-    console.log('useEffect running...');
-    console.log('Token exists:', !!token);
-    
-    if (!token) {
-      console.warn('No auth token found');
-      return;
-    }
-    
-    // Connect to socket if not connected
-    if (!socketService.isConnected) {
-      console.log('Socket not connected, connecting...');
-      socketService.connect(token);
-    } else {
-      console.log('Socket already connected');
-    }
-
-    // Job Completed event handler
-    const handleJobCompleted = (data) => {
-      console.log('JOB COMPLETED EVENT RECEIVED');
-            console.log('Event data:', JSON.stringify(data, null, 2));
-      
-      const status = data?.status || 'completed';
-      console.log('Status:', status);
-      
-      // Only show modal for pending_customer_confirmation status
-      if (status === 'pending_customer_confirmation') {
-        console.log('Status is pending_customer_confirmation - showing modal');
-        
-        const cleanerName = data.cleanerName || data.cleaner?.firstName || 'Your cleaner';
-        
-        const jobInfo = {
-          jobId: data.jobDisplayId || data.jobId,  
-          cleanerName: cleanerName,
-          jobTitle: data.jobTitle || data.serviceType || 'Cleaning Service',
-          completedAt: data.completedAt || data.timestamp,
-          status: status 
-        };
-        
-        console.log('Setting completedJobInfo:', jobInfo);
-        
-        setCompletedJobInfo(jobInfo);
-        setShowJobCompleteModal(true);
-        
-              console.log('Modal should be visible now');
-      } else {
-        console.log(`Ignoring jobCompleted event for status: ${status}`);
-      }
-    };
-
-    // Register event listener
-    console.log('Registering jobCompleted listener');
-    socketService.on('jobCompleted', handleJobCompleted);
-
-    // Cleanup
-    return () => {
-      console.log('Cleaning up - removing jobCompleted listener');
-      socketService.off('jobCompleted', handleJobCompleted);
-    };
-  }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -479,15 +390,6 @@ const CustomerDashboard = () => {
         </div>
       </div>
 
-      {/* Job Complete Modal */}
-      <JobCompleteModal
-        isOpen={showJobCompleteModal}
-        onClose={handleCloseJobCompleteModal}
-        cleanerName={completedJobInfo?.cleanerName || "John"}
-        jobTitle={completedJobInfo?.jobTitle || "Cleaning Service"}
-        jobId={completedJobInfo?.jobId || ""}
-        status={completedJobInfo?.status || "pending_customer_confirmation"}
-      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button, ConfirmationModal, PageHeader } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -31,6 +32,8 @@ const CustomerJobDetailsPage = () => {
   const [quoteToDecline, setQuoteToDecline] = useState(null);
   const [cleanerQuotes, setCleanerQuotes] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -39,13 +42,11 @@ const CustomerJobDetailsPage = () => {
         setLoading(true);
         setError('');
 
-        // Fetch job details
         const response = await jobsAPI.getJobById(jobId);
 
         if (response.success && response.data) {
           setJob(response.data);
-          
-          // Extract quotes from job data
+
           if (response.data.quotes && response.data.quotes.length > 0) {
             setCleanerQuotes(response.data.quotes);
           }
@@ -63,7 +64,7 @@ const CustomerJobDetailsPage = () => {
       try {
         const chatResponse = await chatAPI.getChatRooms();
         if (chatResponse.success) {
-          const jobChatRooms = chatResponse.data.filter(room => 
+          const jobChatRooms = chatResponse.data.filter(room =>
             room.jobId._id === jobId || room.jobId === jobId
           );
           setChatRooms(jobChatRooms);
@@ -107,16 +108,6 @@ const CustomerJobDetailsPage = () => {
     });
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return 'Time not set';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   const handleDropdownToggle = () => {
     setShowDropdown(!showDropdown);
   };
@@ -144,20 +135,20 @@ const CustomerJobDetailsPage = () => {
 
   const handleConfirmAcceptQuote = async () => {
     if (!quoteToAccept) return;
-    
+
     try {
       setIsAccepting(true);
-      
+
       const response = await quotesAPI.acceptQuote(jobId, quoteToAccept._id);
 
       if (response.success) {
-        const updatedQuotes = cleanerQuotes.map(quote => 
-          quote._id === quoteToAccept._id 
+        const updatedQuotes = cleanerQuotes.map(quote =>
+          quote._id === quoteToAccept._id
             ? { ...quote, status: 'accepted' }
-            : { ...quote, status: 'rejected' } 
+            : { ...quote, status: 'rejected' }
         );
         setCleanerQuotes(updatedQuotes);
-        
+
         // Close modal
         setShowAcceptModal(false);
         setQuoteToAccept(null);
@@ -180,22 +171,22 @@ const CustomerJobDetailsPage = () => {
 
   const handleConfirmDeclineQuote = async () => {
     if (!quoteToDecline) return;
-    
+
     try {
       setIsDeclining(true);
-      
+
       // Call API to reject quote
       const response = await quotesAPI.rejectQuote(jobId, quoteToDecline._id);
-      
+
       if (response.success) {
         // Update the quote status locally
-        const updatedQuotes = cleanerQuotes.map(quote => 
-          quote._id === quoteToDecline._id 
+        const updatedQuotes = cleanerQuotes.map(quote =>
+          quote._id === quoteToDecline._id
             ? { ...quote, status: 'rejected' }
             : quote
         );
         setCleanerQuotes(updatedQuotes);
-        
+
         // Close modal
         setShowDeclineModal(false);
         setQuoteToDecline(null);
@@ -219,9 +210,9 @@ const CustomerJobDetailsPage = () => {
   const handleConfirmCancel = async () => {
     try {
       setIsCancelling(true);
-      
+
       const response = await jobsAPI.cancelJob(jobId);
-      
+
       if (response.success) {
         navigate('/my-jobs');
       } else {
@@ -240,9 +231,67 @@ const CustomerJobDetailsPage = () => {
     setShowCancelModal(false);
   };
 
+  const jobPhotos = useMemo(() => {
+    if (!job) return [];
+
+    const urls = new Set();
+
+    const extractUrl = (photo) => {
+      if (!photo) return null;
+      if (typeof photo === 'string') return photo;
+      if (photo.secureUrl) return photo.secureUrl;
+      if (photo.url) return photo.url;
+      if (photo.path) return photo.path;
+      return null;
+    };
+
+    const addFromArray = (arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((photo) => {
+        const url = extractUrl(photo);
+        if (url) urls.add(url);
+      });
+    };
+
+    addFromArray(job.photos);
+    addFromArray(job.images);
+    addFromArray(job.beforePhotos);
+    addFromArray(job.afterPhotos);
+    addFromArray(job.attachments);
+    addFromArray(job.propertyPhotos);
+
+    if (job.completionProof) {
+      addFromArray(job.completionProof.beforeImages);
+      addFromArray(job.completionProof.afterImages);
+    }
+
+    return Array.from(urls);
+  }, [job]);
+
+  const openPhotoModal = (index) => {
+    setActivePhotoIndex(index);
+    setIsPhotoModalOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closePhotoModal = () => {
+    setIsPhotoModalOpen(false);
+    document.body.style.overflow = 'unset';
+  };
+
+  const showPrevPhoto = () => {
+    setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const showNextPhoto = () => {
+    setActivePhotoIndex((prev) =>
+      prev < jobPhotos.length - 1 ? prev + 1 : prev
+    );
+  };
+
   // Helper function to check if customer has chatted with a cleaner
   const getChatRoomForCleaner = (cleanerId) => {
-    return chatRooms.find(room => 
+    return chatRooms.find(room =>
       room.cleanerId._id === cleanerId || room.cleanerId === cleanerId
     );
   };
@@ -269,7 +318,7 @@ const CustomerJobDetailsPage = () => {
   const getTimeAgo = (date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
+
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -280,7 +329,7 @@ const CustomerJobDetailsPage = () => {
   const formatCleanerData = (quote) => {
     const cleaner = quote.cleanerId || quote.cleaner;
     const cleanerId = cleaner?._id || cleaner?.id || quote.cleanerId || quote._id || quote.id;
-    
+
     return {
       id: cleanerId,
       quoteId: quote._id || quote.id,
@@ -407,6 +456,42 @@ const CustomerJobDetailsPage = () => {
           </div>
         </div>
 
+        {/* Job Photos */}
+        {jobPhotos.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6 mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-3">
+              Job Photos
+            </h3>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {jobPhotos.slice(0, Math.min(4, jobPhotos.length)).map((photo, index) => {
+                const isOverflowTile = index === 3 && jobPhotos.length > 4;
+                const overlayCount = jobPhotos.length - 4;
+                return (
+                  <button
+                    key={`${photo}-${index}`}
+                    type="button"
+                    onClick={() => openPhotoModal(index)}
+                    className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden focus:outline-none hover:scale-[1.02] cursor-pointer"
+                  >
+                    <img
+                      src={photo}
+                      alt={`Job photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {isOverflowTile && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white text-base sm:text-lg font-semibold">
+                          +{overlayCount}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
 
         {/* Cleaner Quotes Section */}
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
@@ -415,7 +500,7 @@ const CustomerJobDetailsPage = () => {
               Cleaner Quotes ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
             </h3>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">
-              {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0 
+              {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0
                 ? "Cleaners nearby have sent their offers. Review and chat before choosing."
                 : "No quotes yet. Cleaners will send quotes soon."
               }
@@ -427,7 +512,7 @@ const CustomerJobDetailsPage = () => {
               {cleanerQuotes.filter(quote => quote.status !== 'rejected').map((quote, index) => {
                 const cleaner = formatCleanerData(quote);
                 const chatStatus = getChatStatus(cleaner.id);
-                
+
                 return (
                   <div key={quote._id || quote.id || `quote-${index}`} className="border border-primary-200 shadow-custom rounded-xl p-3 sm:p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
@@ -441,25 +526,24 @@ const CustomerJobDetailsPage = () => {
                             </span>
                           </div>
                           {cleaner.tier && cleaner.tier !== 'none' && (
-                            <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] ${
-                              cleaner.tier === 'gold'
-                                ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
-                                : cleaner.tier === 'silver'
+                            <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border-[0.6px] ${cleaner.tier === 'gold'
+                              ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
+                              : cleaner.tier === 'silver'
                                 ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-primary-200'
                                 : cleaner.tier === 'bronze'
-                                ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
-                                : 'bg-gray-100 border-gray-300'
-                            }`}>
-                              <img 
+                                  ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
+                                  : 'bg-gray-100 border-gray-300'
+                              }`}>
+                              <img
                                 src={
-                                  cleaner.tier === 'gold' 
-                                    ? GoldBadgeIcon 
+                                  cleaner.tier === 'gold'
+                                    ? GoldBadgeIcon
                                     : cleaner.tier === 'silver'
-                                    ? SilverBadgeIcon
-                                    : BronzeBadgeIcon
-                                } 
-                                alt="Badge" 
-                                className="w-3 h-3 sm:w-4 sm:h-4" 
+                                      ? SilverBadgeIcon
+                                      : BronzeBadgeIcon
+                                }
+                                alt="Badge"
+                                className="w-3 h-3 sm:w-4 sm:h-4"
                               />
                               <span className="text-xs text-primary-500 font-medium capitalize">
                                 {cleaner.tier}
@@ -485,7 +569,7 @@ const CustomerJobDetailsPage = () => {
                           <div className="text-xs text-primary-500 font-medium">
                             {cleaner.distance}
                           </div>
-                          
+
                           {/* Chat Status */}
                           {chatStatus.hasChat && (
                             <div className="flex items-center space-x-2 mt-2">
@@ -526,7 +610,7 @@ const CustomerJobDetailsPage = () => {
                             </Button>
                           </>
                         )}
-                        
+
                         {/* For accepted quotes - show Start Chat button */}
                         {quote.status === 'accepted' && (
                           <Button
@@ -545,7 +629,7 @@ const CustomerJobDetailsPage = () => {
                             Start Chat
                           </Button>
                         )}
-                        
+
                         {/* Quote Status for rejected quotes */}
                         {quote.status === 'rejected' && (
                           <div className="bg-red-500 text-red-500 border border-red-500 px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center shadow-custom">
@@ -591,7 +675,7 @@ const CustomerJobDetailsPage = () => {
         onConfirm={handleConfirmAcceptQuote}
         title="Accept Quote?"
         message={
-          quoteToAccept ? 
+          quoteToAccept ?
             `Are you sure you want to accept this quote for $${quoteToAccept.price}? This will reject all other quotes and confirm this cleaner for your job.` :
             "Are you sure you want to accept this quote?"
         }
@@ -608,7 +692,7 @@ const CustomerJobDetailsPage = () => {
         onConfirm={handleConfirmDeclineQuote}
         title="Decline Quote?"
         message={
-          quoteToDecline ? 
+          quoteToDecline ?
             `Are you sure you want to decline this quote for $${quoteToDecline.price}? This action cannot be undone.` :
             "Are you sure you want to decline this quote?"
         }
@@ -617,6 +701,61 @@ const CustomerJobDetailsPage = () => {
         confirmButtonColor="bg-red-500 hover:bg-[#EF4444] text-red-500! hover:text-white! border border-red-500"
         isLoading={isDeclining}
       />
+
+      {isPhotoModalOpen && jobPhotos.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+          <div className="relative w-full max-w-4xl">
+            <button
+              type="button"
+              onClick={closePhotoModal}
+              className="absolute -top-10 right-0 text-white hover:text-primary-200 transition-colors cursor-pointer"
+            >
+              <X className="w-6 h-6" strokeWidth={2.5} />
+            </button>
+            <div className="relative">
+              <img
+                src={jobPhotos[activePhotoIndex]}
+                alt={`Job photo ${activePhotoIndex + 1}`}
+                className="w-full max-h-[70vh] object-contain rounded-2xl"
+              />
+              <button
+                type="button"
+                onClick={showPrevPhoto}
+                disabled={activePhotoIndex === 0}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 disabled:opacity-30 cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+              </button>
+              <button
+                type="button"
+                onClick={showNextPhoto}
+                disabled={activePhotoIndex === jobPhotos.length - 1}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 disabled:opacity-30 cursor-pointer"
+              >
+                <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
+              </button>
+            </div>
+            {jobPhotos.length > 1 && (
+              <div className="mt-4 flex gap-2 overflow-x-auto">
+                {jobPhotos.map((photo, idx) => (
+                  <button
+                    key={`${photo}-thumb-${idx}`}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(idx)}
+                    className={`h-16 w-16 sm:h-20 sm:w-20 rounded-lg overflow-hidden border-2 ${idx === activePhotoIndex ? 'border-primary-500' : 'border-transparent'} cursor-pointer`}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

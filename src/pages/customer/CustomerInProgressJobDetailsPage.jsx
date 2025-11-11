@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, UserRound, X } from 'lucide-react';
-import { Button, JobCompleteModal, MapWithPolyline, PageHeader, Loader } from '../../components';
+import { Button, MapWithPolyline, PageHeader, Loader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone2.svg?react';
@@ -30,8 +30,6 @@ const CustomerInProgressJobDetailsPage = () => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
-  const [showJobCompleteModal, setShowJobCompleteModal] = useState(false);
-  const [completedJobInfo, setCompletedJobInfo] = useState(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -50,12 +48,7 @@ const CustomerInProgressJobDetailsPage = () => {
 
           // Check if job is completed - show modal
           if (jobResponse.data.status === 'completed') {
-            setCompletedJobInfo({
-              jobId: jobId,
-              cleanerName: jobResponse.data.quotes?.find(q => q.status === 'accepted')?.cleanerId?.firstName || "Cleaner",
-              jobTitle: jobResponse.data.title || jobResponse.data.serviceType || "Cleaning Service"
-            });
-            setShowJobCompleteModal(true);
+            // Redirect to completed page if needed
           }
 
           // Set customer location from job data
@@ -156,17 +149,6 @@ const CustomerInProgressJobDetailsPage = () => {
       
       setCleanerLocation(newCleanerLocation);
       setIsCleanerLocationLive(true);
-      
-      // Check if job status changed to completed (optional - for real-time update)
-      if (data.jobStatus === 'completed') {
-        setCompletedJobInfo({
-          jobId: jobId,
-          cleanerName: cleaner?.firstName || "Cleaner",
-          jobTitle: job?.title || job?.serviceType || "Cleaning Service"
-        });
-        setShowJobCompleteModal(true);
-      }
-      
       // Calculate distance if customer location exists
       if (customerLocation) {
         const R = 6371e3;
@@ -178,7 +160,6 @@ const CustomerInProgressJobDetailsPage = () => {
           Math.cos(φ1) * Math.cos(φ2) *
           Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c;
       }
       
       // Update arrival time based on route info if available
@@ -202,7 +183,7 @@ const CustomerInProgressJobDetailsPage = () => {
         socketService.leaveJobRoom(jobId);
       }
     };
-  }, [jobId, job, customerLocation]); // Added customerLocation to dependencies
+  }, [jobId, job, customerLocation]); 
 
   // Update arrival time when route info changes
   useEffect(() => {
@@ -247,45 +228,6 @@ const CustomerInProgressJobDetailsPage = () => {
     } else {
       console.error('Cleaner phone number not available');
     }
-  };
-
-  const handleCloseJobCompleteModal = () => {
-    setShowJobCompleteModal(false);
-    setCompletedJobInfo(null);
-  };
-
-  const getCoordinates = (coordinates) => {
-    if (!coordinates) return null;
-
-    let lat, lng;
-
-    // Handle different coordinate formats
-    if (typeof coordinates === 'string') {
-      // If it's a string like "21.236941, 72.862925"
-      const coords = coordinates.split(',').map(coord => parseFloat(coord.trim()));
-      lat = coords[0];
-      lng = coords[1];
-    } else if (coordinates.lat && coordinates.lng) {
-      // If it's an object like { lat: 21.236941, lng: 72.862925 }
-      lat = coordinates.lat;
-      lng = coordinates.lng;
-    } else if (Array.isArray(coordinates)) {
-      // If it's an array like [21.236941, 72.862925]
-      lat = coordinates[0];
-      lng = coordinates[1];
-    }
-
-    // Validate coordinates (lat should be between -90 and 90, lng between -180 and 180)
-    if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      return { lat, lng };
-    }
-
-    // If coordinates seem swapped (lat > 90 or lat < -90), try swapping them
-    if (lat && lng && (lat > 90 || lat < -90)) {
-      return { lat: lng, lng: lat };
-    }
-
-    return null;
   };
 
   // Helper functions for payment display (same as cleaner page)
@@ -596,14 +538,6 @@ const CustomerInProgressJobDetailsPage = () => {
         </div>
       </div>
 
-      {/* Job Complete Modal */}
-      <JobCompleteModal
-        isOpen={showJobCompleteModal}
-        onClose={handleCloseJobCompleteModal}
-        cleanerName={completedJobInfo?.cleanerName || cleaner?.firstName || "Cleaner"}
-        jobTitle={completedJobInfo?.jobTitle || job?.title || "Cleaning Service"}
-        jobId={jobId}
-      />
     </div>
   );
 };
