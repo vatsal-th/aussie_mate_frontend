@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Check, UserRound, X } from 'lucide-react';
 import { Button, JobCompleteModal, MapWithPolyline, PageHeader, Loader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/location.svg';
@@ -224,10 +225,6 @@ const CustomerInProgressJobDetailsPage = () => {
     }
   };
 
-  const startArrivalCountdown = () => {
-    // Using real-time route info instead of countdown
-  };
-
   const handleChatWithCleaner = () => {
     // Try multiple possible ID locations
     const cleanerId = cleaner?._id || cleaner?.id;
@@ -337,22 +334,6 @@ const CustomerInProgressJobDetailsPage = () => {
     }
   };
 
-  const getCleanerDistance = () => {
-    // Use route info from Google Maps for accurate distance
-    if (routeInfo && routeInfo.distance) {
-      return routeInfo.distance;
-    }
-    return 'Calculating distance...';
-  };
-
-  const getArrivalTime = () => {
-    // Use route info from Google Maps for accurate arrival time
-    if (routeInfo && routeInfo.duration) {
-      return routeInfo.duration;
-    }
-    return 'Calculating...';
-  };
-
   const getCleanerTier = () => {
     return cleaner?.tier || 'none';
   };
@@ -362,21 +343,7 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="bg-gray-50">
-        <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl p-4">
-          <div className="bg-white rounded-2xl p-6 animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-            <div className="space-y-4">
-              <div className="h-20 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-24 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader fullscreen message="Updating your job details..." />;
   }
 
   if (error || !job) {
@@ -473,9 +440,7 @@ const CustomerInProgressJobDetailsPage = () => {
                   onClick={handleGetDirections}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer "
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" strokeWidth={2} />
                 </button>
               </div>
 
@@ -505,9 +470,7 @@ const CustomerInProgressJobDetailsPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                      <Check className="w-4 h-4 text-white" strokeWidth={2} />
                     </div>
                     <div>
                       <div className="text-green-600 font-semibold text-sm">ARRIVING</div>
@@ -519,7 +482,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-[#1EB154] text-white rounded-xl w-12 h-16   flex items-center justify-center">
+                  <div className="bg-primary-500 text-white rounded-xl w-12 h-16   flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-lg font-bold">
                         {routeInfo ? Math.round(routeInfo.durationValue / 60) : arrivalTime}
@@ -548,9 +511,7 @@ const CustomerInProgressJobDetailsPage = () => {
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
+                          <UserRound className="w-6 h-6 text-gray-400" strokeWidth={2} />
                         </div>
                       )}
                     </div>

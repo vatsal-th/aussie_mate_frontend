@@ -140,7 +140,7 @@ const ProviderComplianceQuizPage = () => {
               <div className="mt-6">
                 <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full ${hasPassed ? 'bg-[#1EB154]' : 'bg-[#EF4444]'}`}
+                    className={`h-full ${hasPassed ? 'bg-primary-500' : 'bg-[#EF4444]'}`}
                     style={{ width: `${Math.min(scorePercent, 100)}%` }}
                   />
                 </div>

@@ -320,7 +320,7 @@ const JobDetailsCompletedPage = () => {
         {/* Completed Banner */}
         <div className="bg-green-500 border border-green-500 px-4 py-2 mx-4 mt-2 rounded-xl">
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-[#1EB154] rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-primary-500 rounded-full mr-3"></div>
             <span className="text-green-500 font-medium">
               Completed on {jobData.completedAt}
             </span>
