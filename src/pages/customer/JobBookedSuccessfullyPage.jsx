@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button } from '../../components';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button, Loader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import MessageIcon from '../../assets/message2.svg';
@@ -14,7 +14,6 @@ import { paymentService } from '../../services/paymentService';
 const JobBookedSuccessfullyPage = () => {
   const navigate = useNavigate();
   const { jobId } = useParams();
-  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState(null);
   const [cleaner, setCleaner] = useState(null);
@@ -189,16 +188,7 @@ const JobBookedSuccessfullyPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading booking details...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader fullscreen message="Loading booking details..." />;
   }
 
   if (error || !job) {

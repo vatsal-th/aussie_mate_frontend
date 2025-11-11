@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, RadioButtonGroup } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, RadioButtonGroup, PageHeader } from '../../components';
 
 const QUIZ_QUESTIONS = [
   {
@@ -124,14 +123,10 @@ const ProviderComplianceQuizPage = () => {
   return (
     <div className="min-h-screen bg-white sm:bg-gray-50 flex justify-center px-4 py-6 sm:py-10">
       <div className="w-full max-w-[420px] sm:max-w-xl bg-white rounded-none sm:rounded-3xl sm:shadow-custom p-0 sm:p-8">
-        <button
-          type="button"
-          onClick={() => (showResults ? navigate('/cleaner-dashboard') : navigate(-1))}
-          className="flex items-center gap-2 text-primary-500 font-medium text-sm sm:text-base mb-6 sm:mb-8 cursor-pointer"
-        >
-          <img src={ArrowLeftIcon} alt="Back" className="w-4 h-4" />
-          Back
-        </button>
+        <PageHeader
+          title="Provider Compliance & Safety Quiz"
+          onBack={() => (showResults ? navigate('/cleaner-dashboard') : navigate(-1))}
+        />
 
         {showResults ? (
           <div className="space-y-6">

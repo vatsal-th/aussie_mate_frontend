@@ -79,36 +79,19 @@ export const resetPasswordSchema = yup.object().shape({
 
 // Verify Documents Schema (Dynamic based on user role)
 export const createVerifyDocumentsSchema = (userRole) => {
-  const baseSchema = {
+  return yup.object().shape({
     abnNumber: yup.string()
       .matches(/^\d{11}$/, 'ABN Number must be exactly 11 digits')
       .required('ABN Number is required'),
     policeCheck: yup.mixed()
       .nullable()
-      .test('at-least-one-document', 'Please upload at least one document.', function(value) {
+      .test('at-least-one-document', 'Please upload at least one document.', function () {
         const { policeCheck, visaWorkRights, trainingCertificates } = this.parent;
         return policeCheck || visaWorkRights || trainingCertificates;
       }),
     visaWorkRights: yup.mixed().nullable(),
     trainingCertificates: yup.mixed().nullable()
-  };
-
-  // Add TFN validation for Student Cleaner
-  if (userRole === 'Student Cleaner') {
-    baseSchema.tfnNumber = yup.string()
-      .required('TFN Number is required for Student Cleaner')
-      .matches(/^\d{9}$/, 'TFN Number must be exactly 9 digits');
-  } else {
-    baseSchema.tfnNumber = yup.string()
-      .transform((value) => (value && value.trim() === '' ? null : value))
-      .nullable()
-      .test('tfn-length', 'TFN Number must be exactly 9 digits', (value) => {
-        if (!value) return true;
-        return /^\d{9}$/.test(value);
-      });
-  }
-
-  return yup.object().shape(baseSchema);
+  });
 };
 
 // Cleaning Job Service Detail Schema

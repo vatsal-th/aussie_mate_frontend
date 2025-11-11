@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader, Loader } from '../../components';
 import RatingIcon from '../../assets/rating.svg';
 import Rating2Icon from '../../assets/rating2.svg';
 import PdfIcon from '../../assets/pdf.svg';
@@ -263,15 +262,7 @@ const JobDetailsCompletedPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-lg text-gray-600">Loading job details...</div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader fullscreen message="Loading job details..." />;
   }
 
   if (error) {
@@ -303,18 +294,7 @@ const JobDetailsCompletedPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto min-h-screen">
-        {/* Header */}
-        <div className="flex items-center p-4 ">
-          <button
-            onClick={() => navigate(-1)}
-            className="mr-3 p-1 hover:bg-gray-100 rounded-full"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-          </button>
-          <h1 className="text-lg font-bold text-gray-900 truncate">
-            Job #{jobData.jobId} - {jobData.title}
-          </h1>
-        </div>
+        <PageHeader title={`Job #${jobData.jobId} - ${jobData.title}`} />
 
         {/* Success Message */}
         {successMessage && (

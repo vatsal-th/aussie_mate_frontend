@@ -23,4 +23,6 @@ export { default as FrequencySelect } from './service-forms/common/FrequencySele
 // Common Components
 export { default as PaginationRanges } from './common/PaginationRanges';
 export { default as FiltersDrawer } from './common/FiltersDrawer';
+export { default as ScrollToTop } from './common/ScrollToTop';
+export { default as Loader } from './common/Loader';
 

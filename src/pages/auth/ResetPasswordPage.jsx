@@ -5,7 +5,7 @@ import { resetPasswordSchema } from '../../utils/validationSchemas';
 import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
-import { FloatingLabelInput, Button } from '../../components';
+import { FloatingLabelInput, Button, Loader } from '../../components';
 
 const ResetPasswordPage = () => {
   const [formData, setFormData] = useState({
@@ -152,11 +152,7 @@ const ResetPasswordPage = () => {
   }
 
   if (isTokenLoading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Loader fullscreen message="Preparing reset form..." />;
   }
 
   return (

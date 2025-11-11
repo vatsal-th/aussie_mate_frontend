@@ -4,7 +4,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import CurrentLocationIcon from '../../assets/currentLocation.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import { userAPI } from '../../services/api';
-import { Button, FloatingLabelInput } from '../../components';
+import { Button, FloatingLabelInput, Loader } from '../../components';
 
 // Map container style
 const mapContainerStyle = {
@@ -333,11 +333,8 @@ const SetCleanerLocationPage = () => {
             </GoogleMap>
           ) : (
             <div className="flex items-center justify-center h-full bg-gray-100">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-2"></div>
-                <p className="text-gray-600">Loading map...</p>
+              <Loader message="Loading map..." />
             </div>
-          </div>
           )}
         </div>
 

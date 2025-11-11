@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { PageHeader } from '../../components';
 import DownIcon from '../../assets/down2.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -553,17 +553,10 @@ const CleanerJobsPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-semibold text-primary-500">Jobs</h1>
-          </div>
+        <PageHeader
+          title="Jobs"
+          onBack={() => navigate(-1)}
+          rightSlot={
             <div 
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => navigate('/set-cleaner-location', { state: { from: 'cleaner-jobs' } })}
@@ -573,7 +566,8 @@ const CleanerJobsPage = () => {
                 {userLocation.address}, {userLocation.city}
               </span>
             </div>
-        </div>
+          }
+        />
 
         <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-custom">
           {/* Search and Sort Bar */}

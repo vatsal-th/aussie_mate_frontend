@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components';
+import { PageHeader, Loader } from '../../../components';
 import PdfIcon from '../../../assets/pdf.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
 import InfoIcon from '../../../assets/info.svg';
@@ -194,9 +194,7 @@ const VerificationStatusPage = () => {
 
                     {/* Loading State */}
                     {loading && (
-                        <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-                        </div>
+                        <Loader message="Refreshing verification status..." />
                     )}
 
                     {/* Sections */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../../components';
+import { PageHeader, Loader } from '../../../components';
 import MapPinIcon from '../../../assets/map-pin 1.png';
 import { userAPI } from '../../../services/api';
 import CurrentLocationIcon from '../../../assets/currentLocation.svg';
@@ -284,12 +284,7 @@ const AvailabilityPage = () => {
                         className="mb-4 sm:mb-6"
                         titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
                     />
-                    <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                            <p className="text-primary-500 font-medium">Loading availability settings...</p>
-                        </div>
-                    </div>
+                    <Loader message="Loading availability settings..." />
                 </div>
             </div>
         );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button, PageHeader, PhoneValidationAlert } from '../../components';
+import { Button, PageHeader, PhoneValidationAlert, Loader } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 import MessageIcon from '../../assets/sendChat.svg';
 import UserIcon from '../../assets/user.svg';
@@ -354,9 +354,8 @@ const CustomerChatPage = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="px-4 py-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
-          <p className="text-sm text-gray-500 mt-2">Loading chat...</p>
+        <div className="px-4 py-8">
+          <Loader message="Loading chat..." />
         </div>
       )}
 

@@ -65,7 +65,7 @@ const JobDetailsPage = () => {
     
     return {
       _id: apiJob._id,
-      id: apiJob._id, // Use _id as the main ID
+      id: apiJob._id, 
       title: `${apiJob.serviceType?.charAt(0).toUpperCase() + apiJob.serviceType?.slice(1)} - ${apiJob.propertyType?.charAt(0).toUpperCase() + apiJob.propertyType?.slice(1)}`,
       postedAgo: apiJob.createdAt ? getTimeAgo(new Date(apiJob.createdAt)) : 'Recently posted',
       scheduledDate: apiJob.scheduledDate ? new Date(apiJob.scheduledDate).toLocaleDateString('en-AU', {

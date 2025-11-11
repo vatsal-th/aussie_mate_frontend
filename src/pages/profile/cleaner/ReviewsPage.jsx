@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, PageHeader } from '../../../components';
+import { Button, PageHeader, Loader } from '../../../components';
 import StarIcon from '../../../assets/rating.svg';
 import { reviewsAPI } from '../../../services/api';
 
@@ -140,13 +140,7 @@ const ReviewsPage = () => {
             className="mb-6"
             titleClassName="text-xl font-semibold text-primary-500"
           />
-
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
-              <p className="text-primary-200">Loading reviews...</p>
-            </div>
-          </div>
+          <Loader message="Loading reviews..." />
         </div>
       </div>
     );
@@ -208,7 +202,7 @@ const ReviewsPage = () => {
               You haven't received any reviews yet. Complete some jobs to start building your reputation!
             </p>
             <Button
-              onClick={() => navigate('/cleaner/jobs')}
+              onClick={() => navigate('/cleaner-jobs')}
               size="md"
               className="px-6 max-sm:px-4 max-sm:text-sm"
             >

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { paymentService } from '../services/paymentService';
-import { Button } from '../components';
+import { Button, Loader } from '../components';
 
 const StripeSuccessPage = () => {
   const navigate = useNavigate();
@@ -45,10 +45,7 @@ const StripeSuccessPage = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-              <p className="text-gray-600 font-medium">Verifying your Stripe account...</p>
-            </div>
+            <Loader message="Verifying your Stripe account..." />
           </div>
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">

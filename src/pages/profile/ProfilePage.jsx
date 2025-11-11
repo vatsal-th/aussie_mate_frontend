@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { userAPI, jobsAPI, matePointsAPI } from '../../services/api';
-import { Button } from '../../components';
+import { Button, PageHeader, Loader } from '../../components';
 import EditIcon from '../../assets/edit.svg';
 import HelpIcon from '../../assets/help.svg';
 import InvoiceIcon from '../../assets/invoice.svg';
@@ -184,11 +184,7 @@ const ProfilePage = () => {
     ];
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-            </div>
-        );
+        return <Loader fullscreen message="Loading profile..." />;
     }
 
   return (
@@ -199,17 +195,6 @@ const ProfilePage = () => {
           onBack={() => navigate(-1)}
           className="h-16"
           titleClassName="text-xl font-semibold text-gray-900"
-          rightSlot={
-            <Button
-              onClick={() => navigate('/edit-profile')}
-              variant=""
-              size="sm"
-              icon={EditIcon}
-              className="px-3 py-2 text-sm font-medium text-primary-500 border border-primary-200 rounded-lg hover:bg-primary-50"
-            >
-              Edit Profile
-            </Button>
-          }
         />
       </div>
 

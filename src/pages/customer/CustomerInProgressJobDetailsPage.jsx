@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, JobCompleteModal, MapWithPolyline, PageHeader } from '../../components';
+import { Button, JobCompleteModal, MapWithPolyline, PageHeader, Loader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone2.svg?react';
@@ -627,9 +627,7 @@ const CustomerInProgressJobDetailsPage = () => {
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-4 shadow-sm">
-                <div className="text-center py-4">
-                  <p className="text-gray-500 text-sm">Loading cleaner information...</p>
-                </div>
+                <Loader message="Loading cleaner information..." />
               </div>
             )}
           </div>

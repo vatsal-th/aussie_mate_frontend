@@ -5,7 +5,7 @@ import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { Button, JobCompleteModal } from '../../components';
+import { Button, JobCompleteModal, Loader } from '../../components';
 import { jobsAPI } from '../../services/api';
 import { socketService } from '../../services/socketService';
 import CardBG2 from '../../assets/CardBG2.png';
@@ -250,7 +250,7 @@ const CustomerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
         {/* Search Section */}
         <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl mb-4 sm:mb-6 mt-4 shadow-custom">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -393,8 +393,8 @@ const CustomerDashboard = () => {
           </div>
           
           {loading && (
-            <div className="text-center py-8">
-              <div className="text-sm text-gray-500">Loading jobs...</div>
+            <div className="py-8">
+              <Loader message="Loading your jobs..." />
             </div>
           )}
           

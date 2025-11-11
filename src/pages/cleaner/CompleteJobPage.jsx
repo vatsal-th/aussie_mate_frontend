@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader } from '../../components';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
@@ -321,21 +320,10 @@ const CompleteJobPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between py-4 px-4">
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => navigate(-1)}
-              variant="ghost"
-              size="sm"
-              icon={ArrowLeftIcon}
-              className="p-2"
-            />
-            <h1 className="text-lg font-semibold text-primary-500 truncate">
-              {job?.title || job?.serviceType || 'Job Details'}
-            </h1>
-          </div>
-        </div>
+        <PageHeader
+          title={job?.title || job?.serviceType || 'Job Details'}
+          onBack={() => navigate(-1)}
+        />
 
         <div className="px-4 space-y-4">
           {/* Success Message */}

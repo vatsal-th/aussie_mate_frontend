@@ -12,7 +12,6 @@ const VerifyDocumentsPage = () => {
     profilePicture: null,
     bio: '',
     abnNumber: '',
-    tfnNumber: '',
     policeCheck: null,
     visaWorkRights: null,
     trainingCertificates: null
@@ -43,15 +42,40 @@ const VerifyDocumentsPage = () => {
     try {
       const response = await userAPI.getDocumentStatus();
       if (response.success) {
-        setDocumentStatus(response.data);
-        // Pre-fill form with existing data
-        if (response.data.documents) {
-          setFormData(prev => ({
+        const responseData = response.data || {};
+        const documents = responseData.documents || {};
+        const userData = responseData.user || {};
+
+        setDocumentStatus(responseData);
+
+        setFormData(prev => {
+          const updatedForm = {
             ...prev,
-            abnNumber: response.data.documents.abnNumber || '',
-            tfnNumber: response.data.documents.tfnNumber || ''
-          }));
-        }
+            abnNumber: documents.abnNumber || '',
+            bio: typeof userData.bio === 'string' ? userData.bio : (prev.bio || '')
+          };
+
+          const profilePhotoUrl =
+            userData?.profilePhoto?.url ||
+            userData?.profilePhoto?.secureUrl ||
+            userData?.profilePhotoUrl ||
+            userData?.profilePictureUrl ||
+            userData?.profilePicture ||
+            (typeof userData?.profilePhoto === 'string' ? userData.profilePhoto : null);
+
+          if (profilePhotoUrl) {
+            updatedForm.profilePicture = {
+              preview: profilePhotoUrl,
+              fileName: userData?.profilePhoto?.fileName || 'current-profile-photo',
+              fileType: userData?.profilePhoto?.fileType || 'image/*',
+              fileSize: userData?.profilePhoto?.fileSize || null,
+              originalFile: null,
+              isExisting: true
+            };
+          }
+
+          return updatedForm;
+        });
       }
     } catch (error) {
       console.error('Error fetching document status:', error);
@@ -65,18 +89,6 @@ const VerifyDocumentsPage = () => {
     if (name === 'abnNumber') {
       const digitsOnly = value.replace(/[^\d]/g, '');
       if (digitsOnly.length <= 11) {
-        setFormData({
-          ...formData,
-          [name]: digitsOnly
-        });
-      }
-      return;
-    }
-
-    // Special handling for TFN Number - only allow digits and limit to 9 characters
-    if (name === 'tfnNumber') {
-      const digitsOnly = value.replace(/[^\d]/g, '');
-      if (digitsOnly.length <= 9) {
         setFormData({
           ...formData,
           [name]: digitsOnly
@@ -110,17 +122,24 @@ const VerifyDocumentsPage = () => {
 
       try {
         const base64 = await convertToBase64(file);
-        setFormData(prev => ({
-          ...prev,
-          profilePicture: {
-            file: base64,
-            originalFile: file,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            preview: URL.createObjectURL(file)
+        setFormData(prev => {
+          if (prev.profilePicture?.preview && !prev.profilePicture?.isExisting) {
+            URL.revokeObjectURL(prev.profilePicture.preview);
           }
-        }));
+
+          return {
+            ...prev,
+            profilePicture: {
+              file: base64,
+              originalFile: file,
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+              preview: URL.createObjectURL(file),
+              isExisting: false
+            }
+          };
+        });
         setError('');
       } catch (error) {
         setError('Failed to process profile picture. Please try again.');
@@ -130,7 +149,7 @@ const VerifyDocumentsPage = () => {
 
   // Handle profile picture removal
   const handleRemoveProfilePicture = () => {
-    if (formData.profilePicture?.preview) {
+    if (formData.profilePicture?.preview && !formData.profilePicture?.isExisting) {
       URL.revokeObjectURL(formData.profilePicture.preview);
     }
     setFormData(prev => ({
@@ -207,30 +226,33 @@ const VerifyDocumentsPage = () => {
       // Create FormData for file upload (backend expects multipart/form-data)
       const formDataToSend = new FormData();
       formDataToSend.append('abnNumber', formData.abnNumber);
-      if (formData.tfnNumber) {
-        formDataToSend.append('tfnNumber', formData.tfnNumber);
-      }
-
-      // Add profile picture to FormData
-      if (formData.profilePicture) {
-        formDataToSend.append('profilePicture', formData.profilePicture.originalFile);
-      }
 
       // Add bio to FormData
       if (formData.bio) {
         formDataToSend.append('bio', formData.bio);
       }
 
+      const documentFields = ['policeCheck', 'visaWorkRights', 'trainingCertificates'];
+      const hasNewDocument = documentFields.some(
+        field => formData[field]?.originalFile
+      );
+
+      if (!hasNewDocument) {
+        setError('Please upload at least one document before submitting.');
+        setIsLoading(false);
+        return;
+      }
+
       // Add files to FormData (use original file objects)
-      if (formData.policeCheck) {
+      if (formData.policeCheck?.originalFile) {
         formDataToSend.append('policeCheck', formData.policeCheck.originalFile);
       }
 
-      if (formData.visaWorkRights) {
+      if (formData.visaWorkRights?.originalFile) {
         formDataToSend.append('visaWorkRights', formData.visaWorkRights.originalFile);
       }
 
-      if (formData.trainingCertificates) {
+      if (formData.trainingCertificates?.originalFile) {
         formDataToSend.append('trainingCertificates', formData.trainingCertificates.originalFile);
       }
 
@@ -383,26 +405,6 @@ const VerifyDocumentsPage = () => {
                 Your ABN is used for tax and compliance. Auto verification is instant.
               </p>
             </div>
-
-            {/* TFN Number - Only for Student Cleaner */}
-            {userRole === 'Student Cleaner' && (
-              <div className="mb-6">
-                <FloatingLabelInput
-                  id="tfnNumber"
-                  name="tfnNumber"
-                  label="TFN (Tax File Number)"
-                  type="text"
-                  value={formData.tfnNumber}
-                  onChange={handleInputChange}
-                  placeholder=""
-                  maxLength={9}
-                  required
-                />
-                <p className="text-sm text-primary-200 font-medium mt-1">
-                  Required to limit your working hours as per AU rules.
-                </p>
-              </div>
-            )}
 
             {/* Identity & Work Rights - Police Check */}
             <div className="mb-6">

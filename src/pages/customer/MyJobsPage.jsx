@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { PageHeader, PaginationRanges, Checkbox, FiltersDrawer } from '../../components';
+import { PageHeader, PaginationRanges, Checkbox, FiltersDrawer, Loader } from '../../components';
 import SearchIcon from '../../assets/search.svg';
 import { SlidersHorizontal, X } from 'lucide-react';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -449,10 +449,10 @@ const MyJobsPage = () => {
 
         {/* Job Cards */}
         {!currentUserId && (
-          <div className="text-sm text-gray-500">Loading user information...</div>
+          <Loader message="Loading user information..." />
         )}
         {currentUserId && loading && (
-          <div className="text-sm text-gray-500">Loading your jobs...</div>
+          <Loader message="Loading your jobs..." />
         )}
         {(!loading && error) && (
           <div className="text-sm text-red-600">{error}</div>

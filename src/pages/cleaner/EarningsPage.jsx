@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { PageHeader } from '../../components';
 import ExportIcon from '../../assets/export.svg';
 import BusinessIcon from '../../assets/business.svg';
 import DollarIcon from '../../assets/dollar.svg';
@@ -85,22 +85,18 @@ const EarningsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Edit Profile Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer flex items-center"
-            >
-              <img src={ArrowLeftIcon} alt="Back" className="w-6 h-6" />
-            <h1 className="ml-2 sm:ml-4 text-base sm:text-xl font-semibold text-gray-900 capitalize ">Earnings Dashboard</h1>
-            </button>
+        <PageHeader
+          title="Earnings Dashboard"
+          onBack={() => navigate(-1)}
+          rightSlot={
             <button className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl! transition-colors cursor-pointer">
               <img src={ExportIcon} alt="Export" className="w-4 h-4" />
               <span className="text-sm font-medium text-gray-700">Export</span>
             </button>
-          </div>
-        </div>
+          }
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0!">
         {/* Summary Cards */}

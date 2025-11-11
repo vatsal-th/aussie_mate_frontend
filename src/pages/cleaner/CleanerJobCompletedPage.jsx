@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { Button, PageHeader, Loader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
 import { jobsAPI, jobPhotosAPI, reviewsAPI } from '../../services/api';
@@ -124,13 +123,7 @@ const CleanerJobCompletedPage = () => {
 
 
   if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-        </div>
-      </div>
-    );
+    return <Loader fullscreen message="Loading job details..." />;
   }
 
   if (error || !jobData) {
@@ -146,16 +139,7 @@ const CleanerJobCompletedPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4">
-        {/* Top Navigation */}
-        <div className="flex items-center gap-3 py-4">
-          <button
-            onClick={() => navigate('/cleaner-jobs')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-semibold text-primary-500">Job Completed</h1>
-        </div>
+        <PageHeader title="Job Completed" onBack={() => navigate('/cleaner-jobs')} />
 
         {/* Main Content */}
         <div className="bg-white rounded-2xl p-6 shadow-custom mb-6">

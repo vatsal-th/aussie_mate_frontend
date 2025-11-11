@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { FloatingLabelInput, ConfirmationModal, PhoneValidationAlert } from '../../components';
-import ArrowLeftIcon from '../../assets/arrow-left.svg';
+import { FloatingLabelInput, ConfirmationModal, PhoneValidationAlert, PageHeader, Loader } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 import SendIcon from '../../assets/sendChat.svg';
 import MessageIcon from '../../assets/message2.svg';
@@ -18,7 +17,7 @@ const CleanerChatPage = () => {
     const [searchParams] = useSearchParams();
     const cleanerId = searchParams.get('cleanerId');
     const [hasSubmittedQuote, setHasSubmittedQuote] = useState(false);
-    const [quoteStatus, setQuoteStatus] = useState('pending'); // pending, accepted, rejected
+    const [quoteStatus, setQuoteStatus] = useState('pending');
     const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
     const [myQuote, setMyQuote] = useState(null);
     const [job, setJob] = useState(null);
@@ -652,21 +651,8 @@ const CleanerChatPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Chat Header */}
             <div className="max-w-6xl mx-auto py-4 px-1">
-                <div className="flex items-center space-x-3">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className=" hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                    >
-                        <img src={ArrowLeftIcon} alt="Back" className="w-5 h-5" />
-                    </button>
-                    <div>
-                        <h1 className="text-lg font-semibold text-primary-500 truncate">
-                            {getJobTitle(job)}
-                        </h1>
-                    </div>
-                </div>
+                <PageHeader title={getJobTitle(job)} onBack={() => navigate(-1)} />
             </div>
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 bg-white rounded-2xl shadow-custom py-4">
@@ -701,8 +687,8 @@ const CleanerChatPage = () => {
                 <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 h-[50vh]">
                     <div className="space-y-4">
                         {isLoadingMessages && (
-                            <div className="flex justify-center py-4">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
+                            <div className="py-4">
+                                <Loader message="Loading chat..." />
                             </div>
                         )}
                         {messages.map((message, index) => {

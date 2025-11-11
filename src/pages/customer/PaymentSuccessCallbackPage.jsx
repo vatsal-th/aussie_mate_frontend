@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { paymentService } from '../../services/paymentService';
-import { Button } from '../../components';
+import { Button, Loader } from '../../components';
 
 const PaymentSuccessCallbackPage = () => {
   const navigate = useNavigate();
@@ -84,13 +84,7 @@ const PaymentSuccessCallbackPage = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500"></div>
-              <h2 className="text-xl font-semibold text-gray-900">Verifying Payment...</h2>
-              <p className="text-gray-600 text-center">
-                Please wait while we confirm your payment with our secure payment processor.
-              </p>
-            </div>
+            <Loader message="Verifying payment..." />
           </div>
         ) : verificationStatus === 'success' ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
