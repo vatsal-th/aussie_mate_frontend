@@ -289,27 +289,12 @@ const CustomerInProgressJobDetailsPage = () => {
   };
 
   // Helper functions for payment display (same as cleaner page)
-  const getPaymentMethod = () => {
-    // Find payment for this job from payment history (try different field names)
-    const jobPayment = paymentStatus?.data?.payments?.find(payment =>
-      payment.jobId === jobId ||
-      payment.jobId === job?.jobId ||
-      payment.jobId === job?._id ||
-      payment._id === jobId
-    );
-
-    if (jobPayment?.paymentMethod === 'online') {
-      return 'Online';
-    }
-    return 'Cash';
-  };
+  const getPaymentMethod = () => 'Online';
 
   const getPaymentSummary = () => {
-    // Find accepted quote for payment calculation
     const acceptedQuote = job?.quotes?.find(quote => quote.status === 'accepted');
     const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
 
-    // Find payment for this job from payment history (try different field names)
     const jobPayment = paymentStatus?.data?.payments?.find(payment =>
       payment.jobId === jobId ||
       payment.jobId === job?.jobId ||
@@ -317,21 +302,11 @@ const CustomerInProgressJobDetailsPage = () => {
       payment._id === jobId
     );
 
-    if (jobPayment?.paymentMethod === 'online') {
-      // For online payments, show the breakdown
-      const paidAmount = jobPayment?.amount || totalAmount;
-      const platformFee = Math.round(paidAmount * 0.1); // 10% platform fee
-      const cleanerAmount = paidAmount - platformFee; // 90% to cleaner
+    const paidAmount = jobPayment?.amount || totalAmount;
+    const platformFee = Math.round(paidAmount * 0.1);
+    const cleanerAmount = paidAmount - platformFee;
 
-
-      return `Cleaner receives $${cleanerAmount}, platform fee $${platformFee} (10%)`;
-    } else {
-      // For cash payments, show the breakdown
-      const platformFee = Math.round(totalAmount * 0.1); // 10% platform fee
-      const cleanerAmount = totalAmount - platformFee; // 90% to cleaner
-
-      return `$${platformFee} (10%) paid online to platform. Cleaner receives $${cleanerAmount} (90%) cash after job.`;
-    }
+    return `Cleaner receives $${cleanerAmount}, platform fee $${platformFee} (10%)`;
   };
 
   const getCleanerTier = () => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 import { PageHeader } from '../../components';
 import ExportIcon from '../../assets/export.svg';
 import BusinessIcon from '../../assets/business.svg';
@@ -178,14 +179,10 @@ const EarningsPage = () => {
                 className="flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50 focus:outline-none text-primary-200 font-medium"
               >
                 <span className="text-primary-200">{selectedPeriod}</span>
-                <svg 
-                  className={`w-4 h-4 ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <ChevronDown
+                  className={`w-4 h-4 ml-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  strokeWidth={2}
+                />
               </button>
               
               {/* Dropdown Menu */}

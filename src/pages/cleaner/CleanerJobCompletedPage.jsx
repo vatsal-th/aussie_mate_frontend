@@ -67,9 +67,8 @@ const CleanerJobCompletedPage = () => {
             },
             payment: {
               totalPaid: acceptedQuote?.price || job.estimatedPrice || 0,
-              paidOnline: Math.round((acceptedQuote?.price || job.estimatedPrice || 0) * 0.1),
-              cashToPay: Math.round((acceptedQuote?.price || job.estimatedPrice || 0) * 0.9),
-              mode: job.paymentMethod || 'Cash'
+              paidOnline: acceptedQuote?.price || job.estimatedPrice || 0,
+              mode: job.paymentMethod || 'Online'
             },
             completionProof: {
               beforeImages: beforeImages,
@@ -85,8 +84,7 @@ const CleanerJobCompletedPage = () => {
             customerName: transformedData.customer.name,
             completedAt: transformedData.completedAt,
             totalPaid: transformedData.payment.totalPaid,
-            paidOnline: transformedData.payment.paidOnline,
-            cashToPay: transformedData.payment.cashToPay
+            paidOnline: transformedData.payment.paidOnline
           });
           
           // Set review data if available
@@ -223,10 +221,6 @@ const CleanerJobCompletedPage = () => {
               <div className="flex justify-between">
                 <span className="text-sm text-primary-200 font-medium">Paid Online</span>
                 <span className="text-sm font-semibold text-green-600">${jobData.payment.paidOnline}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-primary-200 font-medium">Cash Payment</span>
-                <span className="text-sm font-semibold text-orange-600">${jobData.payment.cashToPay}</span>
               </div>
             </div>
           </div>

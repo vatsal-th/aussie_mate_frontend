@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { XCircle } from 'lucide-react';
 import { Button, PageHeader, Loader } from '../../../components';
 import StarIcon from '../../../assets/rating.svg';
 import { reviewsAPI } from '../../../services/api';
@@ -173,17 +174,7 @@ const ReviewsPage = () => {
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3 max-sm:p-3 max-sm:gap-2">
-            <svg 
-              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5 max-sm:w-4 max-sm:h-4" 
-              fill="currentColor" 
-              viewBox="0 0 20 20"
-            >
-              <path 
-                fillRule="evenodd" 
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
-                clipRule="evenodd" 
-              />
-            </svg>
+            <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5 max-sm:w-4 max-sm:h-4" strokeWidth={2} />
             <div>
               <h4 className="text-sm font-medium text-red-800 max-sm:text-xs">Error</h4>
               <p className="text-sm text-red-600 mt-1 max-sm:text-xs">{error}</p>

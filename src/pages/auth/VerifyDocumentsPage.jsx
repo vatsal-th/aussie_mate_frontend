@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { UserRound } from 'lucide-react';
 import PlusIcon from '../../assets/plus2.svg';
 import CloseIcon from '../../assets/close.svg';
 import { userAPI } from '../../services/api';
@@ -329,13 +330,7 @@ const VerifyDocumentsPage = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <svg
-                        className="w-16 h-16 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                      </svg>
+                      <UserRound className="w-16 h-16 text-gray-400" strokeWidth={2} />
                     )}
                   </div>
                   {/* Add/Change Button */}

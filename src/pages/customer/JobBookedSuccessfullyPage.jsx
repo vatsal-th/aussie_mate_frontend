@@ -70,19 +70,14 @@ const JobBookedSuccessfullyPage = () => {
             ? `${cleanerInfo.firstName} ${cleanerInfo.lastName}`
             : cleanerInfo.name || 'Cleaner';
 
-          let paymentMethod = 'cash';
-          let onlineAmount = 0;
-          let cashAmount = acceptedQuote.price || 0;
+          let paymentMethod = 'online';
+          let onlineAmount = acceptedQuote.price || 0;
+          let cashAmount = 0;
 
           try {
             const paymentResponse = await paymentService.getPaymentStatus(jobId);
-            if (paymentResponse.success && paymentResponse.data) {
-              paymentMethod = paymentResponse.data.paymentMethod;
-
-              if (paymentMethod === 'online') {
-                onlineAmount = paymentResponse.data.amount;
-                cashAmount = 0;
-              }
+            if (paymentResponse.success && paymentResponse.data?.paymentMethod === 'online') {
+              onlineAmount = paymentResponse.data.amount || (acceptedQuote.price || 0);
             }
           } catch (paymentError) {
             onlineAmount = Math.round((acceptedQuote.price || 0) * 0.1);
@@ -258,38 +253,12 @@ const JobBookedSuccessfullyPage = () => {
           {/* Payment Information */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <h3 className="text-sm font-semibold text-primary-600 mb-2">Payment Summary</h3>
-            <div className="space-y-2">
-              <div className="flex text-sm">
-                <span className="text-primary-200 font-medium mr-2">Total Amount:</span>
-                <span className="font-semibold text-primary-500">${job?.total}</span>
-              </div>
-
-              {job?.paymentMethod === 'online' && (
-                <div className="flex text-sm">
-                  <span className="text-primary-200 font-medium mr-2">Paid Online:</span>
-                  <span className="font-medium text-green-600">
-                    ${job?.onlinePaid} ✓
-                  </span>
-                </div>
-              )}
-
-              {job?.paymentMethod === 'cash' && (
-                <>
-                  {job?.onlinePaid > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-primary-200">Paid Online (10%):</span>
-                      <span className="font-medium text-green-600">${job?.onlinePaid} ✓</span>
-                    </div>
-                  )}
-                  {job?.cashAmount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-primary-200">Pay Cash After Job (90%):</span>
-                      <span className="font-medium text-primary-600">${job?.cashAmount}</span>
-                    </div>
-                  )}
-                </>
-              )}
+          <div className="space-y-2">
+            <div className="flex text-sm">
+              <span className="text-primary-200 font-medium mr-2">Total Amount:</span>
+              <span className="font-semibold text-primary-500">${job?.total}</span>
             </div>
+          </div>
           </div>
         </div>
 

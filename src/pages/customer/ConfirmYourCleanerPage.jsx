@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ChevronDown, UserRound, XCircle } from 'lucide-react';
 import { Button, PageHeader } from '../../components';
 import { paymentService, handlePaymentError } from '../../services/paymentService';
 import StarIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
 import GoldBadgeIcon from '../../assets/goldBadge.svg';
 import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
-import UserIcon from '../../assets/user.svg';
 
 const ConfirmYourCleanerPage = () => {
   const navigate = useNavigate();
@@ -16,7 +16,6 @@ const ConfirmYourCleanerPage = () => {
   // Get data from location state
   const cleanerData = location.state?.cleanerData;
   const quoteData = location.state?.quoteData;
-  const jobData = location.state?.jobData;
   
   
   // Extract dynamic data from quote if available, otherwise use cleanerData
@@ -47,79 +46,32 @@ const ConfirmYourCleanerPage = () => {
     return null;
   }
 
-  const [selectedPayment, setSelectedPayment] = useState('online');
-  const [showCashBreakdown, setShowCashBreakdown] = useState(false);
-  const [showOnlineBreakdown, setShowOnlineBreakdown] = useState(false);
-  const [useWalletBalance, setUseWalletBalance] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [showOnlineBreakdown, setShowOnlineBreakdown] = useState(false);
 
   // Calculate amounts based on final data
-  const walletBalance = 45; // This should come from user API
   const onlinePaymentPercentage = 10;
   const onlineNowAmount = Math.round(finalCleanerData.total * (onlinePaymentPercentage / 100));
   const cashAmount = finalCleanerData.total - onlineNowAmount;
 
   const handleProceedToPay = async () => {
-    if (selectedPayment === 'cash') {
-      // For cash payment, create payment with cash method
-      try {
-        setProcessing(true);
-        setError(null);
+    try {
+      setProcessing(true);
+      setError(null);
 
-        const response = await paymentService.createPayment(jobId, 'cash', true, 'automatic');
+      const response = await paymentService.createPayment(jobId, 'online', true, 'automatic');
 
-        if (response.success) {
-          // Verify payment was created successfully before redirecting
-          try {
-            const paymentStatus = await paymentService.getPaymentStatus(jobId);
-            
-            if (paymentStatus.success && paymentStatus.data) {
-              // Payment verified, navigate to booking confirmation
-              navigate(`/booking-confirmation/${jobId}`, { replace: true });
-            } else {
-              setError('Payment created but verification failed. Please check "My Jobs" to confirm.');
-              setTimeout(() => {
-                navigate('/my-jobs');
-              }, 3000);
-            }
-          } catch (verifyErr) {
-            console.error('Payment verification error:', verifyErr);
-            // Even if verification fails, payment might have succeeded
-            // Navigate to My Jobs as fallback
-            setError('Payment created but verification failed. Redirecting to My Jobs...');
-            setTimeout(() => {
-              navigate('/my-jobs');
-            }, 3000);
-          }
-        }
-      } catch (err) {
-        console.error('Cash payment error:', err);
-        setError(handlePaymentError(err));
-      } finally {
+      if (response.success && response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('Failed to initialize payment. Please try again.');
         setProcessing(false);
       }
-    } else {
-      // For online payment, redirect to Stripe Checkout
-      try {
-        setProcessing(true);
-        setError(null);
-
-        // Create payment with Stripe Checkout (useCheckout = true, captureMethod = 'automatic')
-        const response = await paymentService.createPayment(jobId, 'online', true, 'automatic');
-
-        if (response.success && response.data.url) {
-          // Redirect to Stripe Checkout page
-          window.location.href = response.data.url;
-        } else {
-          setError('Failed to initialize payment. Please try again.');
-          setProcessing(false);
-        }
-      } catch (err) {
-        console.error('Payment initialization error:', err);
-        setError(handlePaymentError(err));
-        setProcessing(false);
-      }
+    } catch (err) {
+      console.error('Payment initialization error:', err);
+      setError(handlePaymentError(err));
+      setProcessing(false);
     }
   };
 
@@ -139,7 +91,7 @@ const ConfirmYourCleanerPage = () => {
           <div className="flex items-center gap-4">
             {/* Cleaner Avatar */}
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-              <img src={UserIcon} alt="User" className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+              <UserRound className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" strokeWidth={2} />
             </div>
 
             {/* Cleaner Details */}
@@ -215,180 +167,52 @@ const ConfirmYourCleanerPage = () => {
           </div>
         </div>
 
-        {/* Payment Options */}
+        {/* Payment Option */}
         <div className="bg-white rounded-2xl shadow-custom p-4 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold text-primary-500 mb-4">Choose Your Payment Option</h3>
-          
-          <div className="space-y-4">
-            {/* Cash Payment Option */}
-            <div className={`border rounded-xl p-4 transition-all cursor-pointer ${
-              selectedPayment === 'cash' 
-                ? 'border-[#1F6FEB] bg-blue-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedPayment('cash')}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  selectedPayment === 'cash' 
-                    ? 'border-[#1F6FEB] bg-[#1F6FEB]' 
-                    : 'border-gray-300'
-                }`}>
-                  {selectedPayment === 'cash' && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                
-                <div className="flex-1">
-                  <h4 className="text-base font-semibold text-primary-500">Cash Payment</h4>
-                  <p className="text-sm text-primary-200 font-medium mt-1">
-                    Pay 10% online now and give the rest directly to your cleaner in cash.
-                  </p>
-                  
-                  {/* Breakdown Toggle */}
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCashBreakdown(!showCashBreakdown);
-                    }}
-                    variant="link"
-                    size="sm"
-                    className="flex items-center gap-1 mt-2 text-sm text-primary-600 font-medium"
-                  >
-                    View Breakdown
-                    <svg 
-                      className={`w-4 h-4 transition-transform ${
-                        showCashBreakdown ? 'rotate-180' : ''
-                      }`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-                  
-                  {/* Breakdown Details */}
-                  {showCashBreakdown && (
-                    <div className="mt-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-primary-200 font-medium">Online Now:</span>
-                        <span className="font-semibold text-primary-500">${onlineNowAmount} (10%)</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-primary-200 font-medium">Pay Later in Cash:</span>
-                        <span className="font-semibold text-primary-500">${cashAmount}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Online Payment Option */}
-            <div className={`border rounded-xl p-4 transition-all cursor-pointer ${
-              selectedPayment === 'online' 
-                ? 'border-[#1F6FEB] bg-blue-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedPayment('online')}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  selectedPayment === 'online' 
-                    ? 'border-[#1F6FEB] bg-[#1F6FEB]' 
-                    : 'border-gray-300'
-                }`}>
-                  {selectedPayment === 'online' && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                
-                <div className="flex-1">
-                  <h4 className="text-base font-semibold text-primary-500">
-                    Online Payment <span className="text-primary-200 font-medium">(Recommended)</span>
-                  </h4>
-                  <p className="text-sm text-primary-200 font-medium mt-1">
-                    Pay the full amount online securely with your card.
-                  </p>
-                  
-                  {/* Breakdown Toggle */}
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowOnlineBreakdown(!showOnlineBreakdown);
-                    }}
-                    variant="link"
-                    size="sm"
-                    className="flex items-center gap-1 mt-2 text-sm text-primary-600 font-medium"
-                  >
-                    View Breakdown
-                    <svg 
-                      className={`w-4 h-4 transition-transform ${
-                        showOnlineBreakdown ? 'rotate-180' : ''
-                      }`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-                  
-                  {/* Breakdown Details */}
-                  {showOnlineBreakdown && (
-                    <div className="mt-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-primary-200 font-medium">Full Amount:</span>
-                        <span className="font-semibold text-primary-500">${finalCleanerData.total}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Aussie Mate Wallet */}
-        <div className="bg-white rounded-2xl shadow-custom p-4 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold text-primary-500 mb-4">Aussie Mate Wallet</h3>
+          <h3 className="text-lg font-semibold text-primary-500 mb-4">Online Payment</h3>
           
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-primary-200 font-medium">Available Balance:</span>
-              <span className="text-sm font-semibold text-primary-600">${walletBalance}</span>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="useWallet"
-                checked={useWalletBalance}
-                onChange={(e) => setUseWalletBalance(e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-[#1F6FEB]"
+            <p className="text-sm text-primary-200 font-medium">
+              Pay securely online to confirm your booking instantly.
+            </p>
+
+            <Button
+              onClick={() => setShowOnlineBreakdown(!showOnlineBreakdown)}
+              variant="link"
+              size="sm"
+              className="flex items-center gap-1 text-sm text-primary-600 font-medium"
+            >
+              View Breakdown
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  showOnlineBreakdown ? 'rotate-180' : ''
+                }`}
+                strokeWidth={2}
               />
-              <label htmlFor="useWallet" className="text-sm text-primary-500 font-medium cursor-pointer">
-                Use Wallet Balance
-              </label>
-            </div>
+            </Button>
+
+            {showOnlineBreakdown && (
+              <div className="mt-2 space-y-2 text-sm text-primary-200 font-medium">
+                <div className="flex justify-between">
+                  <span>Online Payment (10% initial):</span>
+                  <span className="font-semibold text-primary-500">${onlineNowAmount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Remaining balance after service:</span>
+                  <span className="font-semibold text-primary-500">${cashAmount}</span>
+                </div>
+                <p className="text-xs text-primary-300 font-medium">
+                  The remaining balance will be charged automatically after the job is completed.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-            <svg 
-              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" 
-              fill="currentColor" 
-              viewBox="0 0 20 20"
-            >
-              <path 
-                fillRule="evenodd" 
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" 
-                clipRule="evenodd" 
-              />
-            </svg>
+            <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
             <div>
               <h4 className="text-sm font-medium text-red-800">Error</h4>
               <p className="text-sm text-red-600 mt-1">{error}</p>
@@ -405,9 +229,7 @@ const ConfirmYourCleanerPage = () => {
             loading={processing}
             disabled={processing}
           >
-            {selectedPayment === 'cash' 
-              ? `Proceed to Pay $${onlineNowAmount}` 
-              : `Proceed to Pay $${finalCleanerData.total}`}
+            {`Confirm & Pay $${finalCleanerData.total}`}
           </Button>
         </div>
 
