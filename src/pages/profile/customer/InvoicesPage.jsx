@@ -313,7 +313,7 @@ const InvoicesPage = () => {
                                                          setShowDeleteModal(true);
                                                          setShowDropdown(null);
                                                      }}
-                                                     className="w-full px-4 py-3 text-left text-sm text-[#EF4444] font-medium hover:bg-red-50 transition-colors flex items-center gap-3 cursor-pointer"
+                                                     className="w-full px-4 py-3 text-left text-sm text-red-500 font-medium hover:bg-red-50 transition-colors flex items-center gap-3 cursor-pointer"
                                                  >
                                                      <img src={TrashRedIcon} alt="Delete" className="w-4 h-4" />
                                                      Delete Invoice

@@ -123,7 +123,7 @@ const ForgotPasswordPage = () => {
                 required
               />  
               {error && (
-            <div className="mb-4 text-[#EF4444] font-medium rounded-lg text-sm leading-4">
+            <div className="mb-4 text-red-500 font-medium rounded-lg text-sm leading-4">
               {error}
             </div>
           )}

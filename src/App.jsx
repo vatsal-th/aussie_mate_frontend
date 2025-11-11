@@ -12,7 +12,7 @@ function App() {
     <AuthProvider>
       <Router>
         <ScrollToTop />
-        <Suspense fallback={<Loader fullscreen message="Hang tight, loading your experience..." />}>
+        <Suspense fallback={<Loader fullscreen message="Setting up your Aussie Mate journey..." />}>
           <Routes>
             {/* Public */}
             <Route path="/" element={<HomePage />} />

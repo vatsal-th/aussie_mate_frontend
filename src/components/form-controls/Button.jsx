@@ -23,8 +23,8 @@ const Button = ({
     secondary: 'bg-white border border-[#9CC0F6] text-primary-600 shadow-custom',
     outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 ',
     ghost: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-    danger: 'bg-[#FFE4E4] hover:text-[#B80A34] text-[#EF4444]',
-    success: 'bg-[#E4FBED] hover:text-[#00832D] text-[#1EB154]',
+    danger: 'bg-red-500 hover:text-[#B80A34] text-red-500',
+    success: 'bg-green-500 hover:text-[#00832D] text-green-500',
     warning: 'bg-yellow-500 hover:bg-yellow-600 text-white ',
     link: 'bg-transparent text-primary-600 hover:underline  p-0'
   };

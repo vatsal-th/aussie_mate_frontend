@@ -318,7 +318,7 @@ const JobBookedSuccessfullyPage = () => {
                 <div className="flex-2">
                   <div className="flex items-center gap-3 mb-2">
                     <h4 className="text-lg font-bold text-primary-500">{cleaner?.name}</h4>
-                    <span className="bg-[#FFF1D9] text-[#F59E0B] text-xs font-medium px-2 py-1 rounded-full border border-[#FFEBCA]">
+                    <span className="bg-yellow-500 text-yellow-500 text-xs font-medium px-2 py-1 rounded-full border border-yellow-500">
                       {job?.status === 'in_progress' ? 'In Progress' : 'Booked'}
                     </span>
                   </div>

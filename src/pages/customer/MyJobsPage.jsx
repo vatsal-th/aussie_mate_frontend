@@ -57,10 +57,10 @@ const formatDate = (iso) => {
 const getStatusChip = (statusRaw) => {
   const s = (statusRaw || '').toString().toLowerCase();
   if (s === 'in_progress') {
-    return { label: 'In Process', className: 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]' };
+    return { label: 'In Process', className: 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500' };
   }
   if (s === 'completed') {
-    return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
+    return { label: 'Completed', className: 'bg-[#DBF9E7] text-green-500 border border-green-500' };
   }
   if (s === 'pending_customer_confirmation') {
     return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };

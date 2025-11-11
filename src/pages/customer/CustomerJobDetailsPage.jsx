@@ -494,7 +494,7 @@ const CustomerJobDetailsPage = () => {
                                 {chatStatus.lastMessage}
                               </span>
                               {chatStatus.unreadCount > 0 && (
-                                <span className="bg-[#FFE4E4] text-[#EF4444] font-medium border border-[#FFDDDD] text-xs px-1.5 py-0.5 rounded-full">
+                                <span className="bg-red-500 text-red-500 font-medium border border-red-500 text-xs px-1.5 py-0.5 rounded-full">
                                   {chatStatus.unreadCount}
                                 </span>
                               )}
@@ -548,7 +548,7 @@ const CustomerJobDetailsPage = () => {
                         
                         {/* Quote Status for rejected quotes */}
                         {quote.status === 'rejected' && (
-                          <div className="bg-[#FFE4E4] text-[#EF4444] border border-[#FFDDDD] px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center shadow-custom">
+                          <div className="bg-red-500 text-red-500 border border-red-500 px-3 sm:px-4 py-2 rounded-xl flex items-center justify-center shadow-custom">
                             <span className="text-xs sm:text-sm font-medium">Rejected</span>
                           </div>
                         )}
@@ -597,7 +597,7 @@ const CustomerJobDetailsPage = () => {
         }
         confirmText="Accept Quote"
         cancelText="Cancel"
-        confirmButtonColor="bg-[#E4FBED] text-[#1EB154]! hover:text-[#00832D]! border border-[#DBF9E7]"
+        confirmButtonColor="bg-green-500 text-green-500! hover:text-[#00832D]! border border-green-500"
         isLoading={isAccepting}
       />
 
@@ -614,7 +614,7 @@ const CustomerJobDetailsPage = () => {
         }
         confirmText="Decline Quote"
         cancelText="Cancel"
-        confirmButtonColor="bg-[#FFE4E4] hover:bg-[#EF4444] text-[#EF4444]! hover:text-white! border border-[#FFDDDD]"
+        confirmButtonColor="bg-red-500 hover:bg-[#EF4444] text-red-500! hover:text-white! border border-red-500"
         isLoading={isDeclining}
       />
     </div>

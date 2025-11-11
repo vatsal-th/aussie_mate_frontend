@@ -592,7 +592,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FFEBCA] border border-[#FFEBCA] text-[#F59E0B]">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FFEBCA] border border-yellow-500 text-yellow-500">
                     In Progress
                   </span>
                 </div>
@@ -652,7 +652,7 @@ const CustomerInProgressJobDetailsPage = () => {
                 </p>
               </div>
 
-              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FFF1D9] border border-[#FFEBCA] text-[#F59E0B] font-medium">
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-500 border border-yellow-500 text-yellow-500 font-medium">
                 Pending Release
               </span>
             </div>

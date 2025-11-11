@@ -697,7 +697,7 @@ const CleanerJobsPage = () => {
                         </span>
                       )}
                       {activeTab === 'accepted' && job.originalJob?.status === 'in_progress' && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FFF1D9] border border-[#FFEBCA] text-[#F59E0B]">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-500 border border-yellow-500 text-yellow-500">
                           Awaiting Payment
                         </span>
                       )}

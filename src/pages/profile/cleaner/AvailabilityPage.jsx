@@ -304,18 +304,18 @@ const AvailabilityPage = () => {
                 {error && (
                     <div className={`mb-4 p-3 rounded-xl ${
                         error.includes('successfully') 
-                            ? 'bg-[#E4FBED] border border-[#DBF9E7]' 
-                            : 'bg-[#FFE4E4] border border-[#FFDDDD]'
+                            ? 'bg-green-500 border border-green-500' 
+                            : 'bg-red-500 border border-red-500'
                     }`}>
                         <p className={`text-sm font-medium ${
                             error.includes('successfully') 
-                                ? 'text-[#1EB154]' 
-                                : 'text-[#EF4444]'
+                                ? 'text-green-500' 
+                                : 'text-red-500'
                         }`}>{error}</p>
                         {!error.includes('successfully') && (
                             <button 
                                 onClick={fetchUserData}
-                                className="text-[#EF4444] text-xs underline mt-1"
+                                className="text-red-500 text-xs underline mt-1"
                             >
                                 Retry
                             </button>

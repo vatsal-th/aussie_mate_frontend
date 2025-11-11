@@ -58,10 +58,10 @@ const CustomerDashboard = () => {
   const getStatusChip = (statusRaw) => {
     const s = (statusRaw || '').toString().toLowerCase();
     if (s === 'in_progress') {
-      return { label: 'In Progress', className: 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]' };
+      return { label: 'In Progress', className: 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500' };
     }
     if (s === 'completed') {
-      return { label: 'Completed', className: 'bg-[#DBF9E7] text-[#1EB154] border border-[#DBF9E7]' };
+      return { label: 'Completed', className: 'bg-[#DBF9E7] text-green-500 border border-green-500' };
     }
     if (s === 'pending_customer_confirmation') {
       return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };
@@ -447,9 +447,9 @@ const CustomerDashboard = () => {
                               job.status === 'Pending Quotes' 
                                 ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
                                 : job.status === 'In Progress'
-                                ? 'bg-[#FFEBCA] text-[#F59E0B] border border-[#FFEBCA]'
+                                ? 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500'
                                 : job.status === 'Completed'
-                                ? 'bg-[#E4FBED] text-[#10B981] border border-[#D2F8E0]'
+                                ? 'bg-green-500 text-[#10B981] border border-[#D2F8E0]'
                                 : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
                             }`}> 
                               {job.status}

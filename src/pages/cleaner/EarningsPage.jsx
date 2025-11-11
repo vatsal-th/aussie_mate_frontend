@@ -304,7 +304,7 @@ const EarningsPage = () => {
                     </p>
                   </div>
                   <div className="ml-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#DBF9E7] text-[#1EB154]">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#DBF9E7] text-green-500">
                       {job.status}
                     </span>
                   </div>

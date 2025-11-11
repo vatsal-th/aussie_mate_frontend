@@ -153,7 +153,7 @@ const LoginPage = () => {
               </button>
             </FloatingLabelInput>
             {error && (
-            <div className=" text-[#EF4444] font-medium rounded-lg text-sm leading-4 mt-0">
+            <div className=" text-red-500 font-medium rounded-lg text-sm leading-4 mt-0">
               {error}
             </div>
           )}

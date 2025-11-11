@@ -214,7 +214,7 @@ const ResetPasswordPage = () => {
               </FloatingLabelInput>
               </div>
               {error && (
-            <div className="mb-4 text-[#EF4444] font-medium rounded-lg text-sm leading-4 mt-3">
+            <div className="mb-4 text-red-500 font-medium rounded-lg text-sm leading-4 mt-3">
               {error}
             </div>
           )}

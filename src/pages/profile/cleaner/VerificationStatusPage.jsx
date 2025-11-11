@@ -9,9 +9,9 @@ import { userAPI } from '../../../services/api';
 
 const Pill = ({ label, tone = 'gray' }) => {
     const toneClasses = {
-        green: 'bg-[#E4FBED] text-[#1EB154] font-medium border border-[#DBF9E7]',
-        yellow: 'bg-[#FFF1D9] text-[#F59E0B] font-medium border border-[#FFEBCA]',
-        red: 'bg-[#FFE4E4] text-[#EF4444] font-medium border border-[#FFDDDD]',
+        green: 'bg-green-500 text-green-500 font-medium border border-green-500',
+        yellow: 'bg-yellow-500 text-yellow-500 font-medium border border-yellow-500',
+        red: 'bg-red-500 text-red-500 font-medium border border-red-500',
     }[tone];
 
     return (

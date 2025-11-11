@@ -941,7 +941,7 @@ const PostNewJobPage = () => {
       <div className="space-y-6 bg-white rounded-2xl p-6 sm:p-8 shadow-custom">
         {/* Error Message */}
         {error && (
-          <div className="text-[#EF4444] font-medium px-4 py-3 rounded">
+          <div className="text-red-500 font-medium px-4 py-3 rounded">
             {error}
           </div>
         )}

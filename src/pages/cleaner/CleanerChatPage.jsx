@@ -702,9 +702,9 @@ const CleanerChatPage = () => {
                                 
                                 // Determine message styling based on content
                                 const isRejectedMessage = message.content.includes('quote has been rejected');
-                                const bgColor = isRejectedMessage ? 'bg-[#FFE4E4]' : 'bg-[#E4FBED]';
-                                const borderColor = isRejectedMessage ? 'border-[#FFDDDD]' : 'border-[#DBF9E7]';
-                                const textColor = isRejectedMessage ? 'text-[#EF4444]' : 'text-[#1EB154]';
+                                const bgColor = isRejectedMessage ? 'bg-red-500' : 'bg-green-500';
+                                const borderColor = isRejectedMessage ? 'border-red-500' : 'border-green-500';
+                                const textColor = isRejectedMessage ? 'text-red-500' : 'text-green-500';
                                 
                                 return (
                                     <div key={uniqueKey} className="flex justify-center my-4">
@@ -917,7 +917,7 @@ const CleanerChatPage = () => {
                                         setIsNegotiable(false);
                                         setQuoteAmount('');
                                     }}
-                                    className="flex-1 text-center py-2.5 sm:py-3 text-[#EF4444] font-medium cursor-pointer text-xs sm:text-sm"
+                                    className="flex-1 text-center py-2.5 sm:py-3 text-red-500 font-medium cursor-pointer text-xs sm:text-sm"
                                 >
                                     Cancel
                                 </button>

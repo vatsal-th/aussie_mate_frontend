@@ -45,7 +45,7 @@ const PhoneValidationAlert = ({ error, onClose, isVisible }) => {
               </div>
               <button
                 onClick={onClose}
-                className="text-white hover:text-[#EF4444] transition-colors p-0.5 xs:p-1 cursor-pointer touch-manipulation"
+                className="text-white hover:text-red-500 transition-colors p-0.5 xs:p-1 cursor-pointer touch-manipulation"
               >
                 <img src={CloseIcon} alt="Close" className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
               </button>
@@ -72,7 +72,7 @@ const PhoneValidationAlert = ({ error, onClose, isVisible }) => {
           <div className="px-3 xs:px-4 sm:px-6 py-2.5 xs:py-3 sm:py-4 flex items-center justify-end">
             <button
               onClick={onClose}
-              className="bg-[#FFE4E4] px-3 xs:px-4 sm:px-6 py-1.5 xs:py-2 rounded-lg font-medium transition-colors focus:outline-none text-[#EF4444] border border-[#FFDDDD] cursor-pointer text-xs xs:text-sm sm:text-base touch-manipulation min-h-[36px] xs:min-h-[40px]"
+              className="bg-red-500 px-3 xs:px-4 sm:px-6 py-1.5 xs:py-2 rounded-lg font-medium transition-colors focus:outline-none text-red-500 border border-red-500 cursor-pointer text-xs xs:text-sm sm:text-base touch-manipulation min-h-[36px] xs:min-h-[40px]"
             >
               I Understand
             </button>

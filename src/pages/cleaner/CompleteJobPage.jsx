@@ -394,7 +394,7 @@ const CompleteJobPage = () => {
                       ></div>
                     </div>
                     <div className="absolute right-0 top-0 -mt-6"> 
-                      <span className="text-sm font-semibold text-[#1EB154]">
+                      <span className="text-sm font-semibold text-green-500">
                         {formatTime(timeLeft)}
                       </span>
                     </div>

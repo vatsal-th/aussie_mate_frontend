@@ -144,7 +144,7 @@ const ProviderComplianceQuizPage = () => {
                     style={{ width: `${Math.min(scorePercent, 100)}%` }}
                   />
                 </div>
-                <p className={`text-xs sm:text-sm font-semibold mt-3 ${hasPassed ? 'text-[#1EB154]' : 'text-[#EF4444]'}`}>
+                <p className={`text-xs sm:text-sm font-semibold mt-3 ${hasPassed ? 'text-green-500' : 'text-red-500'}`}>
                   {hasPassed
                     ? 'Great job! You’ve met the 80% requirement. You can proceed to the next onboarding step.'
                     : 'Score below 80%. Please review the guidelines and retake the quiz.'}
@@ -175,14 +175,14 @@ const ProviderComplianceQuizPage = () => {
                     <div className="mt-3 text-xs sm:text-sm text-[#374151] font-medium">
                       <p>
                         Your answer:{' '}
-                        <span className={isCorrect ? 'text-[#1EB154]' : 'text-[#EF4444]'}>
+                        <span className={isCorrect ? 'text-green-500' : 'text-red-500'}>
                           {question.options[answer?.selected ?? -1] || 'No answer'}
                         </span>
                       </p>
                       {!isCorrect && (
                         <p>
                           Correct answer:{' '}
-                          <span className="text-[#1EB154] font-semibold">
+                          <span className="text-green-500 font-semibold">
                             {question.options[question.correctIndex]}
                           </span>
                         </p>
@@ -265,10 +265,10 @@ const ProviderComplianceQuizPage = () => {
                 getOptionLabelClass={(value) => {
                   if (!isSubmitted) return '';
                   if (value === currentQuestion.correctIndex) {
-                    return 'text-[#1EB154] font-semibold';
+                    return 'text-green-500 font-semibold';
                   }
                   if (value === selectedOption && value !== currentQuestion.correctIndex) {
-                    return 'text-[#EF4444] font-semibold';
+                    return 'text-red-500 font-semibold';
                   }
                   return '';
                 }}

@@ -72,16 +72,6 @@ const WalletPage = () => {
                   </div>
                 )}
               </div>
-
-              <div className="flex flex-col gap-3 sm:w-64">
-                <Button
-                  size="sm"
-                  disabled
-                  className="cursor-not-allowed bg-gray-200 text-gray-500 hover:bg-gray-200"
-                >
-                  Top Up (Coming Soon)
-                </Button>
-              </div>
             </div>
           </section>
         )}
