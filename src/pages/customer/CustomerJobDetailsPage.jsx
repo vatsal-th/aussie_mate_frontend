@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Button, ConfirmationModal, PageHeader } from '../../components';
+import {
+ Wallet,
+  Clock3,
+  Home as HomeIcon,
+  Ruler,
+  AlertTriangle,
+} from 'lucide-react';
+import { Button, ConfirmationModal, PageHeader, JobOverviewCard } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
-import CalendarIcon from '../../assets/Calendar.svg';
-import MapPinIcon from '../../assets/map-pin 1.png';
 import UserIcon from '../../assets/user.svg';
 import RatingIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
@@ -32,8 +36,6 @@ const CustomerJobDetailsPage = () => {
   const [quoteToDecline, setQuoteToDecline] = useState(null);
   const [cleanerQuotes, setCleanerQuotes] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
-  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -96,6 +98,33 @@ const CustomerJobDetailsPage = () => {
     if (!job) return 'Job Details';
     const serviceType = job.serviceType?.charAt(0).toUpperCase() + job.serviceType?.slice(1) || 'Service';
     return `${serviceType} `;
+  };
+
+  const getServiceDetail = (job) => {
+    if (!job) return '';
+    return (
+      job.serviceDetail ||
+      job.serviceDetailName ||
+      job.service?.detail ||
+      job.service?.name ||
+      job.selectedServiceDetail ||
+      ''
+    );
+  };
+
+  const getJobFrequency = (job) => {
+    if (!job) return 'One-time';
+    return job.frequency || job.serviceFrequency || job.schedule?.frequency || 'One-time';
+  };
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === '') return '';
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return value;
+    return `$${numeric.toLocaleString('en-AU', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: numeric % 1 === 0 ? 0 : 2,
+    })}`;
   };
 
   const formatDate = (dateString) => {
@@ -268,26 +297,154 @@ const CustomerJobDetailsPage = () => {
     return Array.from(urls);
   }, [job]);
 
-  const openPhotoModal = (index) => {
-    setActivePhotoIndex(index);
-    setIsPhotoModalOpen(true);
-    document.body.style.overflow = 'hidden';
-  };
+  const serviceDetail = getServiceDetail(job);
+  const scheduledDateLabel = job?.scheduledDate ? formatDate(job.scheduledDate) : 'Date not set';
+  const jobFrequencyLabel = getJobFrequency(job);
+  const jobOverviewMeta = useMemo(() => {
+    if (!job) return [];
+    const meta = [];
 
-  const closePhotoModal = () => {
-    setIsPhotoModalOpen(false);
-    document.body.style.overflow = 'unset';
-  };
+    const budgetValue = job.budget || job.estimatedPrice || job.priceEstimate || job.priceRange;
+    if (budgetValue) {
+      meta.push({
+        label: 'Budget',
+        value: formatCurrency(budgetValue),
+        icon: <Wallet className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
 
-  const showPrevPhoto = () => {
-    setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  };
+    const durationValue = job.estimatedDuration || job.duration || job.timeEstimate;
+    if (durationValue) {
+      meta.push({
+        label: 'Duration',
+        value: typeof durationValue === 'number' ? `${durationValue} hrs` : durationValue,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
 
-  const showNextPhoto = () => {
-    setActivePhotoIndex((prev) =>
-      prev < jobPhotos.length - 1 ? prev + 1 : prev
-    );
-  };
+    const propertyTypeValue = job.propertyType || job.propertyCategory;
+    if (propertyTypeValue) {
+      meta.push({
+        label: 'Property Type',
+        value: propertyTypeValue,
+        icon: <HomeIcon className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const propertySizeValue = job.propertySize || job.squareFootage || job.propertyArea;
+    if (propertySizeValue) {
+      meta.push({
+        label: 'Property Size',
+        value: propertySizeValue,
+        icon: <Ruler className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const priorityValue = job.priority || job.priorityLevel;
+    if (priorityValue) {
+      meta.push({
+        label: 'Priority',
+        value: priorityValue,
+        icon: <AlertTriangle className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    return meta;
+  }, [job]);
+
+  const roleSections = useMemo(() => {
+    if (!job) return {};
+
+    const getPersonName = (person) => {
+      if (!person) return '';
+      const { firstName, lastName, name, fullName } = person;
+      const combined = `${firstName || ''} ${lastName || ''}`.trim();
+      return combined || fullName || name || '';
+    };
+
+    const getPersonPhone = (person) => {
+      if (!person) return '';
+      return (
+        person.phone ||
+        person.phoneNumber ||
+        person.mobile ||
+        person.contactNumber ||
+        ''
+      );
+    };
+
+    const assignedCleaner =
+      job.assignedCleaner ||
+      job.cleaner ||
+      job.acceptedCleaner ||
+      job.assignedCleanerInfo ||
+      job.assignedTo ||
+      job.assignedCleanerId;
+
+    const assignedCleanerName =
+      typeof assignedCleaner === 'string'
+        ? assignedCleaner
+        : getPersonName(assignedCleaner);
+
+    const assignedCleanerPhone =
+      typeof assignedCleaner === 'string' ? '' : getPersonPhone(assignedCleaner);
+
+    const assignedCleanerRating =
+      typeof assignedCleaner === 'object'
+        ? assignedCleaner.averageRating || assignedCleaner.rating
+        : '';
+
+    const customer =
+      job.customer ||
+      job.customerId ||
+      job.postedBy ||
+      job.createdBy;
+
+    const customerName = getPersonName(customer);
+    const customerPhone = getPersonPhone(customer);
+
+    const sections = {};
+
+    const customerItems = [
+      assignedCleanerName
+        ? { label: 'Assigned Cleaner', value: assignedCleanerName }
+        : null,
+      assignedCleanerPhone
+        ? { label: 'Cleaner Contact', value: assignedCleanerPhone }
+        : null,
+      assignedCleanerRating
+        ? { label: 'Cleaner Rating', value: `${assignedCleanerRating}⭐` }
+        : null,
+      job.specialInstructions
+        ? { label: 'Special Instructions', value: job.specialInstructions }
+        : null,
+    ].filter(Boolean);
+
+    if (customerItems.length > 0) {
+      sections.customer = customerItems;
+    }
+
+    const cleanerItems = [
+      customerName
+        ? { label: 'Customer', value: customerName }
+        : null,
+      customerPhone
+        ? { label: 'Customer Contact', value: customerPhone }
+        : null,
+      job.accessInstructions
+        ? { label: 'Access Notes', value: job.accessInstructions }
+        : null,
+      job.petDetails
+        ? { label: 'Pet Details', value: job.petDetails }
+        : null,
+    ].filter(Boolean);
+
+    if (cleanerItems.length > 0) {
+      sections.cleaner = cleanerItems;
+    }
+
+    return sections;
+  }, [job]);
 
   // Helper function to check if customer has chatted with a cleaner
   const getChatRoomForCleaner = (cleanerId) => {
@@ -425,72 +582,27 @@ const CustomerJobDetailsPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-        {/* Job Information Card */}
-        <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6 mb-3 sm:mb-4">
-          <div className="space-y-2 sm:space-y-3">
-            {/* Job ID */}
-            <div className="text-xs sm:text-sm text-primary-200 font-medium">
-              {job.jobId}
-            </div>
-
-            {/* Job Title */}
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-primary-500 leading-tight">
-              {getJobTitle(job)}
-            </h2>
-
-            {/* Job Schedule */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <img src={CalendarIcon} alt="Calendar" className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                {formatDate(job.scheduledDate)}
-              </span>
-            </div>
-
-            {/* Job Location */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <img src={MapPinIcon} alt="Location" className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                {job.location?.address || job.address || 'Location not specified'}
-              </span>
-            </div>
-          </div>
+        <div className="mb-3 sm:mb-4">
+          <JobOverviewCard
+            jobId={job.jobId || job.referenceId || job._id?.slice(-6)}
+            title={getJobTitle(job)}
+            serviceType={job.serviceType || job.category || job.service}
+            serviceDetail={serviceDetail}
+            instructions={
+              job.specialInstructions ||
+              job.instructions ||
+              job.additionalNotes ||
+              ''
+            }
+            scheduledDate={scheduledDateLabel}
+            frequency={jobFrequencyLabel}
+            location={job.location?.address || job.address || job.locationDescription || 'Location not specified'}
+            photos={jobPhotos}
+            viewerRole="customer"
+            metaInfo={jobOverviewMeta}
+            roleSections={roleSections}
+          />
         </div>
-
-        {/* Job Photos */}
-        {jobPhotos.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6 mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-3">
-              Job Photos
-            </h3>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {jobPhotos.slice(0, Math.min(4, jobPhotos.length)).map((photo, index) => {
-                const isOverflowTile = index === 3 && jobPhotos.length > 4;
-                const overlayCount = jobPhotos.length - 4;
-                return (
-                  <button
-                    key={`${photo}-${index}`}
-                    type="button"
-                    onClick={() => openPhotoModal(index)}
-                    className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden focus:outline-none hover:scale-[1.02] cursor-pointer"
-                  >
-                    <img
-                      src={photo}
-                      alt={`Job photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {isOverflowTile && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="text-white text-base sm:text-lg font-semibold">
-                          +{overlayCount}
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
 
         {/* Cleaner Quotes Section */}
@@ -701,61 +813,6 @@ const CustomerJobDetailsPage = () => {
         confirmButtonColor="bg-red-500 hover:bg-[#EF4444] text-red-500! hover:text-white! border border-red-500"
         isLoading={isDeclining}
       />
-
-      {isPhotoModalOpen && jobPhotos.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="relative w-full max-w-4xl">
-            <button
-              type="button"
-              onClick={closePhotoModal}
-              className="absolute -top-10 right-0 text-white hover:text-primary-200 transition-colors cursor-pointer"
-            >
-              <X className="w-6 h-6" strokeWidth={2.5} />
-            </button>
-            <div className="relative">
-              <img
-                src={jobPhotos[activePhotoIndex]}
-                alt={`Job photo ${activePhotoIndex + 1}`}
-                className="w-full max-h-[70vh] object-contain rounded-2xl"
-              />
-              <button
-                type="button"
-                onClick={showPrevPhoto}
-                disabled={activePhotoIndex === 0}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
-              </button>
-              <button
-                type="button"
-                onClick={showNextPhoto}
-                disabled={activePhotoIndex === jobPhotos.length - 1}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
-              </button>
-            </div>
-            {jobPhotos.length > 1 && (
-              <div className="mt-4 flex gap-2 overflow-x-auto">
-                {jobPhotos.map((photo, idx) => (
-                  <button
-                    key={`${photo}-thumb-${idx}`}
-                    type="button"
-                    onClick={() => setActivePhotoIndex(idx)}
-                    className={`h-16 w-16 sm:h-20 sm:w-20 rounded-lg overflow-hidden border-2 ${idx === activePhotoIndex ? 'border-primary-500' : 'border-transparent'} cursor-pointer`}
-                  >
-                    <img
-                      src={photo}
-                      alt={`Thumbnail ${idx + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

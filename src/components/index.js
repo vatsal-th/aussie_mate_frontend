@@ -25,4 +25,5 @@ export { default as PaginationRanges } from './common/PaginationRanges';
 export { default as FiltersDrawer } from './common/FiltersDrawer';
 export { default as ScrollToTop } from './common/ScrollToTop';
 export { default as Loader } from './common/Loader';
+export { default as JobOverviewCard } from './jobs/JobOverviewCard';
 

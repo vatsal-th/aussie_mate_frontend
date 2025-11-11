@@ -556,6 +556,7 @@ const CleanerJobsPage = () => {
         <PageHeader
           title="Jobs"
           onBack={() => navigate(-1)}
+          className="py-3"
           rightSlot={
             <div 
               className="flex items-center gap-2 cursor-pointer"
