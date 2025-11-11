@@ -61,7 +61,7 @@ const CommercialCleaningJobDetailsForm = ({
           value={formData.propertyType || ''}
           onChange={(e) => onInputChange('propertyType', e.target.value)}
           placeholder="Property Type"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-primary-200 rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
         />
       </div>
       {/* Type of Service Section */}
@@ -74,7 +74,7 @@ const CommercialCleaningJobDetailsForm = ({
           value={formData.serviceDetail || ''}
           onChange={(e) => onInputChange('serviceDetail', e.target.value)}
           placeholder='e.g. "Floor Cleaning"'
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-full focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-primary-200 rounded-full focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 placeholder:text-primary-200"
         />
       </div>
 

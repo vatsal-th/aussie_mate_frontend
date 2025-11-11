@@ -360,7 +360,7 @@ const CustomerChatPage = () => {
       )}
 
       {/* Safety Banner */}
-      <div className="bg-[#F9FAFB] px-3 sm:px-4 py-2 sm:py-3 mt-3 sm:mt-4 rounded-2xl shadow-custom border border-[#E5E7EB] max-w-lg mx-auto">
+      <div className="bg-[#F9FAFB] px-3 sm:px-4 py-2 sm:py-3 mt-3 sm:mt-4 rounded-2xl shadow-custom border border-primary-200 max-w-lg mx-auto">
         <div className="flex items-start space-x-2 sm:space-x-3">
           <img src={InfoIcon} alt="Info" className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
           <p className="text-xs sm:text-sm text-primary-200 font-medium leading-relaxed">
@@ -473,7 +473,7 @@ const CustomerChatPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Message..."
-            className="flex-1 px-3 py-3 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 shadow-custom bg-[#F9FAFB]"
+            className="flex-1 px-3 py-3 border border-primary-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-blue-500 shadow-custom bg-[#F9FAFB]"
           />
           <Button
             onClick={handleSendMessage}
@@ -487,7 +487,7 @@ const CustomerChatPage = () => {
       </div>
       
       {/* Quote Summary */}
-      <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-[#E5E7EB] rounded-t-4xl bg-[#F9FAFB]">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-primary-200 rounded-t-4xl bg-[#F9FAFB]">
         <h3 className="text-base sm:text-lg font-semibold text-primary-500 mb-2 sm:mb-3">Quote Summary</h3>
         
         {/* Base Quote */}

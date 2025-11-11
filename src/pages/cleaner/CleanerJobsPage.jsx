@@ -965,7 +965,7 @@ const CleanerJobsPage = () => {
                   setBudget('');
                   setIsUrgent(false);
                 }}
-                className="flex-1 px-4 py-3 border border-[#E5E7EB] text-primary-500 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+                className="flex-1 px-4 py-3 border border-primary-200 text-primary-500 rounded-lg font-medium hover:bg-primary-50 transition-colors"
               >
                 Reset
               </button>

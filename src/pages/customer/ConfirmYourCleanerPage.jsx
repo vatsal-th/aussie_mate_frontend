@@ -165,7 +165,7 @@ const ConfirmYourCleanerPage = () => {
                     finalCleanerData.tier === 'gold'
                       ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
                       : finalCleanerData.tier === 'silver'
-                      ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-[#E5E7EB]'
+                      ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-primary-200'
                       : finalCleanerData.tier === 'bronze'
                       ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
                       : 'bg-gray-100 border-gray-300'

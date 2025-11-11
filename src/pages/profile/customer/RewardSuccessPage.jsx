@@ -136,7 +136,7 @@ const RewardSuccessPage = () => {
             </h2>
             
             {/* Voucher Code */}
-            <div className="bg-white rounded-full px-4 py-3 mb-2 flex items-center justify-between border border-[#E5E7EB]">
+            <div className="bg-white rounded-full px-4 py-3 mb-2 flex items-center justify-between border border-primary-200">
               <span className="text-sm sm:text-base font-semibold text-primary-500">
                 {voucherCode}
               </span>

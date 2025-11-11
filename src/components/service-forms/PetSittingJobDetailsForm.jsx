@@ -166,7 +166,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-[#E5E7EB] rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 flex items-center justify-between"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-primary-200 rounded-lg focus:outline-none text-xs sm:text-sm lg:text-base bg-white text-primary-500 flex items-center justify-between"
           >
             <span className={selectedService ? 'text-primary-500' : 'text-primary-200'}>
               {selectedService || 'Select Service'}

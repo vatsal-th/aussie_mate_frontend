@@ -429,7 +429,7 @@ const CustomerJobDetailsPage = () => {
                 const chatStatus = getChatStatus(cleaner.id);
                 
                 return (
-                  <div key={quote._id || quote.id || `quote-${index}`} className="border border-[#E5E7EB] shadow-custom rounded-xl p-3 sm:p-4">
+                  <div key={quote._id || quote.id || `quote-${index}`} className="border border-primary-200 shadow-custom rounded-xl p-3 sm:p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
                       <div className="flex-1">
                         {/* Top row: Cleaner ID, Badge, Rating */}
@@ -445,7 +445,7 @@ const CustomerJobDetailsPage = () => {
                               cleaner.tier === 'gold'
                                 ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
                                 : cleaner.tier === 'silver'
-                                ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-[#E5E7EB]'
+                                ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-primary-200'
                                 : cleaner.tier === 'bronze'
                                 ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
                                 : 'bg-gray-100 border-gray-300'

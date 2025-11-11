@@ -658,7 +658,7 @@ const CleanerChatPage = () => {
                 )}
 
                 {/* Safety Banner */}
-                <div className="bg-[#F9FAFB] px-4 py-3 sm:px-6 rounded-xl border border-[#E5E7EB] max-w-lg mx-auto">
+                <div className="bg-[#F9FAFB] px-4 py-3 sm:px-6 rounded-xl border border-primary-200 max-w-lg mx-auto">
                     <div className="flex items-center space-x-2">
                         <img src={InfoIcon} alt="Info" className="w-4 h-4 flex-shrink-0" />
                         <p className="text-xs text-primary-200 font-medium">
@@ -734,7 +734,7 @@ const CleanerChatPage = () => {
                                         {message.messageType === 'quote' && message.quoteData && (
                                             <div className={`px-4 py-3 rounded-2xl font-medium mb-2 ${
                                                 isSentByCurrentUser
-                                                    ? 'bg-[#F9FAFB] text-primary-500 border border-[#E5E7EB]'
+                                                    ? 'bg-[#F9FAFB] text-primary-500 border border-primary-200'
                                                     : 'bg-[#EBF2FD] text-primary-500'
                                             }`}>
                                                 <div className="text-sm font-semibold text-primary-500 mb-2">💰 Quote Update</div>
@@ -756,7 +756,7 @@ const CleanerChatPage = () => {
                                         {message.messageType === 'budget_update' && message.budgetData && (
                                             <div className={`px-4 py-3 rounded-2xl font-medium mb-2 ${
                                                 isSentByCurrentUser
-                                                    ? 'bg-[#F9FAFB] text-primary-500 border border-[#E5E7EB]'
+                                                    ? 'bg-[#F9FAFB] text-primary-500 border border-primary-200'
                                                     : 'bg-[#EBF2FD] text-primary-500'
                                             }`}>
                                                 <div className="text-sm font-semibold text-primary-500 mb-2">💵 Budget Update</div>
@@ -774,7 +774,7 @@ const CleanerChatPage = () => {
                                             <div
                                                 className={`px-4 py-3 rounded-2xl font-medium ${
                                                     isSentByCurrentUser
-                                                        ? 'bg-[#F9FAFB] text-primary-500 border border-[#E5E7EB]'
+                                                        ? 'bg-[#F9FAFB] text-primary-500 border border-primary-200'
                                                         : 'bg-[#EBF2FD] text-primary-500'
                                                 }`}
                                             >
@@ -829,7 +829,7 @@ const CleanerChatPage = () => {
                                 disabled={quoteStatus !== 'accepted'}
                                 className={`flex-1 px-4 py-3 rounded-full text-sm focus:outline-none border shadow-custom ${
                                     quoteStatus === 'accepted'
-                                        ? 'bg-[#F9FAFB] border-[#E5E7EB]' 
+                                        ? 'bg-[#F9FAFB] border-primary-200' 
                                         : 'bg-gray-100 border-gray-300 cursor-not-allowed'
                                 }`}
                             />

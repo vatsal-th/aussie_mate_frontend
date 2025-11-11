@@ -99,7 +99,7 @@ const NDISPlanInfoPage = () => {
                     </button>
                     <button
                         onClick={() => navigate('/location')}
-                        className="px-4 py-2 bg-[#F9FAFB] text-primary-500 border border-[#E5E7EB] rounded-lg hover:bg-gray-300 font-medium cursor-pointer"
+                        className="px-4 py-2 bg-[#F9FAFB] text-primary-500 border border-primary-200 rounded-lg hover:bg-gray-300 font-medium cursor-pointer"
                     >
                         Skip
                     </button>

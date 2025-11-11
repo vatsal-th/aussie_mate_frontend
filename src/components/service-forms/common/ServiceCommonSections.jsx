@@ -40,7 +40,7 @@ const ServiceCommonSections = ({
               onChange={(e) => onInstructionsChange?.(e.target.value)}
               placeholder={instructionsPlaceholder}
               rows={4}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-[#E5E7EB] rounded-xl! focus:outline-none text-xs sm:text-sm lg:text-base resize-none"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-primary-200 rounded-xl! focus:outline-none text-xs sm:text-sm lg:text-base resize-none"
             />
           </div>
         </div>

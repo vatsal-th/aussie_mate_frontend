@@ -149,6 +149,10 @@ button {
   border-color: rgba(31, 111, 235, 0.2) !important;
 }
 
+.border-primary-200 {
+  border-color: #E5E7EB !important;
+}
+
 .border-green-500 {
   border-color: #DBF9E7 !important;
 }

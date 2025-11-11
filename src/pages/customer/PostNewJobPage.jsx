@@ -784,7 +784,7 @@ const PostNewJobPage = () => {
             }`}>
             <div className={`mr-3 rounded-[8px] p-3 border ${(!selectedLocation.address || selectedLocation.address === 'Location not set')
                 ? 'border-yellow-300 bg-yellow-100'
-                : 'border-[#E5E7EB] bg-white'
+                : 'border-primary-200 bg-white'
               }`}>
               <img
                 src={MapPinIcon}

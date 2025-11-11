@@ -175,7 +175,7 @@ const CleanerJobCompletedPage = () => {
                 Customer Review
               </h3>
               
-              <div className="shadow-custom rounded-xl p-4 border border-[#E5E7EB]">
+              <div className="shadow-custom rounded-xl p-4 border border-primary-200">
                 {/* Rating */}
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1">

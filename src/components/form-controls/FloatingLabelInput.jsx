@@ -9,7 +9,7 @@ const FloatingLabelInput = ({ id, name, label, type = "text", value, onChange, r
         id={id}
         value={value}
         onChange={onChange}
-        className="peer w-full px-4 py-4 border border-[#E5E7EB] rounded-md focus:outline-none focus:border-[#6B7280] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="peer w-full px-4 py-4 border border-primary-200 rounded-md focus:outline-none focus:border-[#6B7280] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         placeholder={placeholder}
         required={required}
         maxLength={maxLength}

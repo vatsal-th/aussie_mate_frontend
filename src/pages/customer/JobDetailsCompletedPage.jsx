@@ -350,7 +350,7 @@ const JobDetailsCompletedPage = () => {
                     jobData.cleaner.tier === 'gold' 
                       ? 'bg-gradient-to-r from-white to-[#FFDBAE] border-[#FFDBAE]'
                       : jobData.cleaner.tier === 'silver'
-                      ? 'bg-gradient-to-r from-white to-[#E9E9E9] border-[#E5E7EB]'
+                      ? 'bg-gradient-to-r from-white to-[#E9E9E9] border-primary-200'
                       : jobData.cleaner.tier === 'bronze'
                       ? 'bg-gradient-to-r from-white to-[#D4A574] border-[#CD7F32]'
                       : 'bg-gradient-to-r from-white to-gray-200 border-gray-300'
@@ -615,7 +615,7 @@ const JobDetailsCompletedPage = () => {
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                       selectedTags.includes(tag)
                         ? 'bg-[#EBF2FD] text-primary-600 border border-[#9CC0F6]'
-                        : 'bg-[#F9FAFB] text-[#374151] border border-[#E5E7EB]'
+                        : 'bg-[#F9FAFB] text-[#374151] border border-primary-200'
                     }`}
                   >
                     {tag}
@@ -629,7 +629,7 @@ const JobDetailsCompletedPage = () => {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Write your feedback here..."
-                className="w-full p-3 border border-[#E5E7EB] rounded-xl! resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-primary-200 rounded-xl! resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={3}
               />
               

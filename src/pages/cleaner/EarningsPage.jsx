@@ -294,7 +294,7 @@ const EarningsPage = () => {
           
           <div className="mx-3">
             {earningsData.jobs.map((job) => (
-              <div key={job.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors border-b border-[#E5E7EB]">
+              <div key={job.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors border-b border-primary-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold text-primary-500 mb-1">{job.title}</h3>
