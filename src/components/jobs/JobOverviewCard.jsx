@@ -81,6 +81,7 @@ const JobOverviewCard = ({
       housekeeping: <Home className="w-3.5 h-3.5 text-primary-300" strokeWidth={2} />,
       ndissupport: <HelpingHand className="w-3.5 h-3.5 text-primary-300" strokeWidth={2} />,
       ndissupportworker: <HelpingHand className="w-3.5 h-3.5 text-primary-300" strokeWidth={2} />,
+      supportservices: <HelpingHand className="w-3.5 h-3.5 text-primary-300" strokeWidth={2} />,
       petsitting: <PawPrint className="w-3.5 h-3.5 text-primary-300" strokeWidth={2} />,
     };
 

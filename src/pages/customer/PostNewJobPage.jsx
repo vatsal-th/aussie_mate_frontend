@@ -104,13 +104,13 @@ const PostNewJobPage = () => {
       description: 'Complete housekeeping solutions'
     },
     {
-      id: 'ndis',
+      id: 'supportServices',
       name: 'Support Services',
       image: NDISSupportImage,
       description: 'NDIS support services'
     },
     {
-      id: 'retail',
+      id: 'commercialCleaning',
       name: 'Commercial Cleaning',
       image: CommercialCleaningImage,
       description: 'Retail auditing services'
@@ -442,7 +442,7 @@ const PostNewJobPage = () => {
       return;
     }
 
-    const propertyRequiredServices = ['cleaning', 'retail'];
+    const propertyRequiredServices = ['cleaning', 'commercialCleaning'];
     if (propertyRequiredServices.includes(formData.serviceType)) {
       if (!formData.propertyType || formData.propertyType.trim() === '') {
         setError('Please select a property type');
@@ -457,7 +457,7 @@ const PostNewJobPage = () => {
       return;
     }
 
-    const serviceDetailRequiredServices = ['cleaning', 'retail'];
+    const serviceDetailRequiredServices = ['cleaning', 'commercialCleaning'];
     if (serviceDetailRequiredServices.includes(formData.serviceType)) {
       if (!formData.serviceDetail || formData.serviceDetail.trim() === '') {
         setError('Please specify the type of service you need');
@@ -501,7 +501,7 @@ const PostNewJobPage = () => {
         }
         break;
       }
-      case 'ndis': {
+      case 'supportServices': {
         if (!formData.ndisNumber || !/^\d{9}$/.test(formData.ndisNumber)) {
           setError('NDIS number must be exactly 9 digits');
           setIsLoading(false);
@@ -593,7 +593,7 @@ const PostNewJobPage = () => {
         return formData.service || formData.serviceType || '';
       })();
 
-      const propertyRequiredServices = ['cleaning', 'retail'];
+      const propertyRequiredServices = ['cleaning', 'commercialCleaning'];
       const propertyTypeForPayload = propertyRequiredServices.includes(formData.serviceType)
         ? formData.propertyType
         : (formData.propertyType || 'house');
@@ -601,7 +601,7 @@ const PostNewJobPage = () => {
       const isHousekeeping = formData.serviceType === 'housekeeping';
       const isHandyman = formData.serviceType === 'handyman';
       const isPetSitting = formData.serviceType === 'petsitting';
-      const isNdis = formData.serviceType === 'ndis';
+      const isNdis = formData.serviceType === 'supportServices';
 
       const jobData = {
         serviceType: formData.serviceType,
@@ -867,7 +867,7 @@ const PostNewJobPage = () => {
           )}
 
           {/* Use CommercialCleaningJobDetailsForm for retail/commercial cleaning services */}
-          {selectedService === 'retail' && (
+          {selectedService === 'commercialCleaning' && (
             <CommercialCleaningJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}
@@ -891,7 +891,7 @@ const PostNewJobPage = () => {
           )}
 
           {/* Use NDISSupportJobDetailsForm for NDIS support services */}
-          {selectedService === 'ndis' && (
+          {selectedService === 'supportServices' && (
             <NDISSupportJobDetailsForm
               formData={formData}
               onInputChange={handleInputChange}

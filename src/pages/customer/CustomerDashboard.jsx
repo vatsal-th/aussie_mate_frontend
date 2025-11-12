@@ -133,13 +133,13 @@ const CustomerDashboard = () => {
       description: 'Complete housekeeping solutions'
     },
     {
-      id: 'ndis',
+      id: 'supportServices',
       name: 'Support Services',
       image: NDISSupportImage,
       description: 'Support services'
     },
     {
-      id: 'retail',
+      id: 'commercialCleaning',
       name: 'Commercial Cleaning',
       image: CommercialCleaningImage,
       description: 'Retail auditing services'

@@ -23,10 +23,10 @@ const tabs = [
 const categoryOptions = [
   { id: 'cleaning', label: 'Cleaning' },
   { id: 'housekeeping', label: 'Housekeeping' },
-  { id: 'retail', label: 'Commercial Cleaning' },
+  { id: 'commercialCleaning', label: 'Commercial Cleaning' },
   { id: 'petsitting', label: 'Pet Sitter' },
   { id: 'handyman', label: 'Handyman' },
-  { id: 'ndis', label: 'Support Service' }
+  { id: 'supportServices', label: 'Support Service' }
 ];
 
 // Helpers
