@@ -24,7 +24,6 @@ const JobOverviewCard = ({
   scheduledDate,
   frequency,
   location,
-  status,
   photos = [],
   onPhotoClick,
   viewerRole = 'customer',
@@ -177,20 +176,6 @@ const JobOverviewCard = ({
               <div> 
                 <div className="text-base text-primary-200 font-medium leading-snug">
                   {location}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {status && (
-            <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" strokeWidth={2.2} />
-              <div>
-                <div className="text-[11px] uppercase text-primary-300 font-semibold tracking-wide">
-                  Status
-                </div>
-                <div className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-[#EEF4FF] text-primary-500">
-                  {status}
                 </div>
               </div>
             </div>
@@ -374,7 +359,6 @@ JobOverviewCard.propTypes = {
   scheduledDate: PropTypes.string,
   frequency: PropTypes.string,
   location: PropTypes.string,
-  status: PropTypes.string,
   photos: PropTypes.arrayOf(PropTypes.string),
   onPhotoClick: PropTypes.func,
   viewerRole: PropTypes.string,
@@ -415,7 +399,6 @@ JobOverviewCard.defaultProps = {
   scheduledDate: '',
   frequency: '',
   location: '',
-  status: '',
   photos: [],
   onPhotoClick: null,
   viewerRole: 'customer',

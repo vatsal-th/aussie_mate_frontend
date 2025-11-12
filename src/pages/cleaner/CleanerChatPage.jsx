@@ -43,6 +43,18 @@ const CleanerChatPage = () => {
     const messagesEndRef = useRef(null);
     const lastMessageRef = useRef(null);
 
+    // Lock body scroll when budget modal is open
+    useEffect(() => {
+        if (showBudgetModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showBudgetModal]);
+
     // Initialize Socket Connection and User Data
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -862,7 +874,7 @@ const CleanerChatPage = () => {
                 <div className="bg-white border-t border-gray-100 mt-4 pt-8">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-primary-500">Define your budget</h3>
+                            <h3 className="text-lg font-semibold text-primary-500">Define your price</h3>
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-primary-500 font-medium">Is Negotiable?</span>
                                 <button
@@ -943,14 +955,14 @@ const CleanerChatPage = () => {
                     <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-xs sm:max-w-sm mx-auto">
                         <div className="space-y-3 sm:space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-primary-500">Define your budget</h3>
+                                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-primary-500">Define your price</h3>
                             </div>
 
                             <div className="relative">
                                 <FloatingLabelInput
                                     id="modalQuoteAmount"
                                     name="modalQuoteAmount"
-                                    label="Budget Amount"
+                                    label="Enter the amount here..."
                                     type="number"
                                     value={quoteAmount}
                                     onChange={(e) => {
@@ -966,16 +978,6 @@ const CleanerChatPage = () => {
                                 />
                             </div>
                             
-
-                            {quoteAmount && (
-                                <div className="flex items-start bg-primary-50 p-2 sm:p-2.5 md:p-3 rounded-lg">
-                                    <img src={InfoIcon} alt="info" className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2 mt-0.5 flex-shrink-0" />
-                                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                                        You cannot request a higher budget than the one you initially entered.
-                                    </p>
-                                </div>
-                            )}
-
                             <div className="flex items-center justify-end">
                                 <button
                                     onClick={handleSendQuote}

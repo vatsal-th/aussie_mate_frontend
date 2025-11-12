@@ -679,24 +679,6 @@ export const userAPI = {
     });
   },
 
-  saveUserServices: async (services) => {
-    return apiRequest('/auth/services', {
-      method: 'POST',
-      body: JSON.stringify({ services }),
-    });
-  },
-
-  getUserServices: async () => {
-    return apiRequest('/auth/services');
-  },
-
-  updateServiceStatus: async (serviceId, isActive) => {
-    return apiRequest(`/auth/services/${serviceId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ isActive }),
-    }); 
-  },
-
   // Availability Management API
   setAvailability: async (availabilityData) => {
     return apiRequest('/auth/availability', {

@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, UserRound, X } from 'lucide-react';
-import { Button, MapWithPolyline, PageHeader, Loader } from '../../components';
-import CalendarIcon from '../../assets/Calendar.svg';
+import { Button, MapWithPolyline, PageHeader, Loader, JobOverviewCard } from '../../components';
 import MapPinIcon from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone2.svg?react';
 import PhoneIcon2 from '../../assets/phone.svg';
@@ -259,6 +258,58 @@ const CustomerInProgressJobDetailsPage = () => {
     return cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0);
   };
 
+  const resolveImageSrc = (image) => {
+    if (!image) return '';
+    if (typeof image === 'string') return image;
+    return image.url || image.path || image.secureUrl || '';
+  };
+
+  const jobPhotos = useMemo(() => {
+    if (!job) return [];
+    // Only show original job photos, not completion proof photos
+    const photos = job.photos || [];
+    return photos.map(resolveImageSrc).filter(Boolean);
+  }, [job]);
+
+  const getServiceDetail = (job) => {
+    if (!job) return '';
+    return (
+      job.serviceDetail ||
+      job.serviceDetailName ||
+      job.service?.detail ||
+      job.service?.name ||
+      job.selectedServiceDetail ||
+      ''
+    );
+  };
+
+  const getJobFrequency = (job) => {
+    if (!job) return 'One-time';
+    return job.frequency || job.serviceFrequency || job.schedule?.frequency || 'One-time';
+  };
+
+  const getJobTitle = (job) => {
+    if (!job) return 'Job Details';
+    const serviceType = job.serviceType?.charAt(0).toUpperCase() + job.serviceType?.slice(1) || 'Service';
+    return `${serviceType} `;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Date not specified';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const serviceDetail = getServiceDetail(job);
+  const scheduledDateLabel = job?.scheduledDate ? formatDate(job.scheduledDate) : 'Date not set';
+  const jobFrequencyLabel = getJobFrequency(job);
+
   if (loading) {
     return <Loader fullscreen message="Updating your job details..." />;
   }
@@ -285,17 +336,6 @@ const CustomerInProgressJobDetailsPage = () => {
   // Find accepted quote for this job
   const acceptedQuote = job.quotes?.find(quote => quote.status === 'accepted');
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Date not specified';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-AU', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const getTimeAgo = (dateString) => {
     if (!dateString) return 'Recently posted';
     const date = new Date(dateString);
@@ -316,35 +356,32 @@ const CustomerInProgressJobDetailsPage = () => {
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         <PageHeader
-          title={`#${job.jobId || job._id?.slice(-6)} - ${job.title}`}
+          title={`#${job.jobId || job._id?.slice(-6)} - ${getJobTitle(job)}`}
           onBack={() => navigate(-1)}
           className="py-4 px-4"
           titleClassName="text-lg font-semibold text-primary-500 truncate"
         />
 
         <div className="px-4">
-          {/* Job Details Card */}
-          <div className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
-            <h2 className="text-xl font-bold text-primary-500 mb-2">
-              {job.title || `${job.serviceType}`}
-            </h2>
-            <p className="text-sm text-gray-500 mb-2">{getTimeAgo(job.createdAt)}</p>
-
-            {/* Scheduled Time */}
-            <div className="flex items-center mb-1">
-              <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 mr-3" />
-              <span className="text-sm text-primary-200 font-medium">
-                {job.scheduledDate ? formatDate(job.scheduledDate) : 'Date not specified'}
-              </span>
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center">
-              <img src={MapPinIcon} alt="Location" className="w-4 h-4 mr-3" />
-              <span className="text-sm text-primary-200 font-medium">
-                {job.location?.address || job.location?.fullAddress || 'Location not specified'}
-              </span>
-            </div>
+          {/* Job Overview Card */}
+          <div className="mb-4">
+            <JobOverviewCard
+              jobId={job.jobId || job.referenceId || job._id?.slice(-6)}
+              title={getJobTitle(job)}
+              serviceType={job.serviceType || job.category || job.service}
+              serviceDetail={serviceDetail}
+              instructions={
+                job.specialInstructions ||
+                job.instructions ||
+                job.additionalNotes ||
+                ''
+              }
+              scheduledDate={scheduledDateLabel}
+              frequency={jobFrequencyLabel}
+              location={job.location?.address || job.address || job.locationDescription || 'Location not specified'}
+              photos={jobPhotos}
+              viewerRole="customer"
+            />
           </div>
 
           {/* Map Section */}
@@ -517,11 +554,6 @@ const CustomerInProgressJobDetailsPage = () => {
               <div className="mb-2">
                 <span className="text-sm text-primary-200 font-medium">Quoted Price: </span>
                 <span className="text-lg font-semibold text-primary-600">${acceptedQuote?.price || job.estimatedPrice || '0'}</span>
-              </div>
-
-              <div className="mb-2">
-                <span className="text-sm text-primary-200 font-medium">Payment Method: </span>
-                <span className="text-sm font-medium">{getPaymentMethod()}</span>
               </div>
 
               <div className="mb-3">

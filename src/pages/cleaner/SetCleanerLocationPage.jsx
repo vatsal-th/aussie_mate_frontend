@@ -296,8 +296,8 @@ const SetCleanerLocationPage = () => {
           // Navigate back to Cleaner Jobs page
           navigate('/cleaner-jobs');
         } else {
-          // Default navigation to select services
-          navigate('/select-services');
+          // Default navigation to cleaner dashboard
+          navigate('/cleaner-dashboard');
         }
       } else {
         setError(response.message || 'Failed to save location. Please try again.');

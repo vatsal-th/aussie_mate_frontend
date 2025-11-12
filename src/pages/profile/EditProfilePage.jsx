@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Pen, ShieldCheck, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { userAPI } from '../../services/api';
-import EditIcon from '../../assets/edit.svg';
-import MailIcon from '../../assets/mail.svg';
-import PhoneIcon from '../../assets/phone.svg';
 import HeaderLocationIcon from '../../assets/headerlocation.svg';
 import InfoIcon from '../../assets/info.svg';
 import { FloatingLabelInput, Button, PageHeader } from '../../components';
 import ProfileBG from '../../assets/CardBG7.png';
+import GoldBadgeIcon from '../../assets/goldBadge.svg';
+import SilverBadgeIcon from '../../assets/silverBadge.svg';
+import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 
 const EditProfilePage = () => {
   const { user, updateUser } = useAuth();
@@ -29,6 +29,64 @@ const EditProfilePage = () => {
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
+  const formatLabel = useMemo(() => (value, fallback = '') => {
+    const source = value || fallback;
+    if (!source) return '';
+    return source
+      .toString()
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }, []);
+
+  const accountTypeLabel = useMemo(() => {
+    const rawValue = user?.accountType || user?.role || 'Professional Cleaner';
+    const label = formatLabel(rawValue, 'Professional Cleaner');
+    return label || 'Professional Cleaner';
+  }, [user, formatLabel]);
+
+  const tierInfo = useMemo(() => {
+    const rawTier = user?.tier || user?.cleanerTier || user?.badgeLevel || '';
+    const normalized = rawTier?.toString().toLowerCase();
+
+    if (!normalized || normalized === 'none') {
+      return { label: '', icon: null };
+    }
+
+    const baseLabel = formatLabel(rawTier);
+
+    const icon =
+      normalized === 'gold'
+        ? GoldBadgeIcon
+        : normalized === 'silver'
+        ? SilverBadgeIcon
+        : normalized === 'bronze'
+        ? BronzeBadgeIcon
+        : null;
+
+    return {
+      label: baseLabel ? `${baseLabel} Tier` : '',
+      icon,
+    };
+  }, [user, formatLabel]);
+
+  const resolveProfilePhotoUrl = (userData) => {
+    if (!userData) return '';
+    if (typeof userData === 'string') return userData;
+
+    if (userData.profilePicture) {
+      return userData.profilePicture;
+    }
+
+    const photo = userData.profilePhoto;
+    if (!photo) return '';
+
+    if (typeof photo === 'string') return photo;
+
+    return photo.secureUrl || photo.url || photo.path || photo.location;
+  };
 
 
   useEffect(() => {
@@ -40,6 +98,19 @@ const EditProfilePage = () => {
         phone: user.phoneNumber || user.phone || '',
         countryCode: '+61'
       });
+      const initialPhoto = resolveProfilePhotoUrl(user);
+      if (initialPhoto) {
+        setProfilePhotoUrl(initialPhoto);
+      } else {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const storedPhoto = resolveProfilePhotoUrl(parsed);
+          if (storedPhoto) {
+            setProfilePhotoUrl(storedPhoto);
+          }
+        }
+      }
     }
 
     // Load user location from API first, then fallback to localStorage
@@ -49,6 +120,22 @@ const EditProfilePage = () => {
         
         const userData = userProfile.data?.user || userProfile.data || userProfile;
         const location = userData?.location;
+        const apiPhoto = resolveProfilePhotoUrl(userData);
+        const existingPhoto = resolveProfilePhotoUrl(user);
+
+        if (apiPhoto) {
+          setProfilePhotoUrl(apiPhoto);
+          if (apiPhoto !== existingPhoto) {
+            const mergedUser = {
+              ...user,
+              ...userData,
+              profilePhoto: userData?.profilePhoto || user?.profilePhoto,
+              profilePicture: userData?.profilePicture || user?.profilePicture
+            };
+            localStorage.setItem('user', JSON.stringify(mergedUser));
+            updateUser(mergedUser);
+          }
+        }
         
         if (location) {
           const fullAddress = location.fullAddress || location.address || '';
@@ -103,6 +190,8 @@ const EditProfilePage = () => {
       const updatedUser = JSON.parse(localStorage.getItem('user') || 'null');
       if (updatedUser) {
         updateUser(updatedUser);
+        const storedPhoto = resolveProfilePhotoUrl(updatedUser);
+        setProfilePhotoUrl(storedPhoto || '');
       }
     };
 
@@ -141,8 +230,8 @@ const EditProfilePage = () => {
     if (!file) return;
 
     // Validate file
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxSize = 50 * 1024 * 1024; 
 
     if (!allowedTypes.includes(file.type)) {
       setPhotoError('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.');
@@ -170,6 +259,11 @@ const EditProfilePage = () => {
         
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        const newPhotoUrl = resolveProfilePhotoUrl(updatedUser);
+        setProfilePhotoUrl(newPhotoUrl);
+        
+        // Update context
+        updateUser(updatedUser);
         
         // Dispatch custom event to update other components
         window.dispatchEvent(new CustomEvent('userUpdated'));
@@ -192,7 +286,7 @@ const EditProfilePage = () => {
   };
 
   const handleDeletePhoto = async () => {
-    if (!user?.profilePhoto?.url && !user?.profilePhoto?.secureUrl && !user?.profilePicture) {
+    if (!profilePhotoUrl) {
       setPhotoError('No profile photo to delete');
       return;
     }
@@ -213,6 +307,7 @@ const EditProfilePage = () => {
         
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        setProfilePhotoUrl('');
         
         // Force update the user context immediately
         updateUser(updatedUser);
@@ -239,6 +334,7 @@ const EditProfilePage = () => {
         };
         
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        setProfilePhotoUrl('');
         updateUser(updatedUser);
         window.dispatchEvent(new CustomEvent('userUpdated'));
         setFormData(prev => ({ ...prev }));
@@ -337,11 +433,12 @@ const EditProfilePage = () => {
             {/* Profile Picture */}
             <div className="relative">
               <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                {user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture ? (
+                {profilePhotoUrl ? (
                   <img
-                    src={user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture}
+                    src={profilePhotoUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
+                    onError={() => setProfilePhotoUrl('')}
                   />
                 ) : (
                   <div className="w-full h-full bg-primary-500 flex items-center justify-center">
@@ -359,17 +456,17 @@ const EditProfilePage = () => {
               <button 
                 onClick={handleEditPhotoClick}
                 disabled={photoLoading}
-                className="absolute bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 bg-primary-500 rounded-full shadow-custom flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-3 border-white"
               >
-                <img src={EditIcon} alt="Edit" className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-6 md:h-6" />
+                <Pen className="w-4 h-4 text-white" strokeWidth={2} />
               </button>
               
               {/* Delete Photo Button - Only show if photo exists */}
-              {(user?.profilePhoto?.url || user?.profilePhoto?.secureUrl || user?.profilePicture) && (
+              {profilePhotoUrl && (
                 <button 
                   onClick={handleDeletePhoto}
                   disabled={photoLoading}
-                  className="absolute top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-red-500 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-[#EF4444] rounded-full shadow-md flex items-center justify-center transition-colors cursor-pointer"
                   title="Delete photo"
                 >
                   <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white" strokeWidth={2} />
@@ -379,20 +476,46 @@ const EditProfilePage = () => {
 
             {/* User Details Preview */}
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-2 sm:mb-3 capitalize">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-primary-500 mb-2 sm:mb-3 capitalize">
                 {`${formData.firstName || user?.firstName || user?.name || 'User'} ${formData.lastName || user?.lastName || ''}`.trim()}
               </h2>
 
-              <div className="space-y-2 sm:space-y-3">
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <img src={MailIcon} alt="Email" className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+            <div className="space-y-2">
+              {user?.role?.toLowerCase() !== 'customer' && accountTypeLabel && (
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                  <div className="text-base text-primary-500 font-medium flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary-500" strokeWidth={2} />
+                    <span className=" text-base font-medium tracking-wide sm:normal-case sm:tracking-normal">Account Type :-</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div className="text-sm sm:text-base font-medium text-primary-200">
+                      {accountTypeLabel}
+                    </div>
+                    {tierInfo.label && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#F6F8FF] border border-[#E0E7FF] text-xs sm:text-sm font-medium text-primary-500 shadow-sm">
+                        {tierInfo.icon && (
+                          <img
+                            src={tierInfo.icon}
+                            alt={`${tierInfo.label} badge`}
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                          />
+                        )}
+                        {tierInfo.label}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500 flex-shrink-0" strokeWidth={2} />
                   <span className="text-xs sm:text-sm md:text-base text-primary-200 truncate font-medium">
                     {formData.email || user?.email || 'user@example.com'}
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <img src={PhoneIcon} alt="Phone" className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500 flex-shrink-0" strokeWidth={2} />
                   <span className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
                     {formData.phone || user?.phoneNumber || '+61 400 123 456'}
                   </span>

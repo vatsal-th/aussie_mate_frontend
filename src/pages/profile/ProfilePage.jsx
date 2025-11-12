@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { userAPI, jobsAPI, matePointsAPI } from '../../services/api';
@@ -286,8 +286,8 @@ const ProfilePage = () => {
                                     <div className="flex justify-center mb-1 sm:mb-2 ">
                                         <img src={StarIcon} alt="Reviews" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1456%) hue-rotate(210deg) brightness(95%) contrast(101%)' }} />
                                     </div>
-                                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.reviews}</div>
-                                    <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Reviews</div>
+                                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{jobStats.jobs}</div>
+                                    <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">Total Jobs</div>
                                 </div>
 
                                 <div className="text-center border-r border-gray-200">

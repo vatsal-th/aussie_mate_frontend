@@ -30,7 +30,7 @@ const ConfirmYourCleanerPage = React.lazy(() => import('./pages/customer/Confirm
 const JobBookedSuccessfullyPage = React.lazy(() => import('./pages/customer/JobBookedSuccessfullyPage'))
 const PaymentSuccessCallbackPage = React.lazy(() => import('./pages/customer/PaymentSuccessCallbackPage'))
 const CustomerInProgressJobDetailsPage = React.lazy(() => import('./pages/customer/CustomerInProgressJobDetailsPage'))
-const JobDetailsPage = React.lazy(() => import('./pages/customer/JobDetailsPage'))
+const JobDetailsPage = React.lazy(() => import('./pages/cleaner/JobDetailsPage'))
 const LocationPage = React.lazy(() => import('./pages/customer/LocationPage'))
 
 // Profile pages
@@ -52,7 +52,6 @@ const ReviewsPage = React.lazy(() => import('./pages/profile/cleaner/ReviewsPage
 // Cleaner pages
 const SetAvailabilityPage = React.lazy(() => import('./pages/cleaner/SetAvailabilityPage'))
 const SetCleanerLocationPage = React.lazy(() => import('./pages/cleaner/SetCleanerLocationPage'))
-const SelectServicesPage = React.lazy(() => import('./pages/cleaner/SelectServicesPage'))
 const CleanerDashboard = React.lazy(() => import('./pages/cleaner/CleanerDashboard'))
 const CleanerJobsPage = React.lazy(() => import('./pages/cleaner/CleanerJobsPage'))
 const InProgressJobDetailsPage = React.lazy(() => import('./pages/cleaner/InProgressJobDetailsPage'))
@@ -106,7 +105,6 @@ export const cleanerRoutes = [
   { path: '/reviews', component: ReviewsPage },
   { path: '/set-availability', component: SetAvailabilityPage },
   { path: '/set-cleaner-location', component: SetCleanerLocationPage },
-  { path: '/select-services', component: SelectServicesPage },
   { path: '/cleaner-dashboard', component: CleanerDashboard },
   { path: '/cleaner-jobs', component: CleanerJobsPage },
   { path: '/job-details/:jobId', component: JobDetailsPage },

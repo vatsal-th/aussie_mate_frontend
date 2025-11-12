@@ -260,41 +260,17 @@ const CustomerJobDetailsPage = () => {
     setShowCancelModal(false);
   };
 
+  const resolveImageSrc = (image) => {
+    if (!image) return '';
+    if (typeof image === 'string') return image;
+    return image.url || image.path || image.secureUrl || '';
+  };
+
   const jobPhotos = useMemo(() => {
     if (!job) return [];
-
-    const urls = new Set();
-
-    const extractUrl = (photo) => {
-      if (!photo) return null;
-      if (typeof photo === 'string') return photo;
-      if (photo.secureUrl) return photo.secureUrl;
-      if (photo.url) return photo.url;
-      if (photo.path) return photo.path;
-      return null;
-    };
-
-    const addFromArray = (arr) => {
-      if (!Array.isArray(arr)) return;
-      arr.forEach((photo) => {
-        const url = extractUrl(photo);
-        if (url) urls.add(url);
-      });
-    };
-
-    addFromArray(job.photos);
-    addFromArray(job.images);
-    addFromArray(job.beforePhotos);
-    addFromArray(job.afterPhotos);
-    addFromArray(job.attachments);
-    addFromArray(job.propertyPhotos);
-
-    if (job.completionProof) {
-      addFromArray(job.completionProof.beforeImages);
-      addFromArray(job.completionProof.afterImages);
-    }
-
-    return Array.from(urls);
+    // Only show original job photos, not completion proof photos
+    const photos = job.photos || [];
+    return photos.map(resolveImageSrc).filter(Boolean);
   }, [job]);
 
   const serviceDetail = getServiceDetail(job);

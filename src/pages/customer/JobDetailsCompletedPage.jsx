@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, UserRound, X } from 'lucide-react';
-import { Button, PageHeader, Loader } from '../../components';
+import { Button, PageHeader, Loader, JobOverviewCard, CompletionProofSection } from '../../components';
 import RatingIcon from '../../assets/rating.svg';
 import Rating2Icon from '../../assets/rating2.svg';
 import PdfIcon from '../../assets/pdf.svg';
@@ -9,8 +9,6 @@ import DownloadIcon from '../../assets/download.svg';
 import GoldBadgeIcon from '../../assets/goldBadge.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
 import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
-import CalendarIcon from '../../assets/Calendar.svg';
-import MapPinIcon from '../../assets/map-pin 1.png';
 import { jobsAPI, jobPhotosAPI, jobDetailsAPI, reviewsAPI } from '../../services/api';
 import { handleAPIError } from '../../services/api';
 
@@ -29,6 +27,20 @@ const JobDetailsCompletedPage = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [existingReview, setExistingReview] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
+
+  const resolveImageSrc = (image) => {
+    if (!image) return '';
+    if (typeof image === 'string') return image;
+    return image.url || image.path || image.secureUrl || '';
+  };
+
+  const overviewPhotos = useMemo(() => {
+    if (!jobData) return [];
+    // Only show original job photos, not completion proof photos
+    const jobPhotos = jobData.photos || [];
+    return jobPhotos.map(resolveImageSrc).filter(Boolean);
+  }, [jobData]);
+
 
   const feedbackTags = [
     'Punctual', 'Professional', 'Quality Work', 'Friendly', 'Good Communication'
@@ -70,10 +82,17 @@ const JobDetailsCompletedPage = () => {
           // Get photos from multiple possible sources
           const beforeImages = photosData.beforePhotos || job.beforePhotos || [];
           const afterImages = photosData.afterPhotos || job.afterPhotos || [];
+          // Get original job photos
+          const jobPhotos = job.photos || [];
           
           const transformedData = {
             jobId: job.jobId || job._id,
             title: job.title || job.serviceType,
+            serviceType: job.serviceType || job.category || job.service || '',
+            serviceDetail: job.serviceDetail || job.selectedServiceDetail || job.serviceName || job.title || '',
+            instructions: job.specialInstructions || job.instructions || job.additionalNotes || '',
+            frequency: job.frequency || job.recurringFrequency || job.schedule?.frequency || '',
+            status: job.status || 'Completed',
             completedAt: job.completedAt ? new Date(job.completedAt).toLocaleDateString('en-US', { 
               year: 'numeric', 
               month: 'short', 
@@ -82,6 +101,7 @@ const JobDetailsCompletedPage = () => {
               minute: '2-digit'
             }) : 'Recently',
             location: job.location?.address || job.location?.fullAddress || 'Location',
+            photos: jobPhotos,
             cleaner: {
               id: cleaner?._id || cleaner?.id || 'N/A',
               name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() : 'Cleaner',
@@ -295,7 +315,7 @@ const JobDetailsCompletedPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto min-h-screen">
-        <PageHeader title={`Job #${jobData.jobId} - ${jobData.title}`} />
+        <PageHeader title={`Job #${jobData.jobId} - ${jobData.title}`} className="py-3 pl-3" />
 
         {/* Success Message */}
         {successMessage && (
@@ -320,9 +340,9 @@ const JobDetailsCompletedPage = () => {
         {/* Completed Banner */}
         <div className="bg-green-500 border border-green-500 px-4 py-2 mx-4 mt-2 rounded-xl">
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-primary-500 rounded-full mr-3"></div>
+            <div className="w-2 h-2 bg-[#1EB154] rounded-full mr-3"></div>
             <span className="text-green-500 font-medium">
-              Completed on {jobData.completedAt}
+              Completed on 
             </span>
           </div>
         </div>
@@ -374,46 +394,29 @@ const JobDetailsCompletedPage = () => {
           </div>
         </div>
 
-        {/* Job Details */}
-        <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100">
-          <div className="space-y-1">
-            <div>
-              <span className="text-sm text-primary-200 font-medium">Job ID: {jobData.jobId}</span>
-            </div>
-            
-            <h2 className="text-lg font-semibold text-primary-500">{jobData.title}</h2>
-            
-            <div className="flex items-center text-primary-200 font-medium">
-              <img src={CalendarIcon} alt="Calendar" className="w-4 h-4 mr-2" />
-              <span className="text-sm">{jobData.completedAt}</span>
-            </div>
-            
-            <div className="flex items-center text-primary-200 font-medium">
-              <img src={MapPinIcon} alt="Location" className="w-4 h-4 mr-2" />
-              <span className="text-sm">{jobData.location}</span>
-            </div>
-          </div>
+        <div className="mx-4 mt-4">
+          <JobOverviewCard
+            jobId={jobData.jobId}
+            title={jobData.title}
+            serviceType={jobData.serviceType}
+            serviceDetail={jobData.serviceDetail}
+            instructions={jobData.instructions}
+            scheduledDate={jobData.completedAt}
+            frequency={jobData.frequency || jobData.serviceFrequency || ''}
+            location={jobData.location}
+            photos={overviewPhotos}
+            viewerRole="customer"
+          />
         </div>
 
         {/* Payment Info */}
         <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100">
-          <div className="mb-3">
-          <h3 className="text-primary-500 font-semibold text-lg">Payment</h3>
-          <p className="text-primary-200 font-medium text-sm">
-            ${jobData.payment.paidOnline} paid online, pay ${jobData.payment.cashToPay} cash to cleaner after job
-          </p>  
-          </div>
-          
           <div className="">
             <h4 className="font-semibold text-primary-500 mb-1">Payment Summary</h4>
             <div className="">
               <div className="flex ">
                 <span className="text-primary-200 font-medium mr-2">Total Paid:</span>
                 <span className="font-bold text-primary-600">${jobData.payment.totalPaid}</span>
-              </div>
-              <div className="flex ">
-                <span className="text-primary-200 font-medium mr-2">Payment Mode:</span>
-                <span className="text-primary-500 font-medium">{jobData.payment.mode}</span>
               </div>
             </div>
           </div>
@@ -448,70 +451,11 @@ const JobDetailsCompletedPage = () => {
         )}
 
         {/* Completion Proof */}
-        <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-primary-500 mb-1">Completion Proof</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {/* Before Images */}
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-gray-600 mb-2">Before Photos</div>
-              {jobData.completionProof?.beforeImages?.length > 0 ? (
-                jobData.completionProof.beforeImages.map((image, index) => {
-                  // Handle both string URLs and objects with url property
-                  const imageUrl = typeof image === 'string' ? image : (image?.url || image?.path || '');
-                  
-                  return (
-                    <div key={index} className="relative">
-                      <div className="aspect-square bg-gray-200 rounded-xl overflow-hidden">
-                        <img 
-                          src={imageUrl} 
-                          alt={`Before ${index + 1}`} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                        Before
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="aspect-square bg-gray-200 rounded-xl flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">No before photos</span>
-                </div>
-              )}
-            </div>
-            
-            {/* After Images */}
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-gray-600 mb-2">After Photos</div>
-              {jobData.completionProof?.afterImages?.length > 0 ? (
-                jobData.completionProof.afterImages.map((image, index) => {
-                  // Handle both string URLs and objects with url property
-                  const imageUrl = typeof image === 'string' ? image : (image?.url || image?.path || '');
-                  
-                  return (
-                    <div key={index} className="relative">
-                      <div className="aspect-square bg-gray-200 rounded-xl overflow-hidden">
-                        <img 
-                          src={imageUrl} 
-                          alt={`After ${index + 1}`} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                        After
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="aspect-square bg-gray-200 rounded-xl flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">No after photos</span>
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="mx-4 mt-4">
+          <CompletionProofSection
+            beforeImages={jobData.completionProof?.beforeImages || []}
+            afterImages={jobData.completionProof?.afterImages || []}
+          />
         </div>
 
         {/* Rate Your Cleaner / Review Section */}
@@ -629,7 +573,7 @@ const JobDetailsCompletedPage = () => {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Write your feedback here..."
-                className="w-full p-3 border border-primary-200 rounded-xl! resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-primary-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={3}
               />
               
