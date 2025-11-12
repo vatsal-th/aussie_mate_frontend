@@ -32,13 +32,17 @@ const RoleSelectionPage = () => {
     () => [
       'Student Cleaner',
       'Professional Cleaner',
-      'NDIS Assistant',
-      'Retail Auditor',
+      'Support Service Provider (NDIS)',
       'Pet Sitter',
       'Housekeeper'
     ],
     []
   );
+
+  // Map display name to backend role value
+  const roleDisplayToBackend = {
+    'Support Service Provider (NDIS)': 'NDIS Assistant'
+  };
 
   const handleContinue = () => {
     // For Customer, no specific role needed
@@ -56,8 +60,10 @@ const RoleSelectionPage = () => {
       if (!selectedProviderRole) {
         return;
       }
+      // Map display name to backend role value if needed
+      const backendRole = roleDisplayToBackend[selectedProviderRole] || selectedProviderRole;
       const params = new URLSearchParams({
-        role: selectedProviderRole,
+        role: backendRole,
         ndis: isNDISParticipant ? 'true' : 'false'
       });
       navigate(`/signup?${params.toString()}`);

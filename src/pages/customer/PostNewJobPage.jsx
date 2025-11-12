@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Button,
-  FloatingLabelInput,
   PageHeader,
   CleaningJobDetailsForm,
   PetSittingJobDetailsForm,
@@ -598,6 +597,7 @@ const PostNewJobPage = () => {
         ? formData.propertyType
         : (formData.propertyType || 'house');
 
+      const isCleaning = formData.serviceType === 'cleaning';
       const isHousekeeping = formData.serviceType === 'housekeeping';
       const isHandyman = formData.serviceType === 'handyman';
       const isPetSitting = formData.serviceType === 'petsitting';
@@ -612,7 +612,6 @@ const PostNewJobPage = () => {
         preferredDays: formData.preferredDays || {},
         customDates: formData.customDates || [],
         repeatWeeks: formData.repeatWeeks || '',
-        isBondCleaning,
         scheduledDate,
         instructions: finalInstructions || formData.instructions,
         isUrgent,
@@ -623,6 +622,10 @@ const PostNewJobPage = () => {
         },
         customerId,
       };
+
+      if (isCleaning) {
+        jobData.bondCleaning = isBondCleaning;
+      }
 
       if (isPetSitting) {
         jobData.petType = formData.petType || '';

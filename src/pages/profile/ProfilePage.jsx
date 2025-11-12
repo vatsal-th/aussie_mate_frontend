@@ -27,7 +27,7 @@ const ProfilePage = () => {
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-    const [jobStats, setJobStats] = useState({ completed: 0, reviews: 0 });
+    const [jobStats, setJobStats] = useState({ jobs: 0, completed: 0, reviews: 0 });
     const [matePoints, setMatePoints] = useState(0);
 
   useEffect(() => {
@@ -75,18 +75,21 @@ const ProfilePage = () => {
             return jobCustomerId === currentUserId;
           });
           
+          // Count total jobs posted by customer
+          const totalJobs = customerJobs.length;
+          
           // Count completed jobs with various status formats
           const completedJobs = customerJobs.filter(job => {
             const status = (job.status || '').toString().toLowerCase();
             return status === 'completed' || status === 'done' || status === 'finished';
           }).length;
           
-          setJobStats(prev => ({ ...prev, completed: completedJobs }));
+          setJobStats({ jobs: totalJobs, completed: completedJobs });
         }
       } catch (error) {
         console.error('Error fetching job stats:', error);
         // Set a fallback value
-        setJobStats(prev => ({ ...prev, completed: 0 }));
+        setJobStats({ jobs: 0, completed: 0 });
       }
     };
 

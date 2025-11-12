@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../../components';
+import { PageHeader, PaginationRanges } from '../../components';
 import DownIcon from '../../assets/down2.svg';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -528,21 +528,9 @@ const CleanerJobsPage = () => {
     navigate(`/in-progress-job/${jobId}`);
   };
 
-  // Pagination functions
-  const handlePageChange = (page) => {
+  // Pagination function
+  const handlePageChange = (_, page) => {
     setCurrentPage(page);
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   // Reset to page 1 when tab changes
@@ -786,71 +774,14 @@ const CleanerJobsPage = () => {
           {/* Pagination */}
           {!loading && jobs.length > 0 && (
             <div className="px-4 pb-6">
-              <div className="flex items-center justify-between">
-                {/* Page Info */}
-                <div className="text-sm text-gray-600">
-                  Showing {((currentPage - 1) * jobsPerPage) + 1} to {Math.min(currentPage * jobsPerPage, totalJobs)} of {totalJobs} jobs
-                </div>
-
-                {/* Pagination Controls */}
-                <div className="flex items-center space-x-2">
-                  {/* Previous Button */}
-                  <button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                      currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                    }`}
-                  >
-                    Previous
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                            currentPage === pageNum
-                              ? 'bg-primary-500 text-white '
-                              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Next Button */}
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                      currentPage === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+              <PaginationRanges
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                siblingCount={1}
+                boundaryCount={1}
+                stackProps={{ className: 'mt-6' }}
+              />
             </div>
           )}
         </div>

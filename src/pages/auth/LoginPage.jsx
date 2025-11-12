@@ -6,7 +6,6 @@ import logo from '../../assets/logo.png';
 import eyeIcon from '../../assets/eye 1.svg';
 import eyeOffIcon from '../../assets/eye-off 1.svg';
 import { FloatingLabelInput, Button } from '../../components';
-import errorIcon from '../../assets/info.svg';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
