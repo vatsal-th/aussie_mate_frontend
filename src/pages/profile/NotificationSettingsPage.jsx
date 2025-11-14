@@ -126,12 +126,12 @@ const NotificationSettingsPage = () => {
   };
 
   return (
-    <>
+    <>  
         <PageHeader
           title="Notification Settings"
           onBack={handleBack}
           className="mb-6"
-          titleClassName="text-lg sm:text-xl font-semibold text-gray-900"
+          titleClassName="text-lg sm:text-xl font-semibold text-gray-900 py-4 pl-0!"
         />
         {/* Notification Settings - Show for all users except customers */}
         {user?.role !== 'Customer' && (

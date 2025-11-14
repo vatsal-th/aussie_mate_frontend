@@ -389,7 +389,7 @@ const MyJobsPage = () => {
 
   return (
     <div className="overflow-x-hidden">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <PageHeader
           title="My Jobs"
           onBack={() => navigate(-1)}
