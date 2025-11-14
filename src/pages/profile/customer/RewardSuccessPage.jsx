@@ -82,7 +82,7 @@ const RewardSuccessPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-md mx-auto px-4 py-6">
         <PageHeader
           title="Reward Redeemed"
@@ -198,7 +198,7 @@ const RewardSuccessPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

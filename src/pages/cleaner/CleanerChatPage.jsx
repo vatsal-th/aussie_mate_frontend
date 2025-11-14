@@ -622,31 +622,31 @@ const CleanerChatPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <>
                 <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                     <div className="p-4 sm:p-6 lg:p-8">
                         <Loader message="Loading chat..." />
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
     if (error || !job) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <>
                 <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                     <div className="p-4 sm:p-6 lg:p-8">
                         <div className="text-red-500 text-lg font-medium">{error || 'Job not found'}</div>
                         <Button onClick={() => navigate(-1)}>Go Back</Button>
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <>
             <div className="max-w-6xl mx-auto py-4 px-1">
                 <PageHeader title={getJobTitle(job)} onBack={() => navigate(-1)} />
             </div>
@@ -1014,7 +1014,7 @@ const CleanerChatPage = () => {
                 }}
                 isVisible={showPhoneAlert}
             />
-        </div>
+        </>
     );
 };
 

@@ -17,7 +17,7 @@ const JobSuccessPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-md mx-auto px-4 py-6">
         <PageHeader
           title="Job Posted Successfully"
@@ -94,7 +94,7 @@ const JobSuccessPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

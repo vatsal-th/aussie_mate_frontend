@@ -276,7 +276,7 @@ const AvailabilityPage = () => {
     // Show loading state while fetching initial data
     if (initialLoading) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <>
                 <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
                     <PageHeader
                         title="Availability & Work Radius"
@@ -286,13 +286,13 @@ const AvailabilityPage = () => {
                     />
                     <Loader message="Loading availability settings..." />
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto w/full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
+        <>
+            <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
                 <PageHeader
                     title="Availability & Geo-fencing"
                     onBack={() => navigate(-1)}
@@ -466,8 +466,8 @@ const AvailabilityPage = () => {
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 }
             `}</style>
-        </div>
-    );
+    </>
+  );
 };
 
 export default AvailabilityPage;

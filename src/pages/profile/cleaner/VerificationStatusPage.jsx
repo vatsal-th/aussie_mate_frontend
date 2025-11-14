@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
-import { PageHeader, Loader } from '../../../components';
+import { PageHeader, Loader, PageLayout } from '../../../components';
 import PdfIcon from '../../../assets/pdf.svg';
 import CalendarIcon from '../../../assets/Calendar.svg';
 import InfoIcon from '../../../assets/info.svg';
@@ -161,14 +161,13 @@ const VerificationStatusPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="mx-auto w-full max-w-2xl px-4 py-6">
-                <PageHeader
-                    title="Verification & Documents"
-                    onBack={() => navigate(-1)}
-                    className="mb-4"
-                    titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
-                />
+        <PageLayout>
+            <PageHeader
+                title="Verification & Documents"
+                onBack={() => navigate(-1)}
+                className="mb-4"
+                titleClassName="text-lg sm:text-xl font-semibold text-primary-500"
+            />
 
                 {/* Common rounded container */}
                 <div className="bg-white rounded-2xl border border-[#F3F3F3] p-4 sm:p-5 space-y-6">
@@ -286,8 +285,7 @@ const VerificationStatusPage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+        </PageLayout>
     );
 };
 

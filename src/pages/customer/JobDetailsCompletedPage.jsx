@@ -288,32 +288,32 @@ const JobDetailsCompletedPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg text-red-600 mb-4">{error}</div>
             <Button onClick={() => navigate(-1)}>Go Back</Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!jobData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-7xl mx-auto min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-lg text-gray-600">Job not found</div>
             <Button onClick={() => navigate(-1)}>Go Back</Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-7xl mx-auto min-h-screen">
         <PageHeader title={`Job #${jobData.jobId} - ${jobData.title}`} className="py-3 pl-3" />
 
@@ -590,7 +590,7 @@ const JobDetailsCompletedPage = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

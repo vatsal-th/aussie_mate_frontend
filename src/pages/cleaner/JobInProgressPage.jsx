@@ -123,7 +123,7 @@ const CompleteJobPage = () => {
   const progressPercentage = ((600 - timeLeft) / 600) * 100;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         <PageHeader
           title={job.title}
@@ -287,7 +287,7 @@ const CompleteJobPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

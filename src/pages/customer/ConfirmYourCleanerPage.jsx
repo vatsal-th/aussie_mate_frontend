@@ -77,7 +77,7 @@ const ConfirmYourCleanerPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4">
         <PageHeader
           title="Confirm Your Cleaner"
@@ -240,7 +240,7 @@ const ConfirmYourCleanerPage = () => {
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

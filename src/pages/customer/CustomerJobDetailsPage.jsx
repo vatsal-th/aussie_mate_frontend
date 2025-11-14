@@ -481,7 +481,7 @@ const CustomerJobDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="animate-pulse space-y-4">
@@ -494,13 +494,13 @@ const CustomerJobDetailsPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="text-center py-8">
@@ -515,12 +515,12 @@ const CustomerJobDetailsPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-6xl mx-auto py-3 sm:py-4 px-3 sm:px-4 md:px-4">
         <PageHeader
           title={`Job Details - ${job.serviceType || 'Cleaning'}`}
@@ -789,7 +789,7 @@ const CustomerJobDetailsPage = () => {
         confirmButtonColor="bg-red-500 hover:bg-[#EF4444] text-red-500! hover:text-white! border border-red-500"
         isLoading={isDeclining}
       />
-    </div>
+    </>
   );
 };
 

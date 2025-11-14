@@ -160,7 +160,7 @@ const CustomerDashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       {/* Main Content Container */}
       <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
         {/* Search Section */}
@@ -187,11 +187,11 @@ const CustomerDashboard = () => {
           </div>
         </div>
 
-        {/* Book a cleaner section */}
-        <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl shadow-custom mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1">Book a cleaner in minutes</h2>
-          <p className="text-xs sm:text-sm md:text-base text-primary-200 font-medium mb-3 sm:mb-4">Post job → Receive quotes → Choose & pay securely</p>
-          
+          {/* Book a cleaner section */}
+          <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl shadow-custom mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1">Book a cleaner in minutes</h2>
+            <p className="text-xs sm:text-sm md:text-base text-primary-200 font-medium mb-3 sm:mb-4">Post job → Receive quotes → Choose & pay securely</p>
+            
           {/* Service Categories Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
             {serviceCategories.map((service) => (
@@ -389,8 +389,7 @@ const CustomerDashboard = () => {
           )}
         </div>
       </div>
-
-    </div>
+    </>
   );
 };
 

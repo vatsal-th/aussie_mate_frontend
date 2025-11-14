@@ -99,7 +99,7 @@ const PaymentsPayoutsPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <>
             <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
                 <PageHeader
                     title="Payments & Payouts"
@@ -208,7 +208,7 @@ const PaymentsPayoutsPage = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

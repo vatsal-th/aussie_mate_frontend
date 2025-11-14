@@ -133,7 +133,7 @@ const CleanerJobCompletedPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-4">
+    <>  
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-3 sm:px-4">
         <PageHeader
           title="Job Completed"
@@ -227,7 +227,7 @@ const CleanerJobCompletedPage = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

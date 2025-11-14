@@ -399,7 +399,7 @@ const InProgressJobDetailsPage = () => {
     const headerTitle = job.title || job.serviceType || 'Job Details';
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <>
             <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
                 <div className="px-4 py-4">
                     <PageHeader
@@ -631,7 +631,7 @@ const InProgressJobDetailsPage = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

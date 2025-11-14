@@ -145,7 +145,7 @@ const MatePointsPage = () => {
   }, [showRedeemModal]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       {/* Back Button */}
       <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8">
         <PageHeader
@@ -382,7 +382,7 @@ const MatePointsPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -104,7 +104,7 @@ const SetAvailabilityPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-custom mt-5">
           {/* Header */}
@@ -179,7 +179,7 @@ const SetAvailabilityPage = () => {
           </form>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

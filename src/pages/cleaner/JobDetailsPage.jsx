@@ -98,14 +98,12 @@ const JobDetailsPage = () => {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50" />
-    );
+    return null;
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-sm mx-auto min-h-screen sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="text-center py-8">
@@ -119,12 +117,12 @@ const JobDetailsPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         <PageHeader
           title={getJobTitle(job)}
@@ -167,7 +165,7 @@ const JobDetailsPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -388,7 +388,7 @@ const MyJobsPage = () => {
   }, [currentUserId, statusFilter, debouncedQuery, startDate, endDate, page]);
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="overflow-x-hidden">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
         <PageHeader
           title="My Jobs"

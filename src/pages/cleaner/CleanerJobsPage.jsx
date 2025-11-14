@@ -539,7 +539,7 @@ const CleanerJobsPage = () => {
   }, [activeTab]);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+          <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
         <PageHeader
           title="Jobs"
@@ -914,7 +914,7 @@ const CleanerJobsPage = () => {
           </div>
         </div>
       )}  
-    </div>
+    </>
   );
 };
 

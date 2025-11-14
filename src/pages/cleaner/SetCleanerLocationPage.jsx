@@ -311,7 +311,7 @@ const SetCleanerLocationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-xl mx-auto px-4 py-6">
         {/* Google Map Section */}
         <div className="h-80 rounded-t-2xl overflow-hidden border">
@@ -507,7 +507,7 @@ const SetCleanerLocationPage = () => {
         </div>
       </div>
       </div>
-    </div>
+    </>
   );
 };
 

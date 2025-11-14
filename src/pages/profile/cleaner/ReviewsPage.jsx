@@ -133,7 +133,7 @@ const ReviewsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4">
           <PageHeader
             title="Ratings & Reviews"
@@ -143,12 +143,12 @@ const ReviewsPage = () => {
           />
           <Loader message="Loading reviews..." />
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-4 max-sm:px-3 max-sm:py-3">
         <PageHeader
           title="Ratings & Reviews"
@@ -299,7 +299,7 @@ const ReviewsPage = () => {
         )}
 
       </div>
-    </div>
+    </>
   );
 };
 

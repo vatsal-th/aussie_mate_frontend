@@ -324,7 +324,7 @@ const CustomerChatPage = () => {
   
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl py-2 sm:py-3">
         <PageHeader
           title={`Cleaner #${cleanerId || '1047'}`}
@@ -533,7 +533,7 @@ const CustomerChatPage = () => {
         }}
         isVisible={showPhoneAlert}
       />
-    </div>
+    </>
   );
 };
 

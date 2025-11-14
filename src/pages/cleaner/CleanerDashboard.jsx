@@ -292,7 +292,7 @@ const CleanerDashboard = () => {
   }, [activeJobs, completedJobs])
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Greeting + Availability */}
         <div className="flex flex-row sm:items-center justify-between pt-3 sm:pt-4 gap-3 sm:gap-0">
@@ -486,7 +486,7 @@ const CleanerDashboard = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

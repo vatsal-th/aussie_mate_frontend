@@ -81,7 +81,7 @@ const PaymentSuccessCallbackPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <div className="max-w-2xl mx-auto px-4 py-8">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -164,7 +164,7 @@ const PaymentSuccessCallbackPage = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

@@ -189,7 +189,7 @@ const JobBookedSuccessfullyPage = () => {
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl px-4 py-8">
           <div className="text-center">
             <div className="text-red-500 text-lg font-medium mb-4">{error || 'Job not found'}</div>
@@ -198,12 +198,12 @@ const JobBookedSuccessfullyPage = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       {/* Full Screen Animation Overlay - Shows once then disappears */}
       {showAnimation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white animate-fadeIn">
@@ -354,7 +354,7 @@ const JobBookedSuccessfullyPage = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
