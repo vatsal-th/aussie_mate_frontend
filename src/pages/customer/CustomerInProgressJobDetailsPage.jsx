@@ -29,6 +29,10 @@ const CustomerInProgressJobDetailsPage = () => {
   const [cleanerLocation, setCleanerLocation] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
   const [isCleanerLocationLive, setIsCleanerLocationLive] = useState(false);
+  const [showExtraTimeModal, setShowExtraTimeModal] = useState(false);
+  const [extraTimeRequest, setExtraTimeRequest] = useState(null);
+  const [processingRequest, setProcessingRequest] = useState(false);
+  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -170,19 +174,62 @@ const CustomerInProgressJobDetailsPage = () => {
       }
     };
 
-    // Register event listener
+    // Listen for extra time requests
+    const handleExtraTimeRequest = (data) => {
+      console.log('Extra time request received:', data);
+      setExtraTimeRequest(data);
+      setShowExtraTimeModal(true);
+    };
+
+    // Register event listeners
     socketService.on('cleanerLocationUpdate', handleCleanerLocationUpdate);
+    socketService.on('extraTimeRequest', handleExtraTimeRequest);
 
     // Cleanup
     return () => {
       clearTimeout(connectionTimeout);
       socketService.off('cleanerLocationUpdate', handleCleanerLocationUpdate);
+      socketService.off('extraTimeRequest', handleExtraTimeRequest);
       
       if (socketService.isConnected && jobId) {
         socketService.leaveJobRoom(jobId);
       }
     };
   }, [jobId, job, customerLocation]); 
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showExtraTimeModal) {
+      // Save current scroll position
+      scrollPositionRef.current = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll position when modal closes
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (scrollPositionRef.current !== undefined) {
+        window.scrollTo(0, scrollPositionRef.current);
+      }
+    }
+    
+    return () => {
+      // Cleanup: restore scroll on unmount if modal was open
+      if (showExtraTimeModal) {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        if (scrollPositionRef.current !== undefined) {
+          window.scrollTo(0, scrollPositionRef.current);
+        }
+      }
+    };
+  }, [showExtraTimeModal]);
 
   // Update arrival time when route info changes
   useEffect(() => {
@@ -191,6 +238,25 @@ const CustomerInProgressJobDetailsPage = () => {
       setArrivalTime(mins);
     }
   }, [routeInfo]);
+
+  // For testing: Add test function to window object (remove in production)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      window.testExtraTimeModal = () => {
+        setExtraTimeRequest({
+          time: '1:00',
+          amount: '40',
+          reason: 'The kitchen requires deep cleaning and will take longer than expected.'
+        });
+        setShowExtraTimeModal(true);
+      };
+    }
+    return () => {
+      if (window.testExtraTimeModal) {
+        delete window.testExtraTimeModal;
+      }
+    };
+  }, []);
 
   const handleGetDirections = (e) => {
     e.preventDefault();
@@ -256,6 +322,60 @@ const CustomerInProgressJobDetailsPage = () => {
 
   const getCleanerRating = () => {
     return cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0);
+  };
+
+  const handleAcceptExtraTime = async () => {
+    if (!extraTimeRequest) return;
+
+    try {
+      setProcessingRequest(true);
+      
+      await jobsAPI.acceptExtraTimeRequest(jobId, extraTimeRequest.requestId);
+      
+      setShowExtraTimeModal(false);
+      setExtraTimeRequest(null);
+      // Show success message
+      alert('Extra time request accepted successfully!');
+    } catch (error) {
+      console.error('Error accepting extra time request:', error);
+      alert('Failed to accept request. Please try again.');
+    } finally {
+      setProcessingRequest(false);
+    }
+  };
+
+  const handleRejectExtraTime = async () => {
+    if (!extraTimeRequest) return;
+
+    try {
+      setProcessingRequest(true);
+      
+      await jobsAPI.rejectExtraTimeRequest(jobId, extraTimeRequest.requestId);
+      
+      setShowExtraTimeModal(false);
+      setExtraTimeRequest(null);
+      // Show success message
+      alert('Extra time request rejected.');
+    } catch (error) {
+      console.error('Error rejecting extra time request:', error);
+      alert('Failed to reject request. Please try again.');
+    } finally {
+      setProcessingRequest(false);
+    }
+  };
+
+  // Format time duration (e.g., "1:30" -> "1 Hour 30 Minutes" or "1 Hour")
+  const formatTimeDuration = (timeString) => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    const h = parseInt(hours) || 0;
+    const m = parseInt(minutes) || 0;
+    
+    if (h === 1 && m === 0) return '1 Hour Extra';
+    if (h > 1 && m === 0) return `${h} Hours Extra`;
+    if (h === 0 && m > 0) return `${m} ${m === 1 ? 'Minute' : 'Minutes'} Extra`;
+    if (h > 0 && m > 0) return `${h} ${h === 1 ? 'Hour' : 'Hours'} ${m} ${m === 1 ? 'Minute' : 'Minutes'} Extra`;
+    return `${h} Hour${h !== 1 ? 's' : ''} Extra`;
   };
 
   const resolveImageSrc = (image) => {
@@ -570,6 +690,64 @@ const CustomerInProgressJobDetailsPage = () => {
         </div>
       </div>
 
+      {/* Extra Time Request Modal */}
+      {showExtraTimeModal && extraTimeRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Extra Hours Requested</h2>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              Your cleaner has requested <strong>{formatTimeDuration(extraTimeRequest.time || extraTimeRequest.extraTime)}</strong> for this job after reviewing the scope of work.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              {/* Reason */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">Reason</h3>
+                <p className="text-sm text-primary-200 font-medium" >
+                  {extraTimeRequest.reason || extraTimeRequest.extraReason || 'No reason provided'}
+                </p>
+              </div>
+
+              {/* Time Duration */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">Time Duration</h3>
+                <p className="text-sm text-primary-200 font-medium" >
+                  {formatTimeDuration(extraTimeRequest.time || extraTimeRequest.extraTime)}
+                </p>
+              </div>
+
+              {/* Payment Update */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">Payment Update</h3>
+                <p className="text-sm text-primary-200 font-medium" >
+                  ${extraTimeRequest.amount || extraTimeRequest.extraAmount || '0'}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleRejectExtraTime}
+                variant="secondary"
+                disabled={processingRequest}
+                className="flex-1 border border-blue-500 text-blue-500 bg-white hover:bg-gray-50"
+              >
+                Reject
+              </Button>
+              <Button
+                onClick={handleAcceptExtraTime}
+                variant="primary"
+                disabled={processingRequest}
+                className="flex-1"
+              >
+                {processingRequest ? 'Processing...' : 'Accept'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

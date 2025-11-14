@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Loader, PageHeader } from '../../components';
-import { Check, X } from 'lucide-react';
+import { Button, Loader, PageHeader, JobOverviewCard } from '../../components';
+import { Check, X, Clock } from 'lucide-react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
@@ -21,6 +21,10 @@ const CompleteJobPage = () => {
   const [afterPhotos, setAfterPhotos] = useState([]);
   const [selectedAfterFiles, setSelectedAfterFiles] = useState([]);
   const [timerCompleted, setTimerCompleted] = useState(false);
+  const [extraTime, setExtraTime] = useState('');
+  const [extraAmount, setExtraAmount] = useState('');
+  const [extraReason, setExtraReason] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
   const [beforePhotosUploaded, setBeforePhotosUploaded] = useState(false);
   const [afterPhotosUploaded, setAfterPhotosUploaded] = useState(false);
   const [uploadingBefore, setUploadingBefore] = useState(false);
@@ -266,6 +270,36 @@ const CompleteJobPage = () => {
     }
   };
 
+  const handleRequestExtraTime = async () => {
+    if (!extraTime || !extraAmount || !extraReason.trim()) {
+      setUploadError('Please fill all fields');
+      setTimeout(() => setUploadError(null), 3000);
+      return;
+    }
+
+    try {
+      setSubmittingRequest(true);
+      setUploadError(null);
+      
+      await jobsAPI.requestExtraTime(jobId, { time: extraTime, amount: extraAmount, reason: extraReason });
+      
+      setSuccessMessage('Extra time request sent to customer successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+      // Reset form
+      setNeedExtraTime(false);
+      setExtraTime('');
+      setExtraAmount('');
+      setExtraReason('');
+    } catch (error) {
+      console.error('Error requesting extra time:', error);
+      setUploadError('Failed to send request. Please try again.');
+      setTimeout(() => setUploadError(null), 5000);
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -318,6 +352,7 @@ const CompleteJobPage = () => {
         <PageHeader
           title={job?.title || job?.serviceType || 'Job Details'}
           onBack={() => navigate(-1)}
+          className='py-4'
         />
 
         <div className="px-4 space-y-4">
@@ -342,11 +377,24 @@ const CompleteJobPage = () => {
           )}
 
           {/* Job Overview */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-primary-500  mb-1">
-              {job?.serviceType || 'Cleaning Service'} — {job?.title?.split(' - ')[1] || job?.location?.address || 'Location'}
-            </h2>
-          </div>
+          <JobOverviewCard
+            jobId={job?.jobId || job?._id || job?.id}
+            title={job?.title}
+            serviceType={job?.serviceType}
+            serviceDetail={job?.serviceDetail || job?.serviceType}
+            instructions={job?.specialInstructions || job?.instructions || job?.additionalNotes}
+            scheduledDate={job?.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) : ''}
+            frequency={job?.frequency}
+            location={job?.location?.address || job?.location?.fullAddress || job?.address || job?.locationDescription}
+            photos={job?.photos?.map(p => typeof p === 'string' ? p : p.url || p.src) || []}
+            viewerRole="cleaner"
+          />
 
           {/* Review Property Section - Hide after 5 minutes */}
           {!timerCompleted && (
@@ -361,10 +409,11 @@ const CompleteJobPage = () => {
               </div>
               
               <div className="flex items-center mb-4">
-                <span className="text-sm font-medium text-primary-500 mr-2">Need extra time?</span>
+                <span className="text-sm font-medium text-primary-500 mr-4">Need extra time?</span>
                 <button
+                  type="button"
                   onClick={() => setNeedExtraTime(!needExtraTime)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer  ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
                     needExtraTime ? 'bg-[#1F6FEB]' : 'bg-gray-200'
                   }`}
                 >
@@ -375,6 +424,53 @@ const CompleteJobPage = () => {
                   />
                 </button>
               </div>
+
+              {needExtraTime && (
+                <div className="space-y-4 pt-4 mb-4">
+                  {/* Time Input */}
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={extraTime}
+                      onChange={(e) => setExtraTime(e.target.value)}
+                      placeholder="Set time"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Amount Input */}
+                  <input
+                    type="number"
+                    value={extraAmount}
+                    onChange={(e) => setExtraAmount(e.target.value)}
+                    placeholder="Enter the amount here..."
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                    min="0"
+                    step="0.01"
+                  />
+
+                  {/* Reason Textarea */}
+                  <textarea
+                    value={extraReason}
+                    onChange={(e) => setExtraReason(e.target.value)}
+                    placeholder="Enter reason"
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl! focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"
+                  />
+
+                  {/* Request Button */}
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleRequestExtraTime}
+                      variant="primary"
+                      disabled={submittingRequest || !extraTime || !extraAmount || !extraReason.trim()}
+                      className="px-6 py-2"
+                    >
+                      {submittingRequest ? 'Sending...' : 'Request To Customer'}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {timeLeft > 0 && (
                 <div className="space-y-1">

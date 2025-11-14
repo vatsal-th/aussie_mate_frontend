@@ -21,7 +21,6 @@ class SocketService {
     }
 
     let backendURL = API_CONFIG.BASE_URL;
-    console.log('🌐 [SOCKET] Original API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
     
     if (backendURL && backendURL.endsWith('/api')) {
       backendURL = backendURL.slice(0, -4);
@@ -39,8 +38,6 @@ class SocketService {
       backendURL = backendURL.replace('http://', 'ws://');
     }
 
-    console.log('🔌 Connecting to WebSocket:', backendURL);
-    console.log('🔑 Auth token (first 20 chars):', token?.substring(0, 20) + '...');
 
     this.socket = io(backendURL, {
       auth: { token },
@@ -51,8 +48,6 @@ class SocketService {
 
     this.socket.on('connect', () => {
       this.isConnected = true;
-      console.log('✅ Socket connected successfully');
-      console.log('📡 Socket ID:', this.socket.id);
       
       // Join user-specific room for notifications
       try {
@@ -112,16 +107,43 @@ class SocketService {
       this.notifyListeners('locationUpdateAcknowledged', data);
     });
 
+    // Extra time request events
+    this.socket.on('extra_time_request', (data) => {
+      this.notifyListeners('extraTimeRequest', data);
+    });
+
     // User room events
     this.socket.on('user_room_joined', (data) => {
       console.log('✅ Joined user room successfully:', data);
     });
 
-    // 🎯 JOB COMPLETION EVENT - ENHANCED LOGGING
-    this.socket.on('jobCompleted', (data) => {
-      console.log('🎉 JOB COMPLETED EVENT RECEIVED:', data);
-      console.log('📋 Event data:', JSON.stringify(data, null, 2));
-      this.notifyListeners('jobCompleted', data);
+    // Admin chat events
+    this.socket.on('admin_chat_joined', (data) => {
+      this.notifyListeners('adminChatJoined', data);
+    });
+
+    this.socket.on('admin_chat_history', (messages) => {
+      this.notifyListeners('adminChatHistory', messages);
+    });
+
+    this.socket.on('admin_chat_history_response', (data) => {
+      this.notifyListeners('adminChatHistoryResponse', data);
+    });
+
+    this.socket.on('admin_new_message', (message) => {
+      this.notifyListeners('adminNewMessage', message);
+    });
+
+    this.socket.on('admin_chat_notification', (notification) => {
+      this.notifyListeners('adminChatNotification', notification);
+    });
+
+    this.socket.on('admin_pending_chat_message', (data) => {
+      this.notifyListeners('adminPendingChatMessage', data);
+    });
+
+    this.socket.on('admin_messages_marked_read', (data) => {
+      this.notifyListeners('adminMessagesMarkedRead', data);
     });
 
     this.socket.on('error', (error) => {
@@ -277,6 +299,55 @@ class SocketService {
       this.socket.emit('join_user_room', { userId });
     } else {
       console.warn('⚠️ Cannot join user room: Socket not connected');
+    }
+  }
+
+  // Admin chat methods
+  joinAdminChat(userId, adminId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('join_admin_chat', { userId, adminId });
+    }
+  }
+
+  sendAdminMessage(adminChatRoomId, content, messageType = 'text', fileData = null) {
+    // Check for phone numbers in message content
+    const validation = validateMessageForPhoneNumbers(content);
+    if (!validation.isValid) {
+      this.notifyListeners('error', { 
+        message: validation.message 
+      });
+      return;
+    }
+
+    if (this.socket && this.isConnected) {
+      this.socket.emit('admin_message', {
+        adminChatRoomId,
+        content,
+        messageType,
+        fileData
+      });
+    }
+  }
+
+  getAdminChatHistory(adminChatRoomId, page = 1, limit = 50) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('admin_chat_history', {
+        adminChatRoomId,
+        page,
+        limit
+      });
+    }
+  }
+
+  markAdminMessagesAsRead(adminChatRoomId) {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('mark_admin_messages_read', { adminChatRoomId });
+    }
+  }
+
+  leaveAdminChat() {
+    if (this.socket && this.isConnected) {
+      this.socket.emit('leave_admin_chat');
     }
   }
 }

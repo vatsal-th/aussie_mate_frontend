@@ -318,6 +318,43 @@ export const jobsAPI = {
       method: 'DELETE',
     });
   },
+
+  // Extra Time Request APIs
+  // Request extra time for a job (Cleaner)
+  requestExtraTime: async (jobId, { time, amount, reason }) => {
+    return apiRequest(`/jobs/${jobId}/extra-time-request`, {
+      method: 'POST',
+      body: JSON.stringify({ time, amount, reason }),
+    });
+  },
+
+  // Accept extra time request (Customer)
+  acceptExtraTimeRequest: async (jobId, requestId) => {
+    return apiRequest(`/jobs/${jobId}/extra-time-request/${requestId}/accept`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  },
+
+  // Reject extra time request (Customer)
+  rejectExtraTimeRequest: async (jobId, requestId) => {
+    return apiRequest(`/jobs/${jobId}/extra-time-request/${requestId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  },
+
+  // Get extra time requests for a job (Optional)
+  getExtraTimeRequests: async (jobId, params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.set(key, value);
+      }
+    });
+    const qs = query.toString();
+    return apiRequest(`/jobs/${jobId}/extra-time-requests${qs ? `?${qs}` : ''}`);
+  },
 };
 
 // Quotes API

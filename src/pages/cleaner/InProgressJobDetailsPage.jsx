@@ -301,8 +301,7 @@ const InProgressJobDetailsPage = () => {
     };
 
     const handleStartJob = () => {
-        // Customer payment करने पर status already 'in_progress' हो जाती है
-        // यहाँ सिर्फ CompleteJobPage पर navigate करना है
+
         navigate(`/cleaner/complete-job/${jobId}`, { replace: true });
     };
 

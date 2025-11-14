@@ -90,5 +90,50 @@ export const chatAPI = {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  },
+
+  // Admin chat API endpoints
+  // Get admin chat rooms
+  async getAdminChatRooms() {
+    const response = await fetch(`${API_BASE}/chat/admin/rooms`, {
+      headers: getAuthHeaders()
+    });
+    return response.json();
+  },
+
+  // Create or get admin chat room
+  async createAdminChatRoom(userId, adminId, subject, relatedJobId) {
+    const response = await fetch(`${API_BASE}/chat/admin/rooms`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ userId, adminId, subject, relatedJobId })
+    });
+    return response.json();
+  },
+
+  // Get admin chat messages
+  async getAdminChatMessages(adminChatRoomId, page = 1, limit = 50) {
+    const response = await fetch(
+      `${API_BASE}/chat/admin/rooms/${adminChatRoomId}/messages?page=${page}&limit=${limit}`,
+      { headers: getAuthHeaders() }
+    );
+    return response.json();
+  },
+
+  // Mark admin chat as read
+  async markAdminChatAsRead(adminChatRoomId) {
+    const response = await fetch(`${API_BASE}/chat/admin/rooms/${adminChatRoomId}/read`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+    return response.json();
+  },
+
+  // Get admin unread count
+  async getAdminUnreadCount() {
+    const response = await fetch(`${API_BASE}/chat/admin/unread-count`, {
+      headers: getAuthHeaders()
+    });
+    return response.json();
   }
 };

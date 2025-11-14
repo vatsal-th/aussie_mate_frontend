@@ -22,6 +22,10 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
   const [polylinePath, setPolylinePath] = useState([]);
   const mapRef = useRef(null);
   const initialCleanerLocationRef = useRef(null);
+  const lastApiCallRef = useRef(null);
+  const lastCleanerLocationRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+  const isCalculatingRouteRef = useRef(false);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API_KEY;
 
@@ -116,9 +120,62 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
     };
   }, [externalCleanerLocation]);
 
-  // Imperative DirectionsService - fetch directions once when customer location is available
-  useEffect(() => {
-    if (!isLoaded || !customerLocation || !cleanerLocation) return;
+  // Helper function to calculate distance between two coordinates (in meters)
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Fetch directions with debouncing and throttling
+  const fetchDirections = useCallback(() => {
+    if (!isLoaded || !customerLocation || !cleanerLocation || isCalculatingRouteRef.current) {
+      return;
+    }
+
+    const now = Date.now();
+    const lastCall = lastApiCallRef.current;
+    const lastLocation = lastCleanerLocationRef.current;
+
+    // Check if we should skip this API call
+    if (lastLocation && lastCall) {
+      // Calculate distance moved since last API call
+      const distanceMoved = calculateDistance(
+        lastLocation.lat,
+        lastLocation.lng,
+        cleanerLocation.lat,
+        cleanerLocation.lng
+      );
+
+      // Skip if:
+      // 1. Less than 30 seconds since last call AND moved less than 50 meters
+      // 2. Less than 5 seconds since last call (hard throttle)
+      const timeSinceLastCall = now - lastCall;
+      
+      if (timeSinceLastCall < 5000) {
+        // Hard throttle: minimum 5 seconds between calls
+        return;
+      }
+
+      if (timeSinceLastCall < 30000 && distanceMoved < 50) {
+        // Soft throttle: if moved less than 50m and less than 30s, skip
+        return;
+      }
+    }
+
+    // Mark as calculating to prevent concurrent calls
+    isCalculatingRouteRef.current = true;
+    lastApiCallRef.current = now;
+    lastCleanerLocationRef.current = { ...cleanerLocation };
 
     const directionsService = new window.google.maps.DirectionsService();
 
@@ -127,6 +184,8 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
         destination: customerLocation,
         travelMode: window.google.maps.TravelMode.DRIVING,
     }, (result, status) => {
+        isCalculatingRouteRef.current = false;
+        
         if (status === 'OK' && result) {
             setDirections(result);
 
@@ -170,9 +229,32 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
             }
         } else {
             console.error('❌ Directions failed:', status);
+            isCalculatingRouteRef.current = false;
         }
     });
-}, [cleanerLocation, customerLocation, isLoaded]);
+  }, [cleanerLocation, customerLocation, isLoaded, onRouteInfo]);
+
+  // Debounced effect to fetch directions
+  useEffect(() => {
+    if (!isLoaded || !customerLocation || !cleanerLocation) return;
+
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Debounce: wait 1 second before calling API
+    debounceTimerRef.current = setTimeout(() => {
+      fetchDirections();
+    }, 1000);
+
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [cleanerLocation, customerLocation, isLoaded, fetchDirections]);
 
 
   const onMapLoad = useCallback((map) => {
