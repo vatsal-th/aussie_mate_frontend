@@ -1,5 +1,6 @@
 import React, { useState, useEffect }  from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Button, PageHeader } from '../../components';
 import JobLiveGif from '../../assets/joblive.gif';
 import CardBG6 from '../../assets/CardBG6.png';
@@ -18,7 +19,7 @@ const JobSuccessPage = () => {
 
   return (
     <>
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
         <PageHeader
           title="Job Posted Successfully"
           subtitle="Your job request is live"
@@ -70,12 +71,11 @@ const JobSuccessPage = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="relative z-10 w-full space-y-4 mt-8">
+            <div className="relative z-10 w-full flex flex-col items-center justify-center space-x-4 mt-8">
               {/* View My Job Button */}
               <Button
                 onClick={handleViewMyJob}
-                size="lg"
-                fullWidth
+                size="xl"
               >
                 View My Job
               </Button>
@@ -84,9 +84,9 @@ const JobSuccessPage = () => {
               <Button
                 onClick={handleReturnHome}
                 variant="link"
-                size="md"
-                icon={ArrowLeftIcon}
-                className="mx-auto"
+                size="2xl"
+                icon={<ArrowLeft className="w-5 h-5" />}
+                className="text-black! mt-4!"
               >
                 Return Home
               </Button>

@@ -25,6 +25,7 @@ export { default as PaginationRanges } from './common/PaginationRanges';
 export { default as FiltersDrawer } from './common/FiltersDrawer';
 export { default as ScrollToTop } from './common/ScrollToTop';
 export { default as Loader } from './common/Loader';
+export { default as TierBadge } from './common/TierBadge';
 export { default as JobOverviewCard } from './jobs/JobOverviewCard';
 export { default as CompletionProofSection } from './jobs/CompletionProofSection';
 

@@ -874,7 +874,7 @@ const CleanerChatPage = () => {
                 <div className="bg-white border-t border-gray-100 mt-4 pt-8">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-primary-500">Define your price</h3>
+                            <h3 className="text-lg font-semibold text-primary-500">Quote Summary</h3>
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-primary-500 font-medium">Is Negotiable?</span>
                                 <button
@@ -918,7 +918,7 @@ const CleanerChatPage = () => {
                                         disabled={!quoteAmount.trim() || isSubmittingQuote}
                                         className="px-3 sm:px-4 py-2.5 sm:py-3 text-primary-500 font-medium hover:bg-primary-50 rounded-lg transition-colors cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed text-xs sm:text-sm"
                                     >
-                                        {isSubmittingQuote ? 'Submitting...' : hasSubmittedQuote ? 'Update Budget' : 'Post Budget'}
+                                        {isSubmittingQuote ? 'Submitting...' : hasSubmittedQuote ? 'Post Budget' : 'Post Budget'}
                                     </button>
                                 </div>
                             )}

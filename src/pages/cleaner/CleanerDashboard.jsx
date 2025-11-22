@@ -24,7 +24,7 @@ const CleanerDashboard = () => {
   const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 })
   const [loadingDashboard, setLoadingDashboard] = useState(false)
   const [dashboardError, setDashboardError] = useState('')
-  
+
   // Helper function to get status colors
   const getStatusColors = (status) => {
     switch ((status || '').toLowerCase()) {
@@ -57,15 +57,14 @@ const CleanerDashboard = () => {
     }
   }
 
-  const formatLabel = (value) => {
-    if (!value) return ''
-    return value
+  const formatLabel = (str) =>
+    (str || "")
       .toString()
-      .replace(/[_-]+/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
       .trim()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-  }
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
 
   const formatCurrency = (value) => {
     const amount = Number(value)
@@ -115,48 +114,42 @@ const CleanerDashboard = () => {
 
       const extractJobs = (response) => response?.data?.jobs || response?.data || []
 
-      const doesJobBelongToCleaner = (job) => {
-        if (!cleanerId) return false
-        const candidateIds = [
-          job.assignedCleanerId,
-          job.assignedCleaner?.id,
-          job.assignedCleaner?._id,
-          job.cleanerId?.id,
-          job.cleanerId?._id,
-          job.acceptedQuoteId?.cleanerId?.id,
-          job.acceptedQuoteId?.cleanerId?._id,
-          job.completedBy?.id,
-          job.completedBy?._id,
-        ]
-          .filter(Boolean)
-          .map(String)
+      // Checks if ANY cleanerId inside job matches logged-in cleaner
+      const doesJobBelongToCleaner = (job, cleanerId) => {
+        if (!cleanerId) return false;
 
-        return candidateIds.includes(cleanerId)
-      }
+        const jobString = JSON.stringify(job);
+        return jobString.includes(cleanerId);
+      };
 
-      const buildJobTitle = (job) => {
-        if (job.title) return job.title
-        if (job.jobTitle) return job.jobTitle
-        const service = formatLabel(job.serviceType)
-        const property = formatLabel(job.propertyType)
-        if (service && property) return `${service} – ${property}`
-        return service || property || 'Job Detail'
-      }
 
-      const getJobIdentifier = (job) => job.jobId || job._id || job.id || job.referenceId
+      const buildJobTitle = (job) =>
+        job.title ||
+        job.jobTitle ||
+        `${formatLabel(job.serviceType)} – ${formatLabel(job.propertyType)}` ||
+        "Job Detail";
 
-      const getJobPrice = (job) => {
-        const price =
-          job.budget?.total ||
-          job.paymentDetails?.totalAmount ||
-          job.paymentSummary?.total ||
-          job.quoteAmount ||
-          job.quotedAmount ||
-          job.quotedPrice ||
-          job.price ||
-          job.budget
-        return Number(price) || 0
-      }
+      const getJobIdentifier = (job) =>
+        job.jobId ||
+        job._id ||
+        job.id ||
+        job.referenceId ||
+        "Unknown Job";
+
+      const getJobPrice = (job) =>
+        Number(
+          [
+            job?.budget?.total,
+            job?.paymentDetails?.totalAmount,
+            job?.paymentSummary?.total,
+            job?.quoteAmount,
+            job?.quotedAmount,
+            job?.quotedPrice,
+            job?.price,
+            job?.budget
+          ].find(v => v !== undefined)
+        ) || 0;
+
 
       const getJobNote = (job) => {
         if (job.paymentStatus) return formatLabel(job.paymentStatus)
@@ -192,15 +185,15 @@ const CleanerDashboard = () => {
         const allJobs = extractJobs(allJobsResponse)
 
         const inProgressJobs = allJobs
-          .filter((job) => doesJobBelongToCleaner(job))
+          .filter((job) => doesJobBelongToCleaner(job, cleanerId))
           .filter((job) => inProgressStatuses.has(normalizeStatus(getStatusRaw(job))))
           .filter(
             (job, index, self) =>
               getJobIdentifier(job) &&
               index ===
-                self.findIndex(
-                  (other) => getJobIdentifier(other)?.toString() === getJobIdentifier(job)?.toString()
-                )
+              self.findIndex(
+                (other) => getJobIdentifier(other)?.toString() === getJobIdentifier(job)?.toString()
+              )
           )
           .sort(
             (a, b) =>
@@ -224,7 +217,7 @@ const CleanerDashboard = () => {
         setActiveJobs(formattedActiveJobs)
 
         const completedJobEntries = allJobs
-          .filter((job) => doesJobBelongToCleaner(job))
+          .filter((job) => doesJobBelongToCleaner(job, cleanerId))
           .filter((job) => completedStatuses.has(normalizeStatus(getStatusRaw(job))))
           .filter((job, index, self) => {
             const id = getJobIdentifier(job)
@@ -251,7 +244,7 @@ const CleanerDashboard = () => {
 
         const liveStatuses = new Set(['posted', 'quoted'])
         const liveJobs = allJobs
-          .filter((job) => !doesJobBelongToCleaner(job))
+          .filter((job) => !doesJobBelongToCleaner(job, cleanerId))
           .filter((job) => liveStatuses.has(normalizeStatus(getStatusRaw(job))))
         setLiveJobsCount(liveJobs.length)
 
@@ -309,7 +302,7 @@ const CleanerDashboard = () => {
             <div className="absolute inset-0">
               <img src={CleanerBG} alt="Cleaner Background" className="w-full h-full object-cover" />
             </div>
-            
+
             {/* Content Overlay */}
             <div className="relative z-10 p-2 sm:p-3">
               <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">Earnings This Week</p>
@@ -328,7 +321,7 @@ const CleanerDashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Coin3 image positioned at bottom right */}
             <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
               <img src={Coin3} alt="coins" className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36" />
@@ -337,7 +330,7 @@ const CleanerDashboard = () => {
         </div>
 
         {/* Live jobs near you */}
-      <div className="mt-3 sm:mt-4 bg-white rounded-2xl border-[#F3F3F3] p-3 sm:p-4 shadow-custom">
+        <div className="mt-3 sm:mt-4 bg-white rounded-2xl border-[#F3F3F3] p-3 sm:p-4 shadow-custom">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary-50 flex items-center justify-center">
@@ -345,11 +338,11 @@ const CleanerDashboard = () => {
               </div>
               <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-semibold">Live Jobs near you</span>
             </div>
-             <button 
-               onClick={() => navigate('/cleaner-jobs')}
-               className="text-xs sm:text-sm md:text-lg text-primary-600 font-medium flex items-center cursor-pointer"
-             >
-               <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> {liveJobsLabel}</button>
+            <button
+              onClick={() => navigate('/cleaner-jobs')}
+              className="text-xs sm:text-sm md:text-lg text-primary-600 font-medium flex items-center cursor-pointer"
+            >
+              <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> {liveJobsLabel}</button>
           </div>
         </div>
 
@@ -357,10 +350,10 @@ const CleanerDashboard = () => {
         <div className="mt-3 sm:mt-4 md:mt-5 bg-white rounded-2xl border-[#F3F3F3] p-2 sm:p-3 md:p-4 lg:p-5 shadow-custom">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 md:mb-4 gap-2 sm:gap-3 md:gap-0">
             <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-primary-500">Your Active Jobs</h3>
-            
+
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between sm:justify-end space-x-2">
-              <Button 
+              <Button
                 onClick={() => navigate('/cleaner-jobs')}
                 size="sm"
                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm hover:text-white border border-[#1F6FEB] rounded-full px-2 sm:px-3 md:px-5 py-1 sm:py-1.5 md:py-2 flex items-center justify-center space-x-1 sm:space-x-2"
@@ -371,17 +364,17 @@ const CleanerDashboard = () => {
                 <span className="hidden sm:inline">View Jobs</span>
                 <span className="sm:hidden">Jobs</span>
               </Button>
-              
+
               <div className="flex space-x-1 sm:space-x-2">
-                <Button 
+                <Button
                   onClick={goToPrev}
                   variant="ghost"
                   size="xs"
                   className="rounded-full p-1 sm:p-1.5 md:p-2"
                   icon={<ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600" strokeWidth={2} />}
                 />
-                
-                <Button 
+
+                <Button
                   onClick={goToNext}
                   variant="ghost"
                   size="xs"

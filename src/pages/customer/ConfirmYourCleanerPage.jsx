@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, UserRound, XCircle } from 'lucide-react';
-import { Button, PageHeader } from '../../components';
+import { Button, PageHeader, TierBadge } from '../../components';
 import { paymentService, handlePaymentError } from '../../services/paymentService';
 import StarIcon from '../../assets/rating.svg';
-import SilverBadgeIcon from '../../assets/silverBadge.svg';
-import GoldBadgeIcon from '../../assets/goldBadge.svg';
-import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 
 const ConfirmYourCleanerPage = () => {
   const navigate = useNavigate();
@@ -25,12 +22,9 @@ const ConfirmYourCleanerPage = () => {
       `${quoteData.cleanerId.firstName || ''} ${quoteData.cleanerId.lastName || ''}`.trim() || 
       `Cleaner #${(quoteData.cleanerId._id || quoteData.cleanerId.id || quoteData.cleanerId).slice(-4)}` : 
       'Cleaner',
-    distance: 'Distance not available', // This should be calculated based on locations
     rating: quoteData.cleanerId?.averageRating !== undefined ? quoteData.cleanerId.averageRating : (quoteData.cleanerId?.rating || 0),
     tier: quoteData.cleanerId?.tier || 'none',
     baseQuote: quoteData.basePrice || quoteData.price || 0,
-    addOns: quoteData.addOns || 0,
-    addOnName: quoteData.addOnName || 'Additional Services',
     total: quoteData.totalPrice || quoteData.price || 0
   } : (cleanerData || null);
 
@@ -96,12 +90,9 @@ const ConfirmYourCleanerPage = () => {
 
             {/* Cleaner Details */}
             <div className="flex-1">
-              <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-1">
+              <h2 className="text-lg sm:text-xl font-semibold text-primary-500 mb-3">
                 {finalCleanerData.name}
               </h2>
-              <p className="text-sm text-primary-200 font-medium mb-3">
-                {finalCleanerData.distance}
-              </p>
               
               {/* Rating and Tier Badges */}
               <div className="flex items-center gap-3">
@@ -111,33 +102,7 @@ const ConfirmYourCleanerPage = () => {
                     {finalCleanerData.rating}
                   </span>
                 </div>
-                
-                {finalCleanerData.tier && finalCleanerData.tier !== 'none' && (
-                  <div className={`flex items-center px-2 py-1 rounded-full border ${
-                    finalCleanerData.tier === 'gold'
-                      ? 'bg-[linear-gradient(94.49deg,#FFDBAE_0%,#FFE7C4_100%)] border-[#FFDBAE]'
-                      : finalCleanerData.tier === 'silver'
-                      ? 'bg-[linear-gradient(94.49deg,#FDFDFD_0%,#E9E9E9_100%)] border-primary-200'
-                      : finalCleanerData.tier === 'bronze'
-                      ? 'bg-[linear-gradient(94.49deg,#D4A574_0%,#E6C7A3_100%)] border-[#CD7F32]'
-                      : 'bg-gray-100 border-gray-300'
-                  }`}>
-                    <img 
-                      src={
-                        finalCleanerData.tier === 'gold' 
-                          ? GoldBadgeIcon 
-                          : finalCleanerData.tier === 'silver'
-                          ? SilverBadgeIcon
-                          : BronzeBadgeIcon
-                      } 
-                      alt="Tier" 
-                      className="w-4 h-4 mr-1" 
-                    />
-                    <span className="text-sm font-medium text-primary-500 capitalize">
-                      {finalCleanerData.tier}
-                    </span>
-                  </div>
-                )}
+                <TierBadge tier={finalCleanerData.tier} />
               </div>
             </div>
           </div>
@@ -150,12 +115,6 @@ const ConfirmYourCleanerPage = () => {
           <div className="space-y-3">
             <div className="flex items-center">
               <span className="text-sm text-primary-200 font-medium">Base Quote: <span className="text-sm font-semibold text-primary-500">${finalCleanerData.baseQuote}</span></span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-primary-200 font-medium">
-                Add-ons: <span className="text-primary-600 font-semibold">+${finalCleanerData.addOns}</span> ({finalCleanerData.addOnName})
-              </span>
             </div>
             
             <div className="border-t border-gray-200 pt-3">

@@ -469,11 +469,9 @@ const CustomerJobDetailsPage = () => {
       name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() || `Cleaner #${cleanerId?.slice(-4)}` : 'Cleaner',
       rating: cleaner?.averageRating !== undefined ? cleaner.averageRating : (cleaner?.rating || 0),
       reviews: cleaner?.reviewCount || 0,
-      tier: cleaner?.tier || 'Standard',
+      tier: cleaner?.tier,
       quoteAmount: quote.price || quote.amount || 0,
-      distance: quote.distance || cleaner?.distance || 'Distance unknown',
       isVerified: cleaner?.isVerified || false,
-      estimatedDuration: quote.estimatedDuration || '2 hours',
       status: quote.status || 'pending'
     };
   };
