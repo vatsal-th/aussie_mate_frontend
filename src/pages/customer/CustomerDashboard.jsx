@@ -7,7 +7,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, Loader } from '../../components';
-import { jobsAPI } from '../../services/api';
+import { jobsAPI, userAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
 import CardBG4 from '../../assets/CardBG4.png';
@@ -28,8 +29,10 @@ const CustomerDashboard = () => {
   const [ongoingJobs, setOngoingJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
   const swiperRef = useRef(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const goToPrev = () => {
     if (swiperRef.current) {
@@ -83,12 +86,36 @@ const CustomerDashboard = () => {
     navigate('/rewards');
   };
 
+  // Get current user ID
+  useEffect(() => {
+    const getCurrentUserId = async () => {
+      try {
+        if (user?.id) {
+          setCurrentUserId(user.id);
+        } else if (user?._id) {
+          setCurrentUserId(user._id);
+        } else {
+          const userProfile = await userAPI.getProfile();
+          const userData = userProfile.data?.user || userProfile.data || userProfile;
+          setCurrentUserId(userData?._id || userData?.id);
+        }
+      } catch (error) {
+        console.error('Error fetching user ID:', error);
+        setError('Failed to load user information');
+      }
+    };
+
+    getCurrentUserId();
+  }, [user]);
+
   useEffect(() => {
     const fetchJobs = async () => {
+      if (!currentUserId) return;
+
       try {
         setLoading(true);
-        const res = await jobsAPI.getAllJobs({ page: 1, limit: 10 });
-        const list = res?.data?.jobs || res?.data || res || [];
+        const res = await jobsAPI.getCustomerJobs(currentUserId, { page: 1, limit: 10 });
+        const list = res?.data || res || [];
 
         const normalized = list.map((j) => {
           const status = (j.status || '').toString();
@@ -117,7 +144,7 @@ const CustomerDashboard = () => {
     };
     
     fetchJobs();
-  }, []);
+  }, [currentUserId]);
 
   const serviceCategories = [
     {

@@ -103,7 +103,6 @@ export const authAPI = {
     if (response.success && response.data && response.data.token) {
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-    } else {
     }
 
     return response;
@@ -113,19 +112,19 @@ export const authAPI = {
   registerCustomer: async (userData) => {
     try {
       // Log the data being sent for debugging
-      
-    const response = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
 
-    // Store token and user data if registration includes auto-login
-    if (response.success && response.data && response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
+      const response = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
 
-    return response;
+      // Store token and user data if registration includes auto-login
+      if (response.success && response.data && response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      return response;
     } catch (error) {
       console.error('Registration API error:', error);
       // Log the full error response if available
@@ -167,7 +166,9 @@ export const authAPI = {
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('userLocation'); 
   },
+
 
   // Forgot password
   forgotPassword: async (email) => {
@@ -230,16 +231,16 @@ export const jobsAPI = {
 
     // Add photo files
     if (files.photos && files.photos.length > 0) {
-        files.photos.forEach((photo, index) => {
-            formData.append(`photos`, photo);
-        });
+      files.photos.forEach((photo, index) => {
+        formData.append(`photos`, photo);
+      });
     }
 
     // Add video files
     if (files.videos && files.videos.length > 0) {
-        files.videos.forEach((video, index) => {
-            formData.append(`videos`, video);
-        });
+      files.videos.forEach((video, index) => {
+        formData.append(`videos`, video);
+      });
     }
 
     const token = getAuthToken();
@@ -255,14 +256,14 @@ export const jobsAPI = {
 
       if (!response.ok) {
         const errorData = await response.json();
-        
+
         // Handle validation errors specifically
         if (response.status === 400 && errorData.errors) {
           // Extract validation error messages
           const validationErrors = errorData.errors.map(err => err.msg || err.message || err).join(', ');
           throw new Error(validationErrors);
         }
-        
+
         // Handle other error types
         const errorMessage = errorData.message || errorData.error || errorData.details || 'Failed to create job with files';
         throw new Error(errorMessage);
@@ -400,7 +401,7 @@ export const quotesAPI = {
       body: JSON.stringify(quoteData),
     });
   },
-};  
+};
 
 // Location API
 export const locationAPI = {
@@ -572,7 +573,7 @@ export const userAPI = {
         // Extract last four digits from card number (remove spaces)
         const cleanCardNumber = cardData.cardNumber.replace(/\s/g, '');
         const lastFourDigits = cleanCardNumber.slice(-4);
-        
+
         const newCard = {
           id: `mock_card_${Date.now()}`,
           cardHolderName: cardData.cardHolderName,
@@ -583,12 +584,12 @@ export const userAPI = {
           isDefault: cardData.setAsDefault,
           addedAt: new Date().toISOString()
         };
-        
+
         // Add to mock storage
         const cards = getMockCards();
         cards.push(newCard);
         setMockCards(cards);
-        
+
         return {
           success: true,
           message: 'Card added successfully',
@@ -659,12 +660,12 @@ export const userAPI = {
           isVerified: false,
           addedAt: new Date().toISOString()
         };
-        
+
         // Add to mock storage
         const accounts = getMockBankAccounts();
         accounts.push(newAccount);
         setMockBankAccounts(accounts);
-        
+
         return {
           success: true,
           message: 'Bank account added successfully',
@@ -752,8 +753,8 @@ export const userAPI = {
     try {
       // For FormData, we need to use fetch directly instead of apiRequest
       const token = getAuthToken();
-      
-      
+
+
       const response = await fetch(`${API_BASE_URL}/auth/documents`, {
         method: 'POST',
         headers: {
@@ -764,14 +765,14 @@ export const userAPI = {
 
       // Check if response is HTML (error page) instead of JSON
       const contentType = response.headers.get('content-type');
-      
+
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await response.text();
         throw new Error(`Server returned HTML instead of JSON (Status: ${response.status}). This is a backend error - check server logs.`);
       }
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         const error = new Error(data.message || `API request failed with status ${response.status}`);
         error.status = response.status;
@@ -803,7 +804,7 @@ export const userAPI = {
     if (lng) params.set('lng', lng);
     if (radius) params.set('radius', radius);
     if (role) params.set('role', role);
-    
+
     return apiRequest(`/search?${params.toString()}`);
   },
 
@@ -979,7 +980,7 @@ export const jobDetailsAPI = {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/invoice`, {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/invoice`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

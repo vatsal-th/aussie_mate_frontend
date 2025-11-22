@@ -224,84 +224,59 @@ const LocationPage = () => {
   };
 
   const handleConfirmLocation = async () => {
-    // Store selected location in backend
-    if (selectedLocation) {
-      // Extract city from full address
-      const fullAddress = selectedLocation.fullAddress || '';
-      const addressParts = fullAddress.split(',');
-      const city = addressParts.length > 1 ? addressParts[addressParts.length - 2]?.trim() : selectedLocation.city || 'Location';
-      
-      const locationData = {
-        address: selectedLocation.address || selectedLocation.fullAddress,
-        city: city,
-        fullAddress: selectedLocation.fullAddress,
+    if (!selectedLocation) return;
+  
+    const fullAddress = selectedLocation.fullAddress || '';
+    const addressParts = fullAddress.split(',');
+    const city = addressParts.length > 1 
+      ? addressParts[addressParts.length - 2]?.trim() 
+      : "Unknown";
+  
+    const locationData = {
+      address: selectedLocation.address || selectedLocation.fullAddress,
+      city: city,
+      fullAddress: selectedLocation.fullAddress,
+      lat: selectedLocation.lat,
+      lng: selectedLocation.lng,
+      coordinates: {
         lat: selectedLocation.lat,
-        lng: selectedLocation.lng,
-        coordinates: {
-          lat: selectedLocation.lat,
-          lng: selectedLocation.lng
-        }
-      };
-      try {
-        window.dispatchEvent(new CustomEvent('locationUpdated'));
-      } catch (error) {
-        console.error('Error updating location in backend:', error);
-
-        window.dispatchEvent(new CustomEvent('locationUpdated'));
+        lng: selectedLocation.lng
       }
+    };
+  
+    try {
+      // BACKEND API CALL
+      await userAPI.updateLocation(locationData);
+  
+      //  STORE IN LOCAL STORAGE
+      localStorage.setItem("userLocation", JSON.stringify(locationData));
+  
+      // FIRE FRONTEND EVENT
+      window.dispatchEvent(new CustomEvent("locationUpdated"));
+  
+    } catch (error) {
+      console.error("Location update failed:", error);
     }
-    
-    // Check if user came from a specific page (via state or query params)
-    const fromPage = location.state?.from || new URLSearchParams(location.search).get('from');
-    const step = location.state?.step;
-    
-    // If user came from a specific page, navigate back to that page with step
-    if (fromPage) {
-      if (step) {
-        navigate(fromPage, { state: { step } });
-      } else {
-        navigate(fromPage);
-      }
-      return;
-    }
-    
-    // Get user info from localStorage to determine user type
-    const userStr = localStorage.getItem('user');
+  
+    // REDIRECT LOGIC
+    const userStr = localStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : null;
-    
-    // If no user is logged in, redirect to login
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    
-    // Check both userType and role fields
+  
+    if (!user) return navigate("/login");
+  
     const userType = user?.userType || user?.role;
-    
-    // Check if this is first time location setup (no existing location in localStorage)
-    const existingLocation = localStorage.getItem('userLocation');
-    const isFirstTimeSetup = !existingLocation;
-    
-    // If it's first time setup, always go to customer-dashboard
-    if (isFirstTimeSetup) {
-      navigate("/customer-dashboard");
-      return;
+    const existingLocation = localStorage.getItem("userLocation");
+  
+    // First time user → Always go to customer dashboard
+    if (!existingLocation) return navigate("/customer-dashboard");
+  
+    if (["Customer", "customer"].includes(userType)) {
+      return navigate("/customer-dashboard");
     }
-    
-    // Check if user is a customer (any customer role)
-    if (userType === 'Customer' || userType === 'customer') {
-      navigate("/customer-dashboard");
-    } 
-    // Check if user is any type of cleaner/service provider
-    else if (userType === 'Student Cleaner' || userType === 'Professional Cleaner' || 
-             userType === 'NDIS Assistant' || userType === 'Retail Auditor' || 
-             userType === 'Pet Sitter' || userType === 'Housekeeper' ||
-             userType === 'Cleaner' || userType === 'cleaner') {
-      navigate("/cleaner-dashboard");
-    } else {
-      navigate("/dashboard");
-    }
+  
+    return navigate("/cleaner-dashboard");
   };
+  
 
   return (
     <div className="min-h-screen bg-white">

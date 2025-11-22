@@ -21,12 +21,12 @@ function App() {
             ))}
 
             {/* Customer protected */}
-            {customerRoutes.map(({ path, component: Component, allowedRoles }, i) => (
+            {customerRoutes.map(({ path, component: Component, allowedRoles, showHeader }, i) => (
               <Route
                 key={i}
                 path={path}
                 element={
-                  <ProtectedRoute allowedRoles={allowedRoles || ['Customer']}>
+                  <ProtectedRoute allowedRoles={allowedRoles || ['Customer']} showHeader={showHeader !== false}>
                     <Component />
                   </ProtectedRoute>
                 }
@@ -34,12 +34,12 @@ function App() {
             ))}
 
             {/* Cleaner protected */}
-            {cleanerRoutes.map(({ path, component: Component, allowedRoles }, i) => (
+            {cleanerRoutes.map(({ path, component: Component, allowedRoles, showHeader }, i) => (
               <Route
                 key={i}
                 path={path}
                 element={
-                  <ProtectedRoute allowedRoles={allowedRoles || CLEANER_ROLES}>
+                  <ProtectedRoute allowedRoles={allowedRoles || CLEANER_ROLES} showHeader={showHeader !== false}>
                     <Component />
                   </ProtectedRoute>
                 }

@@ -115,6 +115,6 @@ export const cleanerRoutes = [
   { path: '/chat/:jobId', component: CleanerChatPage },
   { path: '/earnings', component: EarningsPage },
   { path: '/cleaner/stripe/success', component: StripeSuccessPage },
-  { path: '/location', component: LocationPage, allowedRoles: ['Customer', ...CLEANER_ROLES] },
+  { path: '/location', component: LocationPage, allowedRoles: ['Customer', ...CLEANER_ROLES], showHeader: false },
 ]
 
