@@ -13,6 +13,7 @@ import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
+import { calculatePayoutAmounts } from '../../utils/paymentCalculations';
 
 const CustomerInProgressJobDetailsPage = () => {
   const { jobId } = useParams();
@@ -310,10 +311,11 @@ const CustomerInProgressJobDetailsPage = () => {
     );
 
     const paidAmount = jobPayment?.amount || totalAmount;
-    const platformFee = Math.round(paidAmount * 0.1);
-    const cleanerAmount = paidAmount - platformFee;
+    
+    // Use payment calculations utility with 10% commission rate
+    const payout = calculatePayoutAmounts(paidAmount, 10, 10);
 
-    return `Cleaner receives $${cleanerAmount}, platform fee $${platformFee} (10%)`;
+    return `Cleaner receives $${payout.cleanerAmount}, platform fee $${payout.adminCommission} (10%)`;
   };
 
   const getCleanerTier = () => {

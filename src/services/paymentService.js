@@ -132,7 +132,7 @@ export const paymentService = {
    */
   getStripeAccountStatus: async () => {
     try {
-      return await paymentApiRequest('/payments/stripe/account/status');
+      return await paymentApiRequest('/payments/stripe/status');
     } catch (error) {
       // If no Stripe account found, return null instead of throwing
       if (error.response?.code === 'NO_STRIPE_ACCOUNT' || error.status === 404) {
