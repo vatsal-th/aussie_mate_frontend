@@ -12,6 +12,7 @@ import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { chatAPI } from '../../services/chatAPI';
 import { useAuth } from '../../contexts/AuthContext';
+import { getStatusChip } from '../../utils/statusUtils';
 
 const tabs = [
   { id: 'all', label: 'All' },
@@ -52,29 +53,6 @@ const formatDate = (iso) => {
     console.error('Error formatting date:', iso, error);
     return '';
   }
-};
-
-const getStatusChip = (statusRaw) => {
-  const s = (statusRaw || '').toString().toLowerCase();
-  if (s === 'in_progress') {
-    return { label: 'In Process', className: 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500' };
-  }
-  if (s === 'completed') {
-    return { label: 'Completed', className: 'bg-[#DBF9E7] text-green-500 border border-green-500' };
-  }
-  if (s === 'pending_customer_confirmation') {
-    return { label: 'Pending Confirmation', className: 'bg-[#FFF4E6] text-[#FF8800] border border-[#FFF4E6]' };
-  }
-  if (s === 'accepted') {
-    return { label: 'Accepted', className: 'bg-[#D1FAE5] text-[#059669] border border-[#D1FAE5]' };
-  }
-  if (s === 'quoted') {
-    return { label: 'Quoted', className: 'bg-[#E0F2FE] text-[#0369A1] border border-[#E0F2FE]' };
-  }
-  if (['posted', 'pending', 'pending_quotes'].includes(s)) {
-    return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
-  }
-  return { label: 'Pending Quotes', className: 'bg-[#DDEFFF] text-[#0088FF] border border-[#DDEFFF]' };
 };
 
 // Helper function to format cleaner data from quotes (same as CustomerJobDetailsPage)

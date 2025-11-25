@@ -59,7 +59,7 @@ const ConfirmYourCleanerPage = () => {
   );
   const cashAmount = finalCleanerData.total - onlineNowAmount;
 
-  // FIXED: Correct commission/GST/cleaner payout calculation
+  //Correct commission/GST/cleaner payout calculation
   const payoutAmounts = calculatePayoutAmounts(finalCleanerData.total);
 
   const handleProceedToPay = async () => {
@@ -74,10 +74,44 @@ const ConfirmYourCleanerPage = () => {
         'automatic'
       );
 
-      if (response.success && response.data.url) {
-        window.location.href = response.data.url;
+      // Debug: Log response to see actual structure
+      console.log('Payment response:', response);
+
+      // Handle different possible response structures
+      let checkoutUrl = null;
+
+      // Structure 1: { success: true, data: { url: "..." } }
+      if (response?.success && response?.data?.url) {
+        checkoutUrl = response.data.url;
+      }
+      // Structure 2: { success: true, data: { checkoutUrl: "..." } }
+      else if (response?.success && response?.data?.checkoutUrl) {
+        checkoutUrl = response.data.checkoutUrl;
+      }
+      // Structure 3: { url: "..." } (direct response)
+      else if (response?.url) {
+        checkoutUrl = response.url;
+      }
+      // Structure 4: { checkoutUrl: "..." } (direct response)
+      else if (response?.checkoutUrl) {
+        checkoutUrl = response.checkoutUrl;
+      }
+      // Structure 5: { data: { url: "..." } } (without success flag)
+      else if (response?.data?.url) {
+        checkoutUrl = response.data.url;
+      }
+      // Structure 6: { data: { checkoutUrl: "..." } } (without success flag)
+      else if (response?.data?.checkoutUrl) {
+        checkoutUrl = response.data.checkoutUrl;
+      }
+
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
-        setError('Failed to initialize payment. Please try again.');
+        // Log the actual response structure for debugging
+        console.error('Unexpected response structure:', response);
+        const errorMessage = response?.message || response?.error || 'Failed to initialize payment. Please try again.';
+        setError(errorMessage);
         setProcessing(false);
       }
     } catch (err) {

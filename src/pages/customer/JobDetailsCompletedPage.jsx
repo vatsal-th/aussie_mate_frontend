@@ -27,6 +27,7 @@ const JobDetailsCompletedPage = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [existingReview, setExistingReview] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [completingJob, setCompletingJob] = useState(false);
 
   const resolveImageSrc = (image) => {
     if (!image) return '';
@@ -254,6 +255,58 @@ const JobDetailsCompletedPage = () => {
     }
   };
 
+  const handleCompleteJob = async () => {
+    try {
+      setCompletingJob(true);
+      setErrorMessage(null);
+      
+      // Update job status to completed
+      const response = await jobsAPI.updateJobStatus(jobId, 'completed');
+      
+      if (response.success) {
+        // Update local job data status
+        setJobData(prev => ({
+          ...prev,
+          status: 'completed'
+        }));
+        
+        setSuccessMessage('Job marked as completed! You can now review your cleaner.');
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        // Refresh job data to get updated status
+        const jobResponse = await jobsAPI.getJobById(jobId);
+        if (jobResponse.success && jobResponse.data) {
+          const job = jobResponse.data;
+          setJobData(prev => ({
+            ...prev,
+            status: job.status || 'completed',
+            completedAt: job.completedAt ? new Date(job.completedAt).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) : new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          }));
+        }
+      } else {
+        setErrorMessage(response.message || 'Failed to complete job. Please try again.');
+        setTimeout(() => setErrorMessage(null), 5000);
+      }
+    } catch (error) {
+      setErrorMessage(handleAPIError(error));
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setCompletingJob(false);
+    }
+  };
+
   const handleDownloadInvoice = async () => {
     if (!invoiceData) {
       setErrorMessage('Invoice not available');
@@ -458,9 +511,28 @@ const JobDetailsCompletedPage = () => {
           />
         </div>
 
-        {/* Rate Your Cleaner / Review Section */}
-        <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
-          {hasReviewed ? (
+        {/* Complete Job Button - Show if job is not completed yet */}
+        {jobData.status?.toLowerCase() !== 'completed' && jobData.status !== 'Completed' && (
+          <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <div className="flex flex-col items-center justify-center py-4">
+              <p className="text-primary-500 font-semibold mb-4 text-center">
+                Has your cleaner completed the job?
+              </p>
+              <Button
+                onClick={handleCompleteJob}
+                disabled={completingJob}
+                size="lg"
+              >
+                {completingJob ? 'Completing...' : 'Mark Job as Completed'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Rate Your Cleaner / Review Section - Only show if job is completed */}
+        {(jobData.status?.toLowerCase() === 'completed' || jobData.status === 'Completed') && (
+          <div className="bg-white mx-4 mt-4 p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            {hasReviewed ? (
             // Show existing review
             <>
               <div className="flex items-center justify-between mb-3">
@@ -573,7 +645,7 @@ const JobDetailsCompletedPage = () => {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Write your feedback here..."
-                className="w-full p-3 border border-primary-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-primary-200 rounded-xl! resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={3}
               />
               
@@ -588,7 +660,8 @@ const JobDetailsCompletedPage = () => {
               </div>
             </>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

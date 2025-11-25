@@ -9,6 +9,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, Loader } from '../../components';
 import { jobsAPI, userAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { getStatusChip } from '../../utils/statusUtils';
 import CardBG2 from '../../assets/CardBG2.png';
 import CardBG3 from '../../assets/CardBG3.png';
 import CardBG4 from '../../assets/CardBG4.png';
@@ -56,22 +57,6 @@ const CustomerDashboard = () => {
     return `${date}, ${time}`;
   };
 
-  const getStatusChip = (statusRaw) => {
-    const s = (statusRaw || '').toString().toLowerCase();
-    if (s === 'in_progress') {
-      return { label: 'In Progress', className: 'bg-yellow-500 text-yellow-500 border border-yellow-500' };
-    }
-    if (s === 'completed') {
-      return { label: 'Completed', className: 'bg-green-500 text-green-500 border border-green-500' };
-    }
-    if (s === 'pending_customer_confirmation') {
-      return { label: 'Pending Confirmation', className: 'bg-orange-500 text-orange-500 border border-orange-500' };
-    }
-    if (['posted', 'pending', 'pending_quotes', 'quoted'].includes(s)) {
-      return { label: 'Pending Quotes', className: 'bg-blue-500 text-blue-500 border border-blue-500' };
-    }
-    return { label: 'Pending Quotes', className: 'bg-blue-500 text-blue-500 border border-blue-500' };
-  };
 
   const getActionText = (status) => {
     const s = (status || '').toString().toLowerCase();

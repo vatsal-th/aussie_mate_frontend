@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UserRound } from 'lucide-react';
-import { Button, Loader } from '../../components';
-import CalendarIcon from '../../assets/Calendar.svg';
-import MapPinIcon from '../../assets/map-pin 1.png';
+import { Button, Loader, JobOverviewCard } from '../../components';
 import MessageIcon from '../../assets/message2.svg';
 import CallIcon from '../../assets/phone2.svg';
 import CallIcon2 from '../../assets/phone.svg';
 import InfoIcon from '../../assets/info.svg';
 import JobLiveIcon from '../../assets/joblive.gif';
-import { jobsAPI } from '../../services/api';
+import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 
 const JobBookedSuccessfullyPage = () => {
@@ -17,6 +15,8 @@ const JobBookedSuccessfullyPage = () => {
   const { jobId } = useParams();
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState(null);
+  const [jobData, setJobData] = useState(null);
+  const [jobPhotos, setJobPhotos] = useState([]);
   const [cleaner, setCleaner] = useState(null);
   const [error, setError] = useState('');
   // Show animation only once per booking (check sessionStorage)
@@ -34,10 +34,24 @@ const JobBookedSuccessfullyPage = () => {
         const response = await jobsAPI.getJobById(jobId);
 
         if (response.success && response.data) {
-          const jobData = response.data;
+          const fetchedJobData = response.data;
+          setJobData(fetchedJobData);
 
+          // Process job photos
+          const resolveImageSrc = (image) => {
+            if (!image) return null;
+            if (typeof image === 'string') return image;
+            if (image.url) return image.url;
+            if (image.path) return image.path;
+            return null;
+          };
 
-          const acceptedQuote = jobData.quotes?.find(q => q.status === 'accepted');
+          // Only show original job photos, not completion proof photos
+          const photos = fetchedJobData.photos || fetchedJobData.images || [];
+          const processedPhotos = photos.map(resolveImageSrc).filter(Boolean);
+          setJobPhotos(processedPhotos);
+
+          const acceptedQuote = fetchedJobData.quotes?.find(q => q.status === 'accepted');
           if (!acceptedQuote) {
             setError('No accepted quote found');
             setLoading(false);
@@ -57,13 +71,29 @@ const JobBookedSuccessfullyPage = () => {
           };
 
 
-          let cleanerInfo = acceptedQuote.cleanerId;
+          let cleanerInfo = acceptedQuote.cleanerId || acceptedQuote.cleaner;
 
-          if (typeof cleanerInfo === 'string') {
-            cleanerInfo = jobData.cleanerId || {};
+          // If cleanerInfo is just an ID string, fetch full cleaner details
+          if (typeof cleanerInfo === 'string' || (cleanerInfo && !cleanerInfo.firstName && !cleanerInfo.name)) {
+            const cleanerId = typeof cleanerInfo === 'string' 
+              ? cleanerInfo 
+              : cleanerInfo?._id || cleanerInfo?.id || fetchedJobData.cleanerId;
+            
+            if (cleanerId) {
+              try {
+                const cleanerResponse = await userAPI.getUserById(cleanerId);
+                if (cleanerResponse.success) {
+                  cleanerInfo = cleanerResponse.data.user || cleanerResponse.data || cleanerInfo;
+                }
+              } catch (cleanerError) {
+                console.error('Error fetching cleaner details:', cleanerError);
+              }
+            }
           }
-          if (!cleanerInfo || !cleanerInfo.firstName) {
-            cleanerInfo = acceptedQuote.cleaner || acceptedQuote.cleanerId || {};
+
+          // Fallback to job's cleanerId if still not found
+          if (!cleanerInfo || (!cleanerInfo.firstName && !cleanerInfo.name)) {
+            cleanerInfo = fetchedJobData.cleanerId || fetchedJobData.assignedCleaner || {};
           }
 
           const cleanerName = cleanerInfo.firstName && cleanerInfo.lastName
@@ -84,34 +114,44 @@ const JobBookedSuccessfullyPage = () => {
             cashAmount = Math.round((acceptedQuote.price || 0) * 0.9);
           }
 
-          // Set job data
+          // Set job data for payment summary
           setJob({
-            jobId: jobData.jobId || jobId,
-            title: jobData.title || `${jobData.serviceType} - ${jobData.bedrooms} Bed ${jobData.propertyType}`,
-            scheduledDate: formatDate(jobData.scheduledDate),
-            location: jobData.location?.address || jobData.location?.fullAddress || 'Location not specified',
+            jobId: fetchedJobData.jobId || jobId,
+            title: fetchedJobData.title || `${fetchedJobData.serviceType}`,
+            scheduledDate: formatDate(fetchedJobData.scheduledDate),
+            location: fetchedJobData.location?.address || fetchedJobData.location?.fullAddress || 'Location not specified',
             baseQuote: acceptedQuote.basePrice || acceptedQuote.price || 0,
             addOns: acceptedQuote.addOns || 0,
             total: acceptedQuote.price || 0,
             paymentMethod: paymentMethod,
             onlinePaid: onlineAmount,
             cashAmount: cashAmount,
-            status: jobData.status || 'accepted'
+            status: fetchedJobData.status || 'accepted'
           });
 
 
+          // Resolve avatar URL from multiple possible sources
           let avatarUrl = '';
-          if (cleanerInfo.profilePhoto) {
+          
+          const resolveImageUrl = (image) => {
+            if (!image) return '';
+            if (typeof image === 'string') return image;
+            if (image.url) return image.url;
+            if (image.path) return image.path;
+            if (image.secureUrl) return image.secureUrl;
+            return '';
+          };
 
-            avatarUrl = typeof cleanerInfo.profilePhoto === 'object'
-              ? cleanerInfo.profilePhoto.url
-              : cleanerInfo.profilePhoto;
+          if (cleanerInfo.profilePhoto) {
+            avatarUrl = resolveImageUrl(cleanerInfo.profilePhoto);
           } else if (cleanerInfo.profilePicture) {
-            avatarUrl = typeof cleanerInfo.profilePicture === 'object'
-              ? cleanerInfo.profilePicture.url
-              : cleanerInfo.profilePicture;
-          } else {
-            avatarUrl = cleanerInfo.avatar || '';
+            avatarUrl = resolveImageUrl(cleanerInfo.profilePicture);
+          } else if (cleanerInfo.avatar) {
+            avatarUrl = resolveImageUrl(cleanerInfo.avatar);
+          } else if (cleanerInfo.image) {
+            avatarUrl = resolveImageUrl(cleanerInfo.image);
+          } else if (cleanerInfo.photo) {
+            avatarUrl = resolveImageUrl(cleanerInfo.photo);
           }
 
 
@@ -229,38 +269,25 @@ const JobBookedSuccessfullyPage = () => {
         </div>
 
         {/* Job Details Card */}
-        <div className="bg-white rounded-2xl shadow-custom p-4 sm:p-6 mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-sm text-primary-200 font-medium">{job?.jobId}</span>
+        {jobData && (
+          <div className="mb-6">
+            <JobOverviewCard
+              jobId={`#${jobData.jobId || jobId}`}
+              title={jobData.title || `${jobData.serviceType}`}
+              serviceType={jobData.serviceType || jobData.category || jobData.service}
+              serviceDetail={jobData.selectedServiceDetail || jobData.serviceDetail || jobData.service?.name || ''}
+              instructions={jobData.specialInstructions || jobData.instructions || jobData.additionalNotes || ''}
+              scheduledDate={job?.scheduledDate || ''}
+              frequency={jobData.frequency || jobData.serviceFrequency || jobData.schedule?.frequency || 'One-time'}
+              location={jobData.location?.address || jobData.location?.fullAddress || jobData.address || 'Location not specified'}
+              photos={jobPhotos}
+              viewerRole="customer"
+              metaInfo={[
+                { label: 'Total Amount', value: `$${job?.total || 0}` },
+              ]}
+            />
           </div>
-
-          <h2 className="text-lg sm:text-xl font-bold text-primary-500 mb-2">
-            {job?.title}
-          </h2>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <img src={CalendarIcon} alt="Date" className="w-5 h-5 text-primary-200" />
-              <span className="text-sm text-primary-500 font-medium">{job?.scheduledDate}</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <img src={MapPinIcon} alt="Location" className="w-5 h-5 text-primary-200" />
-              <span className="text-sm text-primary-500 font-medium">{job?.location}</span>
-            </div>
-          </div>
-
-          {/* Payment Information */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-primary-600 mb-2">Payment Summary</h3>
-          <div className="space-y-2">
-            <div className="flex text-sm">
-              <span className="text-primary-200 font-medium mr-2">Total Amount:</span>
-              <span className="font-semibold text-primary-500">${job?.total}</span>
-            </div>
-          </div>
-          </div>
-        </div>
+        )}
 
         {/* Your Cleaner Section */}
         <div className="mb-6">
@@ -286,7 +313,7 @@ const JobBookedSuccessfullyPage = () => {
                 {/* Cleaner Details */}
                 <div className="flex-2">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-lg font-bold text-primary-500">{cleaner?.name}</h4>
+                    <h4 className="text-lg font-semibold text-primary-500">{cleaner?.name}</h4>
                     <span className="bg-yellow-500 text-yellow-500 text-xs font-medium px-2 py-1 rounded-full border border-yellow-500">
                       {job?.status === 'in_progress' ? 'In Progress' : 'Booked'}
                     </span>

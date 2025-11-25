@@ -9,6 +9,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button, Loader } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
 import { jobsAPI } from '../../services/api'
+import { getStatusColors } from '../../utils/statusUtils'
 import CleanerBG from '../../assets/cleanerBG.jpg'
 import BoldJobIcon from '../../assets/boldJob.svg'
 import Coin3 from '../../assets/coin3.svg'
@@ -24,38 +25,6 @@ const CleanerDashboard = () => {
   const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 })
   const [loadingDashboard, setLoadingDashboard] = useState(false)
   const [dashboardError, setDashboardError] = useState('')
-
-  // Helper function to get status colors
-  const getStatusColors = (status) => {
-    switch ((status || '').toLowerCase()) {
-      case 'in progress':
-      case 'in_progress':
-      case 'in-progress':
-        return {
-          bg: 'bg-yellow-100',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-        }
-      case 'completed':
-        return {
-          bg: 'bg-green-100',
-          text: 'text-green-700',
-          border: 'border-green-200',
-        }
-      case 'accepted':
-        return {
-          bg: 'bg-primary-50',
-          text: 'text-primary-500',
-          border: 'border-primary-200',
-        }
-      default:
-        return {
-          bg: 'bg-gray-100',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-        }
-    }
-  }
 
   const formatLabel = (str) =>
     (str || "")

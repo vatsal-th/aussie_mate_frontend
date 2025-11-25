@@ -86,13 +86,16 @@ const PaymentsPayoutsPage = () => {
             setSuccessMessage('');
 
             const response = await paymentService.createStripeConnectAccount();
-
-            if (response.success && response.data?.onboardingUrl) {
+            
+            // Support both shapes: { success, data: { onboardingUrl } } and { success, onboardingUrl }
+            const onboardingUrl = response?.data?.onboardingUrl || response?.onboardingUrl;
+            
+            if (response.success && onboardingUrl) {
                 setSuccessMessage('Redirecting to Stripe setup...');
-                // Redirect to Stripe onboarding
-                window.location.href = response.data.onboardingUrl;
+                window.location.href = onboardingUrl;
             } else {
-                setError(response.message || 'Failed to create Stripe account. Please try again.');
+                // Safe fallback
+                setError(response.message || 'Stripe onboarding URL not available. Please try again.');
             }
         } catch (err) {
             setError(handlePaymentError(err));
