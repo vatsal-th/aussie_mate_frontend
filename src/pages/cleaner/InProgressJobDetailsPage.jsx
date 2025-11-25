@@ -395,7 +395,7 @@ const InProgressJobDetailsPage = () => {
         return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
     };
 
-    const headerTitle = job.title || job.serviceType || 'Job Details';
+    const headerTitle = job.title || job.serviceTypeDisplay || job.serviceType || 'Job Details';
 
     return (
         <>
@@ -411,7 +411,7 @@ const InProgressJobDetailsPage = () => {
                     {/* Job Details Card */}
                     <div className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
                         <h2 className="text-xl font-bold text-primary-500 mb-2">
-                            {job.title || `${job.serviceType}`}
+                            {job.title || job.serviceTypeDisplay || job.serviceType || 'Job Details'}
                         </h2>
                         <p className="text-sm text-gray-500 mb-2">{getTimeAgo(job.createdAt)}</p>
 

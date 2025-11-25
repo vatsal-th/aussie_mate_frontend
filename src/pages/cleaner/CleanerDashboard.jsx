@@ -5,7 +5,7 @@ import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, BriefcaseBusiness, Calendar } from 'lucide-react'
 import { Button, Loader } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
 import { jobsAPI } from '../../services/api'
@@ -95,7 +95,7 @@ const CleanerDashboard = () => {
       const buildJobTitle = (job) =>
         job.title ||
         job.jobTitle ||
-        `${formatLabel(job.serviceType)} – ${formatLabel(job.propertyType)}` ||
+        (job.serviceTypeDisplay ? `${job.serviceTypeDisplay}${job.propertyType ? ` – ${formatLabel(job.propertyType)}` : ''}` : `${formatLabel(job.serviceType)} – ${formatLabel(job.propertyType)}`) ||
         "Job Detail";
 
       const getJobIdentifier = (job) =>
@@ -127,6 +127,56 @@ const CleanerDashboard = () => {
         if (job.statusNote) return formatLabel(job.statusNote)
         if (job.note) return formatLabel(job.note)
         return ''
+      }
+
+      const getJobLocation = (job) => {
+        if (job.location?.fullAddress) {
+          return job.location.fullAddress;
+        }
+        if (job.location?.address) {
+          return job.location.address;
+        }
+        if (job.address) {
+          return job.address;
+        }
+        return 'Location not specified'
+      }
+
+      const getJobDate = (job) => {
+        // Prefer scheduledDate, fallback to createdAt
+        const dateToUse = job.scheduledDate || job.createdAt || job.updatedAt;
+        if (!dateToUse) return 'Date not specified';
+        
+        try {
+          const date = new Date(dateToUse);
+          if (Number.isNaN(date.getTime())) return 'Date not specified';
+          
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = date.toLocaleDateString('en-AU', { month: 'short' });
+          const year = date.getFullYear();
+          
+          return `${day} ${month} ${year}`;
+        } catch (error) {
+          return 'Date not specified';
+        }
+      }
+
+      const getAcceptedQuotePrice = (job, cleanerId) => {
+        if (!job.quotes || !Array.isArray(job.quotes) || !cleanerId) return null;
+        
+        // Find accepted quote for this cleaner
+        const acceptedQuote = job.quotes.find(quote => {
+          const quoteCleanerId = quote.cleanerId?._id || quote.cleanerId?.id || quote.cleanerId;
+          const isMyQuote = quoteCleanerId?.toString() === cleanerId.toString();
+          const isAccepted = quote.status === 'accepted';
+          return isMyQuote && isAccepted;
+        });
+        
+        if (acceptedQuote) {
+          return acceptedQuote.price || acceptedQuote.quoteAmount || acceptedQuote.amount || null;
+        }
+        
+        return null;
       }
 
       const getStatusRaw = (job) =>
@@ -172,6 +222,10 @@ const CleanerDashboard = () => {
 
         const formattedActiveJobs = inProgressJobs.slice(0, 12).map((job) => {
           const statusRaw = getStatusRaw(job)
+          const quotePrice = getAcceptedQuotePrice(job, cleanerId);
+          const jobLocation = getJobLocation(job);
+          const jobDate = getJobDate(job);
+          
           return {
             id: getJobIdentifier(job),
             rawId: job._id || job.id || job.jobId,
@@ -179,6 +233,9 @@ const CleanerDashboard = () => {
             status: formatLabel(statusRaw || 'In Progress'),
             statusRaw,
             price: getJobPrice(job),
+            quotePrice: quotePrice, // Quote price for in-progress jobs
+            location: jobLocation,
+            date: jobDate,
             note: getJobNote(job),
           }
         })
@@ -203,6 +260,8 @@ const CleanerDashboard = () => {
           rawId: job._id || job.id || job.jobId,
           title: buildJobTitle(job),
           price: getJobPrice(job),
+          location: getJobLocation(job),
+          date: getJobDate(job),
           completedAt: job.completedAt || job.updatedAt || job.createdAt || null,
           note: getJobNote(job),
           status: 'Completed',
@@ -305,7 +364,7 @@ const CleanerDashboard = () => {
               <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary-50 flex items-center justify-center">
                 <img src={BoldJobIcon} alt="jobs" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-10" />
               </div>
-              <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-semibold">Live Jobs near you</span>
+              <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-medium">Live Jobs near you</span>
             </div>
             <button
               onClick={() => navigate('/cleaner-jobs')}
@@ -325,9 +384,9 @@ const CleanerDashboard = () => {
               <Button
                 onClick={() => navigate('/cleaner-jobs')}
                 size="sm"
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm hover:text-white border border-[#1F6FEB] rounded-full px-2 sm:px-3 md:px-5 py-1 sm:py-1.5 md:py-2 flex items-center justify-center space-x-1 sm:space-x-2"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm rounded-full px-2 flex items-center justify-center space-x-1"
                 icon={
-                  <CalendarDays className="sm:w-3 sm:h-3 md:w-4 md:h-4" strokeWidth={2} />
+                  <BriefcaseBusiness className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4" strokeWidth={2} />
                 }
               >
                 <span className="hidden sm:inline">View Jobs</span>
@@ -389,35 +448,43 @@ const CleanerDashboard = () => {
             >
               {swiperJobs.map((job, index) => (
                 <SwiperSlide key={`job-${job.id || index}`}>
-                  <div className="bg-white rounded-2xl border border-[#F3F3F3] p-2 sm:p-3 md:p-4 lg:p-5 shadow-custom h-36 sm:h-40 md:h-44 lg:h-48">
+                  <div className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5 shadow-custom min-h-[180px] sm:min-h-[200px]">
                     <div className="flex flex-col justify-between h-full">
-                      <div>
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-primary-200 font-medium mb-1 sm:mb-2">
-                          <span className="truncate">{job.id}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs sm:text-sm text-primary-200 font-medium truncate">#{job.id}</span>
                           {(() => {
                             const statusColors = getStatusColors(job.statusRaw || job.status)
                             return (
-                              <span className={`px-1.5 sm:px-2 py-0.5 rounded-full font-semibold text-xs ${statusColors.bg} ${statusColors.text}`}>
+                              <span className={`px-2 py-0.5 rounded-full font-semibold text-xs ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0 ml-2`}>
                                 {job.status}
                               </span>
                             )
                           })()}
                         </div>
-                        <div className="text-primary-500 font-semibold text-xs sm:text-sm md:text-base mb-1 sm:mb-2 line-clamp-2">
+                        <div className="text-primary-500 font-semibold text-sm sm:text-base mb-2 line-clamp-2 capitalize">
                           {job.title}
                         </div>
-                        <div className="text-primary-500 font-bold text-xs sm:text-sm md:text-base">
-                          {formatCurrency(job.price)}
-                          {job.note && (
-                            <span className="text-primary-200 font-medium text-xs sm:text-sm"> ({job.note})</span>
-                          )}
+                        <div className="flex items-start text-primary-200 font-medium text-xs sm:text-sm mb-1.5">
+                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                          <span className="line-clamp-2 leading-relaxed">{job.location || 'Location not specified'}</span>
                         </div>
+                        <div className="flex items-center text-primary-200 font-medium text-xs sm:text-sm mb-2">
+                          <Calendar className="w-4 h-4 mr-1.5 flex-shrink-0" strokeWidth={2} />
+                          <span>{job.date || 'Date not specified'}</span>
+                        </div>
+                        {/* Show quote price for in-progress jobs */}
+                        {job.statusRaw && (job.statusRaw.toLowerCase() === 'in_progress' || job.statusRaw.toLowerCase() === 'in progress' || job.statusRaw.toLowerCase() === 'in-progress' || job.statusRaw.toLowerCase() === 'accepted') && job.quotePrice && (
+                          <div className="text-primary-500 font-bold text-sm sm:text-base mt-1">
+                            {formatCurrency(job.quotePrice)}
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="secondary"
                         size="sm"
                         fullWidth
-                        className="py-1 sm:py-1.5 md:py-2 rounded-xl border text-primary-600 font-medium hover:bg-primary-50 shadow-custom text-xs sm:text-sm"
+                        className="mt-2 py-2 rounded-xl border border-primary-300 text-primary-600 font-medium hover:bg-primary-50 shadow-custom text-xs sm:text-sm"
                         onClick={() => {
                           const status = (job.statusRaw || job.status || '').toLowerCase()
                           const jobIdentifier = job.rawId || job.id

@@ -615,7 +615,7 @@ const CleanerChatPage = () => {
 
     const getJobTitle = (job) => {
         if (!job) return 'Job Chat';
-        const serviceType = job.serviceType?.charAt(0).toUpperCase() + job.serviceType?.slice(1) || 'Service';
+        const serviceType = job.serviceTypeDisplay || (job.serviceType?.charAt(0).toUpperCase() + job.serviceType?.slice(1)) || 'Service';
         const propertyType = job.propertyType?.charAt(0).toUpperCase() + job.propertyType?.slice(1) || 'Property';
         return `${serviceType} - ${job.bedrooms || 0} Bedroom ${propertyType}`;
     };

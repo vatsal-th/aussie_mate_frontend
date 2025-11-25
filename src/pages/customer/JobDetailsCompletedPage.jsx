@@ -88,8 +88,8 @@ const JobDetailsCompletedPage = () => {
           
           const transformedData = {
             jobId: job.jobId || job._id,
-            title: job.title || job.serviceType,
-            serviceType: job.serviceType || job.category || job.service || '',
+            title: job.title || job.serviceTypeDisplay || job.serviceType,
+            serviceType: job.serviceTypeDisplay || job.serviceType || job.category || job.service || '',
             serviceDetail: job.serviceDetail || job.selectedServiceDetail || job.serviceName || job.title || '',
             instructions: job.specialInstructions || job.instructions || job.additionalNotes || '',
             frequency: job.frequency || job.recurringFrequency || job.schedule?.frequency || '',

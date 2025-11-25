@@ -381,7 +381,7 @@ const CleanerJobsPage = () => {
           
           return {
             id: job._id || job.jobId || job.id, // Use _id first as it's the main identifier
-            title: job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
+            title: job.title || job.serviceTypeDisplay || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
             location: job.location?.address || job.location?.fullAddress || 'Location not specified',
             date: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
               day: '2-digit',
@@ -705,7 +705,7 @@ const CleanerJobsPage = () => {
                     </div>
 
                     {/* Job Title */}
-                    <h3 className="text-lg font-semibold text-primary-500 mb-2">
+                    <h3 className="text-lg font-semibold text-primary-500 mb-2 capitalize">
                       {job.title}
                     </h3>
 

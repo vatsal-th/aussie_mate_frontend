@@ -5,7 +5,7 @@ import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BriefcaseBusiness, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, Loader } from '../../components';
 import { jobsAPI, userAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -106,7 +106,7 @@ const CustomerDashboard = () => {
           const status = (j.status || '').toString();
           const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
           const dateLabel = formatDate(j.createdAt);
-          const title = j.title || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
+          const title = j.title || j.serviceTypeDisplay || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
           const statusChip = getStatusChip(status);
           
           return {
@@ -284,7 +284,7 @@ const CustomerDashboard = () => {
                 size="sm"
                 className="rounded-full px-3 sm:px-5 py-1.5 sm:py-2 flex items-center gap-2"
               >
-                <CalendarDays className="w-4 h-4" strokeWidth={2} />
+                <BriefcaseBusiness className="w-4 h-4" strokeWidth={2} />
                 <span>View Jobs</span>
               </Button>
               
@@ -359,7 +359,7 @@ const CustomerDashboard = () => {
                     <div className="flex flex-col justify-between h-full">
                       <div>
                         <div className="flex justify-between items-start mb-2">
-                          <div className="text-xs sm:text-sm text-primary-200 font-medium">{job.id}</div>
+                          <div className="text-xs sm:text-sm text-primary-200 font-medium">#{job.id}</div>
                           {job.status && (
                             <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${
                               job.status === 'Pending Quotes' 
@@ -374,7 +374,7 @@ const CustomerDashboard = () => {
                             </span>  
                           )}
                         </div>
-                        <h4 className="font-medium text-primary-500 mb-2 line-clamp-2 text-sm sm:text-base">{job.title}</h4>
+                        <h4 className="font-semibold text-primary-500 mb-2 line-clamp-2 text-sm sm:text-base capitalize" >{job.title}</h4>
                         <div className="flex items-center text-xs font-medium text-primary-200 mb-1">
                           <img src={CalendarIcon} alt="Calendar" className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           {job.date}

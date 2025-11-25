@@ -319,7 +319,7 @@ const MyJobsPage = () => {
               return composed || name || fullName || null;
             })();
 
-            const title = job.title || `${(job.serviceType || '').toString().replace(/\b\w/g, (c) => c.toUpperCase())}`.trim();
+            const title = job.title || job.serviceTypeDisplay || `${(job.serviceType || '').toString().replace(/\b\w/g, (c) => c.toUpperCase())}`.trim();
 
             return {
               id: jobIdentifier,
@@ -459,7 +459,7 @@ const MyJobsPage = () => {
               className="bg-white rounded-2xl border border-gray-200 shadow-custom p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
             >
               <div className="flex items-start justify-between">
-                <div className="text-[15px] text-primary-200 font-medium">{job.jobId}</div>
+                <div className="text-[15px] text-primary-200 font-medium">#{job.jobId}</div>
                 {(() => { 
                   if (job.status === 'pending_customer_confirmation') {
                     return (
@@ -487,7 +487,7 @@ const MyJobsPage = () => {
                   }
                 })()}
               </div>
-              <h3 className="text-sm sm:text-base font-semibold text-primary-500 mb-2 line-clamp-2">{job.title}</h3>
+              <h3 className="text-sm sm:text-base capitalize font-semibold text-primary-500 mb-2 line-clamp-2">{job.title}</h3>
 
              
               <div className="flex items-center text-xs text-primary-200 font-medium mb-1">
