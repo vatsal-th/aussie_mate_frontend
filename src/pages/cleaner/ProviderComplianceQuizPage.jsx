@@ -79,7 +79,7 @@ const ProviderComplianceQuizPage = () => {
     event.preventDefault();
 
     if (showResults) {
-      navigate('/set-availability');
+      navigate('/availability');
       return;
     }
 
@@ -111,7 +111,7 @@ const ProviderComplianceQuizPage = () => {
       };
       const finalScore = finalAnswers.filter((answer) => answer?.isCorrect).length;
       if (finalScore === totalQuestions) {
-        navigate('/set-availability');
+        navigate('/availability');
         return;
       }
       setAnswers(finalAnswers);
@@ -200,7 +200,7 @@ const ProviderComplianceQuizPage = () => {
               type="button"
               fullWidth
               variant="primary"
-              onClick={() => navigate('/set-availability')}
+              onClick={() => navigate('/availability')}
             >
               Submit & Set Availability
             </Button>

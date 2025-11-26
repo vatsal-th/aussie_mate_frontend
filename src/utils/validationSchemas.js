@@ -84,12 +84,8 @@ export const createVerifyDocumentsSchema = (userRole) => {
       .matches(/^\d{11}$/, 'ABN Number must be exactly 11 digits')
       .required('ABN Number is required'),
     policeCheck: yup.mixed()
-      .nullable()
-      .test('at-least-one-document', 'Please upload at least one document.', function () {
-        const { policeCheck, visaWorkRights, trainingCertificates } = this.parent;
-        return policeCheck || visaWorkRights || trainingCertificates;
-      }),
-    visaWorkRights: yup.mixed().nullable(),
+      .nullable(),
+    P: yup.mixed().nullable(),
     trainingCertificates: yup.mixed().nullable()
   });
 };

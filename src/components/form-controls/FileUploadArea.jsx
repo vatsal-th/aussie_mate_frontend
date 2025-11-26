@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import uploadIcon from '../../assets/upload.svg';
 
@@ -14,6 +15,7 @@ import uploadIcon from '../../assets/upload.svg';
  * @param {string} accept - Accepted file types (default: ".pdf,.jpg,.jpeg,.png")
  * @param {string} className - Additional CSS classes for the container
  * @param {boolean} multiple - Allow selecting multiple files (default false)
+ * @param {function} onRemove - Optional callback function when file is removed
  */
 const FileUploadArea = ({ 
   fieldName, 
@@ -24,7 +26,8 @@ const FileUploadArea = ({
   selectedFile = null,
   accept = ".pdf,.jpg,.jpeg,.png",
   className = "",
-  multiple = false
+  multiple = false,
+  onRemove = null
 }) => {
   const handleClick = () => {
     const input = document.getElementById(`${fieldName}-file`);
@@ -74,9 +77,34 @@ const FileUploadArea = ({
           className="hidden"
         />
         {selectedFile && (
-          <p className="text-xs text-green-600 mt-2">
-            ✓ {selectedFile.fileName || selectedFile.name}
-          </p>
+          <div className="mt-4">
+            {selectedFile.preview && selectedFile.fileType?.startsWith('image/') ? (
+              <div className="relative inline-block">
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onRemove) onRemove(fieldName);
+                    }}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-600 z-10 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                <img
+                  src={selectedFile.preview}
+                  alt="Preview"
+                  className="max-w-full h-32 object-contain rounded-lg border border-gray-300"
+                />
+              </div>
+            ) : null}
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <p className="text-xs text-green-600">
+                ✓ {selectedFile.fileName || selectedFile.name}
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
