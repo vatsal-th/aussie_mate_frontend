@@ -296,8 +296,6 @@ const CustomerInProgressJobDetailsPage = () => {
     }
   };
 
-  // Helper functions for payment display (same as cleaner page)
-  const getPaymentMethod = () => 'Online';
 
   const getPaymentSummary = () => {
     const acceptedQuote = job?.quotes?.find(quote => quote.status === 'accepted');
@@ -458,22 +456,6 @@ const CustomerInProgressJobDetailsPage = () => {
   // Find accepted quote for this job
   const acceptedQuote = job.quotes?.find(quote => quote.status === 'accepted');
 
-  const getTimeAgo = (dateString) => {
-    if (!dateString) return 'Recently posted';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return 'Posted just now';
-    if (diffInHours === 1) return 'Posted 1h ago';
-    if (diffInHours < 24) return `Posted ${diffInHours}h ago`;
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `Posted ${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  };
-
-  // customerLocation is now a state variable set in useEffect
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-sm mx-auto sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
@@ -510,7 +492,7 @@ const CustomerInProgressJobDetailsPage = () => {
           {showMap && (
             <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-primary-500">Track Cleaner</h3>
+                <h3 className="text-lg font-semibold text-primary-500">Track Cleaner</h3> 
                 <button
                   type="button"
                   onClick={handleGetDirections}

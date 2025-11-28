@@ -53,11 +53,6 @@ const ConfirmYourCleanerPage = () => {
   const [error, setError] = useState(null);
   const [showOnlineBreakdown, setShowOnlineBreakdown] = useState(false);
 
-  const onlinePaymentPercentage = 10;
-  const onlineNowAmount = Math.round(
-    finalCleanerData.total * (onlinePaymentPercentage / 100)
-  );
-  const cashAmount = finalCleanerData.total - onlineNowAmount;
 
   //Correct commission/GST/cleaner payout calculation
   const payoutAmounts = calculatePayoutAmounts(finalCleanerData.total);
@@ -66,56 +61,30 @@ const ConfirmYourCleanerPage = () => {
     try {
       setProcessing(true);
       setError(null);
-
-      const response = await paymentService.createPayment(
-        jobId,
-        'online',
-        true,
-        'automatic'
-      );
-
-      // Debug: Log response to see actual structure
-      console.log('Payment response:', response);
-
-      // Handle different possible response structures
-      let checkoutUrl = null;
-
-      // Structure 1: { success: true, data: { url: "..." } }
+  
+      console.log('🔔 Starting createPayment for jobId:', jobId);
+  
+      const response = await paymentService.createPayment(jobId);
+  
+      console.log('✅ createPayment response:', response);
+      // Backend: { success: true, data: { url, sessionId, paymentId, amount } }
       if (response?.success && response?.data?.url) {
-        checkoutUrl = response.data.url;
-      }
-      // Structure 2: { success: true, data: { checkoutUrl: "..." } }
-      else if (response?.success && response?.data?.checkoutUrl) {
-        checkoutUrl = response.data.checkoutUrl;
-      }
-      // Structure 3: { url: "..." } (direct response)
-      else if (response?.url) {
-        checkoutUrl = response.url;
-      }
-      // Structure 4: { checkoutUrl: "..." } (direct response)
-      else if (response?.checkoutUrl) {
-        checkoutUrl = response.checkoutUrl;
-      }
-      // Structure 5: { data: { url: "..." } } (without success flag)
-      else if (response?.data?.url) {
-        checkoutUrl = response.data.url;
-      }
-      // Structure 6: { data: { checkoutUrl: "..." } } (without success flag)
-      else if (response?.data?.checkoutUrl) {
-        checkoutUrl = response.data.checkoutUrl;
-      }
-
-      if (checkoutUrl) {
+        const checkoutUrl = response.data.url;
+        console.log('🌐 Redirecting to Stripe Checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
-      } else {
-        // Log the actual response structure for debugging
-        console.error('Unexpected response structure:', response);
-        const errorMessage = response?.message || response?.error || 'Failed to initialize payment. Please try again.';
-        setError(errorMessage);
-        setProcessing(false);
+        return;
       }
+  
+      console.error('❌ Unexpected payment response:', response);
+      const msg =
+        response?.error ||
+        response?.message ||
+        'Failed to initialize payment. Please try again.';
+      setError(msg);
     } catch (err) {
+      console.error('❌ Payment error:', err);
       setError(handlePaymentError(err));
+    } finally {
       setProcessing(false);
     }
   };
