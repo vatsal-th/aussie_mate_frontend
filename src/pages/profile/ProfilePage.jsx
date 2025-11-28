@@ -299,7 +299,7 @@ const ProfilePage = () => {
                                     return (
                                         <div key={index} className={`text-center ${!isLast ? 'border-r border-gray-200' : ''}`}>
                                             <div className="flex justify-center mb-1 sm:mb-2">
-                                                <IconComponent className="w-8 h-8 text-[#1F6FEB]" strokeWidth={2} />
+                                                <IconComponent className="w-8 h-8 text-[#1F6FEB]" strokeWidth={1} />
                                             </div>
                                             <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-500 mb-1">{stat.value}</div>
                                             <div className="text-[10px] sm:text-xs md:text-sm text-primary-200 font-medium">{stat.label}</div>
@@ -324,7 +324,7 @@ const ProfilePage = () => {
                                 className="w-full flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer"
                             >
                                 <div className="flex items-center space-x-3 sm:space-x-4">                            
-                                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500 flex-shrink-0" />
+                                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500 flex-shrink-0 " strokeWidth={2} />
                                     <span className="text-xs sm:text-sm md:text-base font-medium text-primary-500">
                                         {item.label}
                                     </span>
