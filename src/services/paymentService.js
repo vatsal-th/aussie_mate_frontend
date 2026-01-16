@@ -84,6 +84,11 @@ export const paymentService = {
       throw error;
     }
   },
+
+  // Get payment history (all payments for current user)
+  getPaymentHistory: async () => {
+    return paymentApiRequest('/payments');
+  },
 };
 
 export const handlePaymentError = (error) => {

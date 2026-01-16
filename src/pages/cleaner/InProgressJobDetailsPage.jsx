@@ -46,7 +46,7 @@ const InProgressJobDetailsPage = () => {
                         navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
                         return;
                     }
-                    
+
                     setJob(jobResponse.data);
 
                     // Set customer location from job data
@@ -131,7 +131,7 @@ const InProgressJobDetailsPage = () => {
         return R * c; // Distance in meters
     };
 
- useEffect(() => {
+    useEffect(() => {
         if (cleanerLocation && customerLocation) {
             const distance = getDistance(
                 cleanerLocation.lat,
@@ -381,13 +381,15 @@ const InProgressJobDetailsPage = () => {
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
 
-        // Find payment for this job from payment history (try different field names)
-        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
+        // Find payment for this job from payment history (try different field names and structures)
+        const paymentsArray = paymentStatus?.data?.payments || paymentStatus?.payments || paymentStatus?.data || [];
+
+        const jobPayment = Array.isArray(paymentsArray) ? paymentsArray.find(payment =>
             payment.jobId === jobId ||
             payment.jobId === job?.jobId ||
             payment.jobId === job?._id ||
             payment._id === jobId
-        );
+        ) : null;
 
         const paidAmount = jobPayment?.amount ?? totalAmount;
         const cleanerAmount = jobPayment?.cleanerAmount ?? Math.round(paidAmount * 0.9);
