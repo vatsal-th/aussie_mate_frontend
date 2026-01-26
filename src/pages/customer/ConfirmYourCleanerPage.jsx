@@ -213,7 +213,7 @@ const ConfirmYourCleanerPage = () => {
       setError(msg);
     } catch (err) {
       console.error('❌ Payment error:', err);
-      setError(handlePaymentError(err));
+      setError(handlePaymentError(err));q
     } finally {
       setProcessing(false);
     }

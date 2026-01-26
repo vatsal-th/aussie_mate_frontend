@@ -301,28 +301,12 @@ const CustomerInProgressJobDetailsPage = () => {
     const acceptedQuote = job?.quotes?.find(quote => quote.status === 'accepted');
     const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
 
-    // Extract the payment object. Handle root level, nested in data, or as part of a payments array.
-    const paymentRecord = paymentStatus?.payment ||
-      paymentStatus?.data?.payment ||
-      paymentStatus?.data ||
-      paymentStatus;
-
-    let jobPayment = null;
-
-    if (Array.isArray(paymentRecord?.payments)) {
-      jobPayment = paymentRecord.payments.find(payment =>
-        payment.jobId === jobId ||
-        payment.jobId === job?.jobId ||
-        payment.jobId === job?._id ||
-        payment._id === jobId
-      );
-    } else if (paymentRecord && typeof paymentRecord === 'object' && !Array.isArray(paymentRecord)) {
-      // If it's a single object, check if it matches the jobId
-      const pId = paymentRecord.jobId || (typeof paymentRecord.jobId === 'object' ? paymentRecord.jobId._id : null);
-      if (pId === jobId || pId === job?._id || paymentRecord._id === jobId) {
-        jobPayment = paymentRecord;
-      }
-    }
+    const jobPayment = paymentStatus?.data?.payments?.find(payment =>
+      payment.jobId === jobId ||
+      payment.jobId === job?.jobId ||
+      payment.jobId === job?._id ||
+      payment._id === jobId
+    );
 
     const paidAmount = jobPayment?.amount || totalAmount;
 
@@ -601,15 +585,16 @@ const CustomerInProgressJobDetailsPage = () => {
                           {getCleanerRating()}
                         </div>
                         {getCleanerTier() && getCleanerTier() !== 'none' && (
-                          <div className={`flex items-center text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] ${getCleanerTier() === 'gold'
-                            ? 'bg-gradient-to-r from-[#FFDBAE] to-[#FFE7C4] border-[#FFDBAE]'
-                            : getCleanerTier() === 'silver'
+                          <div className={`flex items-center text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] ${
+                            getCleanerTier() === 'gold'
+                              ? 'bg-gradient-to-r from-[#FFDBAE] to-[#FFE7C4] border-[#FFDBAE]'
+                              : getCleanerTier() === 'silver'
                               ? 'bg-gradient-to-r from-[#FDFDFD] to-[#E9E9E9] border-[#E9E9E9]'
                               : getCleanerTier() === 'bronze'
-                                ? 'bg-gradient-to-r from-[#D4A574] to-[#E6C7A3] border-[#CD7F32]'
-                                : 'bg-gray-100 border-gray-300'
-                            }`}>
-                            <img
+                              ? 'bg-gradient-to-r from-[#D4A574] to-[#E6C7A3] border-[#CD7F32]'
+                              : 'bg-gray-100 border-gray-300'
+                          }`}>
+                            <img 
                               src={
                                 getCleanerTier() === 'gold'
                                   ? GoldBadgeIcon

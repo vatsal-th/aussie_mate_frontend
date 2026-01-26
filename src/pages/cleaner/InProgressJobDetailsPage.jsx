@@ -51,7 +51,7 @@ const InProgressJobDetailsPage = () => {
                         if (typeof coords === 'string') {
                             const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
                             lat = coordsArr[1];
-                            lng = coordsArr[0];
+                            lng = coordsArr[0]
                         } else if (coords.lat && coords.lng) {
                             lat = coords.lat;
                             lng = coords.lng;
@@ -371,9 +371,19 @@ const InProgressJobDetailsPage = () => {
 
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
-        const cleanerAmount = Math.round(totalAmount * 0.9);
-        
-        return `Customer paid $${totalAmount} online to platform. You will receive $${cleanerAmount}.`;
+
+        // Find payment for this job from payment history (try different field names)
+        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
+            payment.jobId === jobId ||
+            payment.jobId === job?.jobId ||
+            payment.jobId === job?._id ||
+            payment._id === jobId
+        );
+
+        const paidAmount = jobPayment?.amount ?? totalAmount;
+        const cleanerAmount = jobPayment?.cleanerAmount ?? Math.round(paidAmount * 0.9);
+
+        return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
     };
 
     const headerTitle = job.title || job.serviceTypeDisplay || job.serviceType || 'Job Details';

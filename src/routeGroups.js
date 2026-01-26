@@ -28,7 +28,6 @@ const JobDetailsCompletedPage = React.lazy(() => import('./pages/customer/JobDet
 const CustomerChatPage = React.lazy(() => import('./pages/customer/CustomerChatPage'))
 const ConfirmYourCleanerPage = React.lazy(() => import('./pages/customer/ConfirmYourCleanerPage'))
 const JobBookedSuccessfullyPage = React.lazy(() => import('./pages/customer/JobBookedSuccessfullyPage'))
-const PaymentSuccessCallbackPage = React.lazy(() => import('./pages/customer/PaymentSuccessCallbackPage'))
 const CustomerInProgressJobDetailsPage = React.lazy(() => import('./pages/customer/CustomerInProgressJobDetailsPage'))
 const JobDetailsPage = React.lazy(() => import('./pages/cleaner/JobDetailsPage'))
 const LocationPage = React.lazy(() => import('./pages/customer/LocationPage'))
@@ -92,7 +91,6 @@ export const customerRoutes = [
   { path: '/customer-chat/:jobId', component: CustomerChatPage },
   { path: '/confirm-cleaner/:jobId', component: ConfirmYourCleanerPage },
   { path: '/booking-confirmation/:jobId', component: JobBookedSuccessfullyPage },
-  { path: '/payment/success', component: PaymentSuccessCallbackPage },
   { path: '/customer-in-progress-job/:jobId', component: CustomerInProgressJobDetailsPage },
 ]
 
