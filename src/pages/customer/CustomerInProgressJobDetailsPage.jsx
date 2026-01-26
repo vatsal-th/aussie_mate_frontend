@@ -70,7 +70,7 @@ const CustomerInProgressJobDetailsPage = () => {
               lat = coords[1];
               lng = coords[0];
             }
-            
+
             if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
               setCustomerLocation({ lat, lng });
             } else if (lat && lng && (lat > 90 || lat < -90)) {
@@ -145,12 +145,12 @@ const CustomerInProgressJobDetailsPage = () => {
 
     // Listen for cleaner location updates
     const handleCleanerLocationUpdate = (data) => {
-      
+
       const newCleanerLocation = {
         lat: data.latitude,
         lng: data.longitude
       };
-      
+
       setCleanerLocation(newCleanerLocation);
       setIsCleanerLocationLive(true);
       // Calculate distance if customer location exists
@@ -165,7 +165,7 @@ const CustomerInProgressJobDetailsPage = () => {
           Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       }
-      
+
       // Update arrival time based on route info if available
       if (routeInfo && routeInfo.duration) {
         const mins = parseInt(routeInfo.duration);
@@ -191,12 +191,12 @@ const CustomerInProgressJobDetailsPage = () => {
       clearTimeout(connectionTimeout);
       socketService.off('cleanerLocationUpdate', handleCleanerLocationUpdate);
       socketService.off('extraTimeRequest', handleExtraTimeRequest);
-      
+
       if (socketService.isConnected && jobId) {
         socketService.leaveJobRoom(jobId);
       }
     };
-  }, [jobId, job, customerLocation]); 
+  }, [jobId, job, customerLocation]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -217,7 +217,7 @@ const CustomerInProgressJobDetailsPage = () => {
         window.scrollTo(0, scrollPositionRef.current);
       }
     }
-    
+
     return () => {
       // Cleanup: restore scroll on unmount if modal was open
       if (showExtraTimeModal) {
@@ -275,7 +275,7 @@ const CustomerInProgressJobDetailsPage = () => {
   const handleChatWithCleaner = () => {
     // Try multiple possible ID locations
     const cleanerId = cleaner?._id || cleaner?.id;
-    
+
     if (cleanerId) {
       navigate(`/customer-chat/${jobId}?cleaner=${cleanerId}`);
     } else {
@@ -285,10 +285,10 @@ const CustomerInProgressJobDetailsPage = () => {
 
   const handleCallCleaner = () => {
     // Try multiple possible phone number locations
-    const phoneNumber = cleaner?.phone || 
-                      cleaner?.phoneNumber || 
-                      cleaner?.mobile;
-    
+    const phoneNumber = cleaner?.phone ||
+      cleaner?.phoneNumber ||
+      cleaner?.mobile;
+
     if (phoneNumber) {
       window.location.href = `tel:${phoneNumber}`;
     } else {
@@ -301,15 +301,31 @@ const CustomerInProgressJobDetailsPage = () => {
     const acceptedQuote = job?.quotes?.find(quote => quote.status === 'accepted');
     const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
 
-    const jobPayment = paymentStatus?.data?.payments?.find(payment =>
-      payment.jobId === jobId ||
-      payment.jobId === job?.jobId ||
-      payment.jobId === job?._id ||
-      payment._id === jobId
-    );
+    // Extract the payment object. Handle root level, nested in data, or as part of a payments array.
+    const paymentRecord = paymentStatus?.payment ||
+      paymentStatus?.data?.payment ||
+      paymentStatus?.data ||
+      paymentStatus;
+
+    let jobPayment = null;
+
+    if (Array.isArray(paymentRecord?.payments)) {
+      jobPayment = paymentRecord.payments.find(payment =>
+        payment.jobId === jobId ||
+        payment.jobId === job?.jobId ||
+        payment.jobId === job?._id ||
+        payment._id === jobId
+      );
+    } else if (paymentRecord && typeof paymentRecord === 'object' && !Array.isArray(paymentRecord)) {
+      // If it's a single object, check if it matches the jobId
+      const pId = paymentRecord.jobId || (typeof paymentRecord.jobId === 'object' ? paymentRecord.jobId._id : null);
+      if (pId === jobId || pId === job?._id || paymentRecord._id === jobId) {
+        jobPayment = paymentRecord;
+      }
+    }
 
     const paidAmount = jobPayment?.amount || totalAmount;
-    
+
     // Use payment calculations utility with 10% commission rate
     const payout = calculatePayoutAmounts(paidAmount, 10, 10);
 
@@ -329,9 +345,9 @@ const CustomerInProgressJobDetailsPage = () => {
 
     try {
       setProcessingRequest(true);
-      
+
       await jobsAPI.acceptExtraTimeRequest(jobId, extraTimeRequest.requestId);
-      
+
       setShowExtraTimeModal(false);
       setExtraTimeRequest(null);
       // Show success message
@@ -349,9 +365,9 @@ const CustomerInProgressJobDetailsPage = () => {
 
     try {
       setProcessingRequest(true);
-      
+
       await jobsAPI.rejectExtraTimeRequest(jobId, extraTimeRequest.requestId);
-      
+
       setShowExtraTimeModal(false);
       setExtraTimeRequest(null);
       // Show success message
@@ -370,7 +386,7 @@ const CustomerInProgressJobDetailsPage = () => {
     const [hours, minutes] = timeString.split(':');
     const h = parseInt(hours) || 0;
     const m = parseInt(minutes) || 0;
-    
+
     if (h === 1 && m === 0) return '1 Hour Extra';
     if (h > 1 && m === 0) return `${h} Hours Extra`;
     if (h === 0 && m > 0) return `${m} ${m === 1 ? 'Minute' : 'Minutes'} Extra`;
@@ -492,7 +508,7 @@ const CustomerInProgressJobDetailsPage = () => {
           {showMap && (
             <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-primary-500">Track Cleaner</h3> 
+                <h3 className="text-lg font-semibold text-primary-500">Track Cleaner</h3>
                 <button
                   type="button"
                   onClick={handleGetDirections}
@@ -576,7 +592,7 @@ const CustomerInProgressJobDetailsPage = () => {
                     <div>
                       <h4 className="font-semibold text-primary-500">{cleaner.firstName} {cleaner.lastName}</h4>
                       <div className="flex items-center text-sm text-primary-200 font-medium">
-                      <img src={PhoneIcon2} alt="Phone" className="w-4 h-4 mr-1" />
+                        <img src={PhoneIcon2} alt="Phone" className="w-4 h-4 mr-1" />
                         {cleaner.phone || cleaner.phoneNumber || cleaner.mobile || 'Phone not available'}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
@@ -585,25 +601,24 @@ const CustomerInProgressJobDetailsPage = () => {
                           {getCleanerRating()}
                         </div>
                         {getCleanerTier() && getCleanerTier() !== 'none' && (
-                          <div className={`flex items-center text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] ${
-                            getCleanerTier() === 'gold'
-                              ? 'bg-gradient-to-r from-[#FFDBAE] to-[#FFE7C4] border-[#FFDBAE]'
-                              : getCleanerTier() === 'silver'
+                          <div className={`flex items-center text-primary-500 font-medium px-2 py-1 rounded-full text-xs border-[0.6px] ${getCleanerTier() === 'gold'
+                            ? 'bg-gradient-to-r from-[#FFDBAE] to-[#FFE7C4] border-[#FFDBAE]'
+                            : getCleanerTier() === 'silver'
                               ? 'bg-gradient-to-r from-[#FDFDFD] to-[#E9E9E9] border-[#E9E9E9]'
                               : getCleanerTier() === 'bronze'
-                              ? 'bg-gradient-to-r from-[#D4A574] to-[#E6C7A3] border-[#CD7F32]'
-                              : 'bg-gray-100 border-gray-300'
-                          }`}>
-                            <img 
+                                ? 'bg-gradient-to-r from-[#D4A574] to-[#E6C7A3] border-[#CD7F32]'
+                                : 'bg-gray-100 border-gray-300'
+                            }`}>
+                            <img
                               src={
-                                getCleanerTier() === 'gold' 
-                                  ? GoldBadgeIcon 
+                                getCleanerTier() === 'gold'
+                                  ? GoldBadgeIcon
                                   : getCleanerTier() === 'silver'
-                                  ? SilverBadgeIcon
-                                  : BronzeBadgeIcon
-                              } 
-                              alt="Badge" 
-                              className="w-4 h-4 mr-1" 
+                                    ? SilverBadgeIcon
+                                    : BronzeBadgeIcon
+                              }
+                              alt="Badge"
+                              className="w-4 h-4 mr-1"
                             />
                             <span className="capitalize">{getCleanerTier()} Tier</span>
                           </div>
@@ -639,7 +654,7 @@ const CustomerInProgressJobDetailsPage = () => {
                       onClick={handleCallCleaner}
                       className="w-8 h-8 shadow-custom rounded-lg! flex items-center justify-center transition-colors cursor-pointer border border-[#9CC0F6]"
                     >
-                     <PhoneIcon className="w-4 h-4" />
+                      <PhoneIcon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -679,7 +694,7 @@ const CustomerInProgressJobDetailsPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Extra Hours Requested</h2>
-            
+
             <p className="text-sm text-gray-600 mb-6">
               Your cleaner has requested <strong>{formatTimeDuration(extraTimeRequest.time || extraTimeRequest.extraTime)}</strong> for this job after reviewing the scope of work.
             </p>

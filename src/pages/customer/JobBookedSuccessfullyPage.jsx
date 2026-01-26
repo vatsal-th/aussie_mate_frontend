@@ -8,7 +8,7 @@ import CallIcon2 from '../../assets/phone.svg';
 import InfoIcon from '../../assets/info.svg';
 import JobLiveIcon from '../../assets/joblive.gif';
 import { jobsAPI, userAPI } from '../../services/api';
-import { paymentService } from '../../services/paymentService';
+
 
 const JobBookedSuccessfullyPage = () => {
   const navigate = useNavigate();
@@ -101,18 +101,8 @@ const JobBookedSuccessfullyPage = () => {
             : cleanerInfo.name || 'Cleaner';
 
           let paymentMethod = 'online';
-          let onlineAmount = acceptedQuote.price || 0;
-          let cashAmount = 0;
-
-          try {
-            const paymentResponse = await paymentService.getPaymentStatus(jobId);
-            if (paymentResponse.success && paymentResponse.data?.paymentMethod === 'online') {
-              onlineAmount = paymentResponse.data.amount || (acceptedQuote.price || 0);
-            }
-          } catch (paymentError) {
-            onlineAmount = Math.round((acceptedQuote.price || 0) * 0.1);
-            cashAmount = Math.round((acceptedQuote.price || 0) * 0.9);
-          }
+          let onlineAmount = Math.round((acceptedQuote.price || 0) * 0.1);
+          let cashAmount = Math.round((acceptedQuote.price || 0) * 0.9);
 
           // Set job data for payment summary
           setJob({

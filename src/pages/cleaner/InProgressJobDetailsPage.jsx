@@ -9,7 +9,6 @@ import PhoneIcon from '../../assets/phone.svg';
 import PhoneIcon1 from '../../assets/phone2.svg';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
-import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
 
 
@@ -17,7 +16,6 @@ const InProgressJobDetailsPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
-    const [paymentStatus, setPaymentStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [customer, setCustomer] = useState(null);
     const [error, setError] = useState('');
@@ -35,18 +33,15 @@ const InProgressJobDetailsPage = () => {
             try {
                 setLoading(true);
 
-                // Fetch job details and payment history in parallel
-                const [jobResponse, paymentResponse] = await Promise.all([
-                    jobsAPI.getJobById(jobId),
-                    paymentService.getPaymentHistory().catch(() => null)
-                ]);
+                // Fetch job details
+                const jobResponse = await jobsAPI.getJobById(jobId);
 
                 if (jobResponse.success && jobResponse.data) {
                     if (jobResponse.data.status === 'completed') {
                         navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
                         return;
                     }
-                    
+
                     setJob(jobResponse.data);
 
                     // Set customer location from job data
@@ -94,10 +89,6 @@ const InProgressJobDetailsPage = () => {
                 } else {
                     setError('Job not found');
                 }
-
-                if (paymentResponse) {
-                    setPaymentStatus(paymentResponse);
-                }
             } catch (err) {
                 setError('Failed to load job details');
                 console.error('Error fetching job:', err);
@@ -131,7 +122,7 @@ const InProgressJobDetailsPage = () => {
         return R * c; // Distance in meters
     };
 
- useEffect(() => {
+    useEffect(() => {
         if (cleanerLocation && customerLocation) {
             const distance = getDistance(
                 cleanerLocation.lat,
@@ -380,19 +371,9 @@ const InProgressJobDetailsPage = () => {
 
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
-
-        // Find payment for this job from payment history (try different field names)
-        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
-            payment.jobId === jobId ||
-            payment.jobId === job?.jobId ||
-            payment.jobId === job?._id ||
-            payment._id === jobId
-        );
-
-        const paidAmount = jobPayment?.amount ?? totalAmount;
-        const cleanerAmount = jobPayment?.cleanerAmount ?? Math.round(paidAmount * 0.9);
-
-        return `Customer paid $${paidAmount} online to platform. You will receive $${cleanerAmount}.`;
+        const cleanerAmount = Math.round(totalAmount * 0.9);
+        
+        return `Customer paid $${totalAmount} online to platform. You will receive $${cleanerAmount}.`;
     };
 
     const headerTitle = job.title || job.serviceTypeDisplay || job.serviceType || 'Job Details';

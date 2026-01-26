@@ -15,45 +15,85 @@ const PaymentSuccessCallbackPage = () => {
     const verifyPayment = async () => {
       try {
         setLoading(true);
-        
+
+        const searchString = window.location.search;
+        console.log('🔍 Full URL Search String:', searchString);
+
         // Get parameters from URL
         const sessionId = searchParams.get('session_id');
-        const jobId = searchParams.get('job_id');
+        const paymentIntentId = searchParams.get('payment_intent');
+        const redirectStatus = searchParams.get('redirect_status');
+        const jobId = searchParams.get('job_id') || searchParams.get('jobId');
+        // Check for multiple possible parameter names
+        let databasePaymentId = searchParams.get('payment_id') || searchParams.get('paymentId') || searchParams.get('database_id') || searchParams.get('id');
 
-        if (!sessionId || !jobId) {
-          setError('Missing payment information. Please contact support.');
-          setLoading(false);
-          return;
+        console.log('✅ Extracted Params:', { sessionId, paymentIntentId, redirectStatus, jobId, databasePaymentId });
+
+        // SELF-HEALING: If database ID is missing, we fetch it using Job ID
+        if (!databasePaymentId && jobId) {
+          console.log(`🔍 databasePaymentId missing from URL. Attempting to recover via jobId: ${jobId}...`);
+          try {
+            const statusResponse = await paymentService.getPaymentStatus(jobId);
+            if (statusResponse?.success) {
+              const paymentRecord = statusResponse.payment || statusResponse.data?.payment || statusResponse.data;
+              if (paymentRecord?._id) {
+                databasePaymentId = paymentRecord._id;
+                console.log(`✅ Recovered databaseId from backend: ${databasePaymentId}`);
+              }
+            }
+          } catch (recoveryErr) {
+            console.warn('⚠️ Could not recover ID via jobId fallback:', recoveryErr);
+          }
         }
 
-        // Verify payment status
-        const response = await paymentService.getPaymentStatus(jobId);
-        
-        if (response.success && response.data) {
-          const paymentStatus = response.data.status;
-          
-          // Check if payment is successful
-          if (paymentStatus === 'succeeded' || paymentStatus === 'completed' || paymentStatus === 'pending_capture') {
+        // If we have NO database ID, calling verify with Stripe ID will cause backend 500
+        let response;
+        if (databasePaymentId) {
+          console.log(`🔌 Calling verifyPayment with DATABASE ID: ${databasePaymentId}`);
+          response = await paymentService.verifyPayment(databasePaymentId);
+        } else if (jobId) {
+          console.log(`🔌 Still no payment_id, using Job ID status check: ${jobId}`);
+          response = await paymentService.getPaymentStatus(jobId);
+        } else if (paymentIntentId) {
+          console.warn('⚠️ Final fallback: Verify with Stripe ID (Backend might 500)');
+          response = await paymentService.verifyPayment(paymentIntentId);
+        } else if (sessionId) {
+          response = await paymentService.verifyPayment(sessionId);
+        }
+
+        // Check if response is successful. Handle both nested 'data' and root-level properties.
+        if (response && response.success) {
+          const paymentData = response.payment || response.data?.payment || response.data || response;
+          const paymentStatus = paymentData.status;
+          console.log("💎 Final Payment Status from Backend:", paymentStatus);
+
+          // SUCCESS CONDITIONS: 
+          // 1. Backend says success/completed/captured/authorized
+          // 2. OR Stripe says succeeded in URL and backend isn't saying 'failed'
+          const isSuccessful =
+            ['succeeded', 'completed', 'pending_capture', 'authorized', 'captured'].includes(paymentStatus) ||
+            (redirectStatus === 'succeeded' && paymentStatus !== 'failed');
+
+          if (isSuccessful) {
             setVerificationStatus('success');
-            
+
             // Wait a moment to show success message, then redirect
+            const targetJobId = jobId || paymentData.jobId || paymentData.job || (typeof paymentData.jobId === 'object' ? paymentData.jobId._id : null);
             setTimeout(() => {
-              navigate(`/booking-confirmation/${jobId}`, { replace: true });
+              navigate(`/booking-confirmation/${targetJobId || 'my-jobs'}`, { replace: true });
             }, 2000);
           } else if (paymentStatus === 'processing' || paymentStatus === 'pending') {
             setVerificationStatus('processing');
-            
             // Retry after 3 seconds
             setTimeout(() => {
               window.location.reload();
             }, 3000);
           } else {
-            // Payment failed
             setVerificationStatus('failed');
-            setError(`Payment ${paymentStatus}. Please try again or contact support.`);
+            setError(`Payment status: ${paymentStatus}. Please contact support.`);
           }
         } else {
-          setError('Unable to verify payment status. Please try again.');
+          setError(response?.message || 'Unable to verify payment status. Please try again.');
         }
       } catch (err) {
         console.error('Error verifying payment:', err);
@@ -94,14 +134,14 @@ const PaymentSuccessCallbackPage = () => {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                 <Check className="w-10 h-10 text-green-600" strokeWidth={3} />
               </div>
-              
+
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-gray-900">Payment Successful! 🎉</h1>
                 <p className="text-gray-600">
                   Your payment has been confirmed. Redirecting to booking details...
                 </p>
               </div>
-              
+
               {/* Loading indicator */}
               <div className="flex items-center space-x-2 text-sm text-gray-500">
                 <Loader2 className="h-4 w-4 text-primary-500 animate-spin" strokeWidth={2} />
@@ -116,14 +156,14 @@ const PaymentSuccessCallbackPage = () => {
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
                 <Loader2 className="w-10 h-10 text-blue-600 animate-spin" strokeWidth={2} />
               </div>
-              
+
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-gray-900">Payment Processing...</h1>
                 <p className="text-gray-600">
                   Your payment is being processed. This usually takes a few seconds.
                 </p>
               </div>
-              
+
               <div className="flex items-center space-x-2 text-sm text-gray-500">
                 <div className="animate-pulse">⏱️</div>
                 <span>Checking status again...</span>
@@ -137,15 +177,22 @@ const PaymentSuccessCallbackPage = () => {
               <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
                 <X className="w-10 h-10 text-red-600" strokeWidth={2} />
               </div>
-              
+
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-gray-900">Payment Verification Failed</h1>
                 <p className="text-red-600 font-medium">{error}</p>
                 <p className="text-gray-600 text-sm">
                   Don't worry, if your payment went through, you can check your booking in "My Jobs"
                 </p>
+                <div className="text-[10px] text-gray-400 mt-4 font-mono break-all opacity-50">
+                  Debug IDs: {JSON.stringify({
+                    p_id: searchParams.get('payment_id'),
+                    pi_id: searchParams.get('payment_intent'),
+                    status: searchParams.get('redirect_status')
+                  })}
+                </div>
               </div>
-              
+
               <div className="w-full space-y-3">
                 <Button onClick={handleRetryPayment} variant="primary" fullWidth>
                   Try Again
@@ -153,7 +200,7 @@ const PaymentSuccessCallbackPage = () => {
                 <Button onClick={() => navigate('/my-jobs')} variant="secondary" fullWidth>
                   Go to My Jobs
                 </Button>
-                <button 
+                <button
                   onClick={handleContactSupport}
                   className="w-full px-4 py-3 text-gray-600 font-medium hover:text-gray-900 transition-colors text-sm"
                 >

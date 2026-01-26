@@ -125,14 +125,19 @@ const CleanerJobsPage = () => {
 
   // --- NEW: helper to fetch jobs list once per (status,page) and cache ---
   const fetchJobsList = async ({ status, page = 1, limit = jobsPerPage, signal }) => {
+    // Convert status array to comma-separated string for API
+    const statusParam = Array.isArray(status) ? status.join(',') : status;
+    
     // key includes status & page so cache is per page
-    const cacheKey = `${status}::page:${page}::limit:${limit}`;
+    const cacheKey = `${statusParam}::page:${page}::limit:${limit}`;
+    
     if (apiCache.current[cacheKey]) {
       return apiCache.current[cacheKey];
     }
 
-    // call backend - keep same params you previously used
-    const result = await jobsAPI.getAllJobs({ status, page, limit, signal });
+    // call backend with status parameter
+    const result = await jobsAPI.getAllJobs({ status: statusParam, page, limit, signal });
+    
     // normalize response: { jobs: [], total }
     const jobsArray = result?.data?.jobs || result?.data || [];
     const total = result?.data?.total || result?.total || jobsArray.length;
@@ -146,9 +151,16 @@ const CleanerJobsPage = () => {
     // jobsList: array of job objects (from getAllJobs)
     // Only fetch details for those actually shown on the page and only when needed
     const promises = jobsList.map(async (job) => {
-      if (job.quotes && job.quotes.length >= 0 && job.assignedCleanerId !== undefined) {
+      // Check if the job object already contains sufficient details
+      // If it has quotes array and assignedCleanerId, we can skip fetching full details
+      const hasQuotes = Array.isArray(job.quotes) && job.quotes.length >= 0;
+      const hasAssignedCleaner = job.assignedCleanerId !== undefined;
+      
+      // If job already has the essential data, return it without making API call
+      if (hasQuotes && hasAssignedCleaner) {
         return job;
       }
+      
       try {
         const details = await jobsAPI.getJobById(job._id || job.jobId || job.id, { signal });
         return (details.success && details.data) ? details.data : job;
@@ -177,68 +189,49 @@ const CleanerJobsPage = () => {
 
         // Map tab -> status string used by backend
         const statusMap = {
-          'live-jobs': ['posted', 'quoted'],
-          'my-bids': ['posted', 'quoted'],
-          'accepted': ['accepted', 'in_progress'],
-          'completed': ['completed']
+          'live-jobs': 'posted,quoted',
+          'my-bids': 'posted,quoted',
+          'accepted': 'accepted,in_progress',
+          'completed': 'completed'
         };
 
-        const statuses = statusMap[activeTab] || ['posted'];
-        // For tabs that combine multiple statuses, we'll fetch each status but only request necessary pages
-        // We'll always fetch only as many items as we need for the current page to reduce load
-        const perStatusLimit = Math.max(50, jobsPerPage); // fetch a small pool to paginate client-side if needed
-
-        // gather jobs from statuses into a single array (without duplicating)
-        const statusResults = await Promise.all(
-          statuses.map(status => fetchJobsList({ status, page: 1, limit: perStatusLimit, signal: controller.signal }))
-        );
-
-        let combined = [];
-        statusResults.forEach(r => {
-          combined = combined.concat(r.jobs || []);
+        const statusParam = statusMap[activeTab] || 'posted';
+        
+        // Fetch jobs directly from API with status parameter
+        const result = await fetchJobsList({ 
+          status: statusParam, 
+          page: currentPage, 
+          limit: jobsPerPage, 
+          signal: controller.signal 
         });
+        
+        let jobsList = result.jobs || [];
 
-        // Deduplicate by id
-        const mapById = new Map();
-        for (const j of combined) {
-          const id = j._id || j.jobId || j.id;
-          if (!mapById.has(id)) mapById.set(id, j);
-        }
-        const combinedUnique = Array.from(mapById.values());
-
-        // If 'my-bids', we need to filter for jobs where current cleaner has a pending quote.
-        let filtered = combinedUnique;
+        // If 'my-bids', we need to filter for jobs where current cleaner has a pending quote
         if (activeTab === 'my-bids') {
-          // Instead of fetching details for all jobs, only check quotes for items on the current page.
-          // We'll first sort / paginate, then fetch details for the page and filter based on quotes.
-          // This massively reduces per-tab requests.
-          const startIndex = (currentPage - 1) * jobsPerPage;
-          const pageSlice = combinedUnique.slice(startIndex, startIndex + jobsPerPage);
-          const pageDetails = await fetchJobDetailsForPage(pageSlice, controller.signal);
-          // filter pageDetails to only those with my pending quote
-          const myFiltered = pageDetails.filter(job => {
+          // Fetch details for all jobs on this page to check quotes
+          const jobsWithDetails = await fetchJobDetailsForPage(jobsList, controller.signal);
+          const myFiltered = jobsWithDetails.filter(job => {
             if (!job.quotes || job.quotes.length === 0) return false;
             return job.quotes.some(q => {
               const qCleanerId = q.cleanerId?._id || q.cleanerId || q.cleanerId?.id;
               return (qCleanerId === currentUserId || qCleanerId?.toString() === currentUserId?.toString()) && q.status === 'pending';
             });
           });
-          // set totals based on a conservative estimate: use page count only
+          
           setJobs(myFiltered.map(j => ({ ...transformJobForUI(j) })));
-          setTotalJobs(myFiltered.length);
-          setTotalPages(Math.ceil(myFiltered.length / jobsPerPage) || 1);
+          setTotalJobs(result.total || 0); // Use total from API for pagination
+          setTotalPages(Math.max(1, Math.ceil((result.total || 0) / jobsPerPage)));
           setLoading(false);
           return;
         }
 
         // For 'accepted' tab, filter for jobs assigned to current cleaner
         if (activeTab === 'accepted') {
-          const start = (currentPage - 1) * jobsPerPage;
-          const pageItems = combinedUnique.slice(start, start + jobsPerPage);
-          const pageWithDetails = await fetchJobDetailsForPage(pageItems, controller.signal);
+          const jobsWithDetails = await fetchJobDetailsForPage(jobsList, controller.signal);
           
           // Filter for jobs assigned to current cleaner
-          const acceptedJobs = pageWithDetails.filter(job => {
+          const acceptedJobs = jobsWithDetails.filter(job => {
             const isAccepted = job.status === 'accepted' || job.status === 'in_progress';
             const isAssigned = 
               job.assignedCleanerId === currentUserId ||
@@ -259,15 +252,17 @@ const CleanerJobsPage = () => {
           
           const transformed = acceptedJobs.map(transformJobForUI);
           setJobs(transformed);
-          setTotalJobs(acceptedJobs.length);
-          setTotalPages(Math.max(1, Math.ceil(acceptedJobs.length / jobsPerPage)));
+          setTotalJobs(result.total || 0);
+          setTotalPages(Math.max(1, Math.ceil((result.total || 0) / jobsPerPage)));
           setLoading(false);
           return;
         }
 
         // For 'completed' tab, filter for jobs completed by current cleaner
         if (activeTab === 'completed') {
-          const completedJobs = combinedUnique.filter(job => {
+          const jobsWithDetails = await fetchJobDetailsForPage(jobsList, controller.signal);
+          
+          const completedJobs = jobsWithDetails.filter(job => {
             if (job.status !== 'completed') return false;
             return (
               job.assignedCleanerId === currentUserId ||
@@ -281,32 +276,31 @@ const CleanerJobsPage = () => {
             );
           });
           
-          const start = (currentPage - 1) * jobsPerPage;
-          const pageItems = completedJobs.slice(start, start + jobsPerPage);
-          const pageWithDetails = await fetchJobDetailsForPage(pageItems, controller.signal);
-          
-          const transformed = pageWithDetails.map(transformJobForUI);
+          const transformed = completedJobs.map(transformJobForUI);
           setJobs(transformed);
-          setTotalJobs(completedJobs.length);
-          setTotalPages(Math.max(1, Math.ceil(completedJobs.length / jobsPerPage)));
+          setTotalJobs(result.total || 0);
+          setTotalPages(Math.max(1, Math.ceil((result.total || 0) / jobsPerPage)));
           setLoading(false);
           return;
         }
 
-        // For other tabs, slice for current page and fetch details for only those items (to get quotes/assignment if needed)
-        const start = (currentPage - 1) * jobsPerPage;
-        const pageItems = combinedUnique.slice(start, start + jobsPerPage);
+        // For 'live-jobs' tab, we don't need detailed job info, just transform directly
+        if (activeTab === 'live-jobs') {
+          const transformed = jobsList.map(transformJobForUI);
+          setJobs(transformed);
+          setTotalJobs(result.total || 0);
+          setTotalPages(Math.max(1, Math.ceil((result.total || 0) / jobsPerPage)));
+          setLoading(false);
+          return;
+        }
 
-        const pageWithDetails = await fetchJobDetailsForPage(pageItems, controller.signal);
-
-        // transform for UI
-        const transformed = pageWithDetails.map(transformJobForUI);
-        // estimate total (combine totals from statusResults)
-        const totalCount = statusResults.reduce((acc, r) => acc + (r.total || r.jobs?.length || 0), 0);
+        // For other tabs, fetch details and transform
+        const jobsWithDetails = await fetchJobDetailsForPage(jobsList, controller.signal);
+        const transformed = jobsWithDetails.map(transformJobForUI);
 
         setJobs(transformed);
-        setTotalJobs(totalCount);
-        setTotalPages(Math.max(1, Math.ceil(totalCount / jobsPerPage)));
+        setTotalJobs(result.total || 0);
+        setTotalPages(Math.max(1, Math.ceil((result.total || 0) / jobsPerPage)));
       } catch (err) {
         if (err.name === 'AbortError') {
           // request aborted - ignore
