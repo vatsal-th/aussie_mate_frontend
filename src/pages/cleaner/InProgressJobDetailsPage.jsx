@@ -9,6 +9,7 @@ import PhoneIcon from '../../assets/phone.svg';
 import PhoneIcon1 from '../../assets/phone2.svg';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
+import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
 
 
@@ -16,6 +17,7 @@ const InProgressJobDetailsPage = () => {
     const { jobId } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
+    const [paymentStatus, setPaymentStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [customer, setCustomer] = useState(null);
     const [error, setError] = useState('');
@@ -33,8 +35,11 @@ const InProgressJobDetailsPage = () => {
             try {
                 setLoading(true);
 
-                // Fetch job details
-                const jobResponse = await jobsAPI.getJobById(jobId);
+                // Fetch job details and payment history
+                const [jobResponse, paymentResponse] = await Promise.all([
+                    jobsAPI.getJobById(jobId),
+                    paymentService.getPaymentHistory().catch(() => null)
+                ]);
 
                 if (jobResponse.success && jobResponse.data) {
                     if (jobResponse.data.status === 'completed') {
@@ -88,6 +93,10 @@ const InProgressJobDetailsPage = () => {
                     }
                 } else {
                     setError('Job not found');
+                }
+
+                if (paymentResponse) {
+                    setPaymentStatus(paymentResponse);
                 }
             } catch (err) {
                 setError('Failed to load job details');
