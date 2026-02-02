@@ -5,6 +5,7 @@ import { Check, X, Clock } from 'lucide-react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
+import { paymentService } from '../../services/paymentService';
 import { handleAPIError } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -199,14 +200,41 @@ const CompleteJobPage = () => {
     try {
       setCompletingJob(true);
       setUploadError(null);
+      console.log("done jobs");
 
+      // First, try to capture the payment if job has an authorized payment
+      try {
+        console.log(`🔌 Attempting to capture payment for job ${jobId}...`);
+        const paymentStatusResponse = await paymentService.getPaymentStatus(jobId);
+        console.log("paymentStatusResponse", paymentStatusResponse);
+
+        if (paymentStatusResponse?.success && paymentStatusResponse?.data?.payment?._id) {
+          const paymentId = paymentStatusResponse.data.payment._id;
+          const paymentStatus = paymentStatusResponse.data.payment.status;
+
+          if (paymentStatus === 'authorized') {
+            console.log(`💰 Capturing payment ${paymentId}...`);
+            const captureResponse = await paymentService.capturePayment(paymentId);
+            if (captureResponse.success) {
+              console.log(`✅ Payment captured successfully for job ${jobId}`);
+              setSuccessMessage('Payment captured and job completed successfully!');
+            }
+          } else {
+            console.log(`ℹ️ Payment status is ${paymentStatus}, not capturing. Proceeding with job completion.`);
+          }
+        }
+      } catch (paymentError) {
+        console.warn('⚠️ Could not capture payment automatically:', paymentError);
+        // Continue with job completion even if payment capture fails
+      }
 
       // Update job status to pending_customer_confirmation
-      // Payment is already captured automatically at booking time
       const response = await jobPhotosAPI.updateJobStatus(jobId, 'pending_customer_confirmation');
 
       if (response.success) {
-        setSuccessMessage('Job completed successfully! Redirecting...');
+        if (!successMessage) {
+          setSuccessMessage('Job completed successfully! Redirecting...');
+        }
         setTimeout(() => {
           navigate('/cleaner-dashboard');
         }, 1500);

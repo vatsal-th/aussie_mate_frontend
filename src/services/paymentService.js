@@ -89,6 +89,16 @@ export const paymentService = {
   getPaymentHistory: async () => {
     return paymentApiRequest('/payments');
   },
+
+  // Get payment status by job ID
+  getPaymentStatus: async (jobId) => {
+    return paymentApiRequest(`/payments/job/${jobId}/status`);
+  },
+
+  // Confirm checkout session (Stripe redirect success)
+  confirmCheckoutSession: async (sessionId) => {
+    return paymentApiRequest(`/payments/confirm-checkout?session_id=${sessionId}`);
+  },
 };
 
 export const handlePaymentError = (error) => {

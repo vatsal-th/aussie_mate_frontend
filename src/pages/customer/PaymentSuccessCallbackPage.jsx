@@ -29,8 +29,20 @@ const PaymentSuccessCallbackPage = () => {
 
         console.log('✅ Extracted Params:', { sessionId, paymentIntentId, redirectStatus, jobId, databasePaymentId });
 
+        // FIRST: If we have session_id, call confirm-checkout to update job status
+        let response;
+        if (sessionId) {
+          console.log(`🔌 Calling confirmCheckoutSession with session_id: ${sessionId}`);
+          response = await paymentService.confirmCheckoutSession(sessionId);
+          
+          // Extract payment ID from response for further verification
+          if (response?.success && response?.data?.payment?._id) {
+            databasePaymentId = response.data.payment._id;
+            console.log(`✅ Got payment ID from confirmCheckout: ${databasePaymentId}`);
+          }
+        }
         // SELF-HEALING: If database ID is missing, we fetch it using Job ID
-        if (!databasePaymentId && jobId) {
+        else if (!databasePaymentId && jobId) {
           console.log(`🔍 databasePaymentId missing from URL. Attempting to recover via jobId: ${jobId}...`);
           try {
             const statusResponse = await paymentService.getPaymentStatus(jobId);
@@ -47,17 +59,16 @@ const PaymentSuccessCallbackPage = () => {
         }
 
         // If we have NO database ID, calling verify with Stripe ID will cause backend 500
-        let response;
-        if (databasePaymentId) {
+        if (!response && databasePaymentId) {
           console.log(`🔌 Calling verifyPayment with DATABASE ID: ${databasePaymentId}`);
           response = await paymentService.verifyPayment(databasePaymentId);
-        } else if (jobId) {
+        } else if (!response && jobId) {
           console.log(`🔌 Still no payment_id, using Job ID status check: ${jobId}`);
           response = await paymentService.getPaymentStatus(jobId);
-        } else if (paymentIntentId) {
+        } else if (!response && paymentIntentId) {
           console.warn('⚠️ Final fallback: Verify with Stripe ID (Backend might 500)');
           response = await paymentService.verifyPayment(paymentIntentId);
-        } else if (sessionId) {
+        } else if (!response && sessionId) {
           response = await paymentService.verifyPayment(sessionId);
         }
 

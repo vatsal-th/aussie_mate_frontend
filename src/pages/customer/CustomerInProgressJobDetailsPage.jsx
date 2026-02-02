@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, UserRound, X } from 'lucide-react';
+import { Check, UserRound, X, CalendarDays, Clock3, Home as HomeIcon, Wallet, Ruler, AlertTriangle, CheckCircle, Circle } from 'lucide-react';
 import { Button, MapWithPolyline, PageHeader, Loader, JobOverviewCard } from '../../components';
 import MapPinIcon from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone2.svg?react';
@@ -14,6 +14,45 @@ import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
 import { calculatePayoutAmounts } from '../../utils/paymentCalculations';
+
+// Helper functions for weekly job history
+const generateWeeklySchedule = (job) => {
+  if (!job?.preferredDays || !job?.repeatWeeks) return [];
+  
+  const preferredDays = Object.keys(job.preferredDays).filter(day => job.preferredDays[day] === true);
+  const repeatWeeks = parseInt(job.repeatWeeks);
+  const scheduledDate = new Date(job.scheduledDate);
+  
+  const schedule = [];
+  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  for (let week = 1; week <= repeatWeeks; week++) {
+    preferredDays.forEach(day => {
+      const dayIndex = dayOrder.indexOf(day);
+      const weekStart = new Date(scheduledDate);
+      weekStart.setDate(scheduledDate.getDate() + (week - 1) * 7);
+      
+      const targetDate = new Date(weekStart);
+      targetDate.setDate(weekStart.getDate() + (dayIndex - weekStart.getDay()));
+      
+      const isCompleted = week === 1 && ['Monday', 'Saturday'].includes(day); // Mock completed for demo
+      const isPendingConfirmation = week === 2 && day === 'Monday'; // Mock pending confirmation for demo
+      const isInProgress = week === 2 && day === 'Saturday'; // Mock in progress for demo
+      
+      schedule.push({
+        id: `${week}-${day}`,
+        week,
+        day,
+        date: targetDate,
+        status: isCompleted ? 'completed' : isPendingConfirmation ? 'pending_customer_confirmation' : isInProgress ? 'in-progress' : 'pending',
+        photos: isCompleted ? (day === 'Monday' ? 2 : 1) : isPendingConfirmation ? 2 : 0,
+        amount: 50
+      });
+    });
+  }
+  
+  return schedule;
+};
 
 const CustomerInProgressJobDetailsPage = () => {
   const { jobId } = useParams();
@@ -33,7 +72,8 @@ const CustomerInProgressJobDetailsPage = () => {
   const [showExtraTimeModal, setShowExtraTimeModal] = useState(false);
   const [extraTimeRequest, setExtraTimeRequest] = useState(null);
   const [processingRequest, setProcessingRequest] = useState(false);
-  const scrollPositionRef = useRef(0);
+  const [weeklySchedule, setWeeklySchedule] = useState([]);
+  const scrollPositionRef = useRef(null);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -49,6 +89,12 @@ const CustomerInProgressJobDetailsPage = () => {
 
         if (jobResponse.success && jobResponse.data) {
           setJob(jobResponse.data);
+          
+          // Generate weekly schedule for weekly jobs
+          if (jobResponse.data.frequency === 'Weekly' && jobResponse.data.preferredDays) {
+            const schedule = generateWeeklySchedule(jobResponse.data);
+            setWeeklySchedule(schedule);
+          }
 
           // Check if job is completed - show modal
           if (jobResponse.data.status === 'completed') {
@@ -344,6 +390,39 @@ const CustomerInProgressJobDetailsPage = () => {
     }
   };
 
+  const handleMarkSessionComplete = async (sessionId) => {
+    try {
+      // For customer side, this confirms completion and releases payment
+      // The cleaner should have already uploaded photos and status should be pending_customer_confirmation
+      
+      // Update local state first for immediate UI feedback
+      setWeeklySchedule(prev => 
+        prev.map(item => 
+          item.id === sessionId 
+            ? { ...item, status: 'completed', photos: item.photos || 2, amount: item.amount || 50 }
+            : item
+        )
+      );
+
+      // Call API to confirm weekly completion and release payment to cleaner
+      await jobsAPI.confirmWeeklyCompletion(jobId, sessionId);
+      
+      // Show success message
+      alert('Session confirmed! Payment has been released to cleaner.');
+    } catch (error) {
+      console.error('Error confirming weekly completion:', error);
+      // Revert state on error
+      setWeeklySchedule(prev => 
+        prev.map(item => 
+          item.id === sessionId 
+            ? { ...item, status: 'pending_customer_confirmation' }
+            : item
+        )
+      );
+      alert('Failed to confirm completion. Please try again.');
+    }
+  };
+
   const handleRejectExtraTime = async () => {
     if (!extraTimeRequest) return;
 
@@ -426,9 +505,124 @@ const CustomerInProgressJobDetailsPage = () => {
     });
   };
 
+  const getPreferredDaysDisplay = (preferredDays) => {
+    if (!preferredDays || typeof preferredDays !== 'object') return '';
+    
+    const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
+    if (days.length === 0) return '';
+    
+    return days.join(', ');
+  };
+
+  const getRepeatWeeksDisplay = (repeatWeeks) => {
+    if (!repeatWeeks) return '';
+    return `${repeatWeeks} week${repeatWeeks === '1' ? '' : 's'}`;
+  };
+
+  const getFrequencyDisplay = (job) => {
+    if (!job) return 'One-time';
+    const frequency = job.frequency || job.serviceFrequency || job.schedule?.frequency || 'One-time';
+    const preferredDays = getPreferredDaysDisplay(job?.preferredDays);
+    const repeatWeeks = getRepeatWeeksDisplay(job?.repeatWeeks);
+    
+    let display = frequency;
+    
+    if (preferredDays && repeatWeeks) {
+      display += ` • ${preferredDays} • ${repeatWeeks}`;
+    } else if (preferredDays) {
+      display += ` • ${preferredDays}`;
+    } else if (repeatWeeks) {
+      display += ` • ${repeatWeeks}`;
+    }
+    
+    return display;
+  };
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === '') return '';
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return value;
+    return `$${numeric.toLocaleString('en-AU', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: numeric % 1 === 0 ? 0 : 2,
+    })}`;
+  };
+
   const serviceDetail = getServiceDetail(job);
   const scheduledDateLabel = job?.scheduledDate ? formatDate(job.scheduledDate) : 'Date not set';
-  const jobFrequencyLabel = getJobFrequency(job);
+  const jobFrequencyLabel = getFrequencyDisplay(job);
+
+  const jobOverviewMeta = useMemo(() => {
+    if (!job) return [];
+    const meta = [];
+
+    const budgetValue = job.budget || job.estimatedPrice || job.priceEstimate || job.priceRange;
+    if (budgetValue) {
+      meta.push({
+        label: 'Budget',
+        value: formatCurrency(budgetValue),
+        icon: <Wallet className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const durationValue = job.estimatedDuration || job.duration || job.timeEstimate;
+    if (durationValue) {
+      meta.push({
+        label: 'Duration',
+        value: typeof durationValue === 'number' ? `${durationValue} hrs` : durationValue,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const propertyTypeValue = job.propertyType || job.propertyCategory;
+    if (propertyTypeValue) {
+      meta.push({
+        label: 'Property Type',
+        value: propertyTypeValue,
+        icon: <HomeIcon className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const propertySizeValue = job.propertySize || job.squareFootage || job.propertyArea;
+    if (propertySizeValue) {
+      meta.push({
+        label: 'Property Size',
+        value: propertySizeValue,
+        icon: <Ruler className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const priorityValue = job.priority || job.priorityLevel;
+    if (priorityValue) {
+      meta.push({
+        label: 'Priority',
+        value: priorityValue,
+        icon: <AlertTriangle className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    // Add preferred days if available
+    const preferredDaysDisplay = getPreferredDaysDisplay(job?.preferredDays);
+    if (preferredDaysDisplay) {
+      meta.push({
+        label: 'Preferred Days',
+        value: preferredDaysDisplay,
+        icon: <CalendarDays className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    // Add repeat weeks if available
+    const repeatWeeksDisplay = getRepeatWeeksDisplay(job?.repeatWeeks);
+    if (repeatWeeksDisplay) {
+      meta.push({
+        label: 'Duration',
+        value: repeatWeeksDisplay,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    return meta;
+  }, [job]);
 
   if (loading) {
     return <Loader fullscreen message="Updating your job details..." />;
@@ -485,6 +679,7 @@ const CustomerInProgressJobDetailsPage = () => {
               location={job.location?.address || job.address || job.locationDescription || 'Location not specified'}
               photos={jobPhotos}
               viewerRole="customer"
+              metaInfo={jobOverviewMeta}
             />
           </div>
 
@@ -650,6 +845,102 @@ const CustomerInProgressJobDetailsPage = () => {
               </div>
             )}
           </div>
+
+          {/* Work Progress Section for Weekly Jobs */}
+          {weeklySchedule.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-primary-500 mb-3">Work Progress</h3>
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="space-y-3">
+                  {weeklySchedule.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {item.status === 'completed' ? (
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                          ) : item.status === 'in-progress' ? (
+                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Circle className="w-5 h-5 text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-primary-500">
+                            {item.day} - Week {item.week}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {item.date.toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-primary-600">
+                            ${item.amount}
+                          </div>
+                          {item.photos > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {item.photos} photo{item.photos > 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </div>
+                        {item.status === 'completed' && (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">
+                            Completed
+                          </span>
+                        )}
+                        {item.status === 'pending_customer_confirmation' && (
+                          <button
+                            onClick={() => handleMarkSessionComplete(item.id)}
+                            className="text-xs font-semibold px-3 py-1 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors cursor-pointer"
+                          >
+                            Confirm & Pay
+                          </button>
+                        )}
+                        {item.status === 'in-progress' && (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                            In Progress
+                          </span>
+                        )}
+                        {item.status === 'pending' && (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Progress Summary */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium text-green-600">
+                        {weeklySchedule.filter(item => item.status === 'completed').length}
+                      </span> completed • 
+                      <span className="font-medium text-orange-600 ml-1">
+                        {weeklySchedule.filter(item => item.status === 'pending_customer_confirmation').length}
+                      </span> pending confirmation • 
+                      <span className="font-medium text-blue-600 ml-1">
+                        {weeklySchedule.filter(item => item.status === 'in-progress').length}
+                      </span> in progress • 
+                      <span className="font-medium text-gray-600 ml-1">
+                        {weeklySchedule.filter(item => item.status === 'pending').length}
+                      </span> pending
+                    </div>
+                    <div className="text-sm font-medium text-primary-600">
+                      Total: ${weeklySchedule.reduce((sum, item) => sum + item.amount, 0)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Summary Section */}
           <div className="mb-4">
