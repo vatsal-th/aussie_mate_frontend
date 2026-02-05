@@ -5,6 +5,7 @@ import { Check, X, Clock } from 'lucide-react';
 import UploadCloudIcon from '../../assets/upload-cloud.svg';
 import UploadIcon from '../../assets/upload.svg';
 import { jobPhotosAPI, jobsAPI } from '../../services/api';
+import { paymentService } from '../../services/paymentService';
 import { handleAPIError } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -39,11 +40,11 @@ const CompleteJobPage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch job details from API
         const jobResponse = await jobsAPI.getJobById(jobId);
         const jobData = jobResponse.data || jobResponse;
-        
+
         // Only redirect if job is completed
         if (jobData.status === 'completed') {
           navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
@@ -53,20 +54,20 @@ const CompleteJobPage = () => {
         // Fetch existing photos
         const photosResponse = await jobPhotosAPI.getJobPhotos(jobId);
         const photosData = photosResponse.data || photosResponse;
-        
+
         setJob(jobData);
-        
+
         // Set existing photos
         if (photosData.beforePhotos && photosData.beforePhotos.length > 0) {
           setUploadedPhotos(photosData.beforePhotos);
           setBeforePhotosUploaded(true);
         }
-        
+
         if (photosData.afterPhotos && photosData.afterPhotos.length > 0) {
           setAfterPhotos(photosData.afterPhotos);
           setAfterPhotosUploaded(true);
         }
-        
+
       } catch (error) {
         console.error('Error fetching job details:', error);
         setError(handleAPIError(error));
@@ -108,7 +109,7 @@ const CompleteJobPage = () => {
   // Auto-redirect if job status changes
   useEffect(() => {
     if (!job) return;
-    
+
     // If job gets completed while on this page, redirect to completed page
     if (job.status === 'completed') {
       navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
@@ -166,13 +167,13 @@ const CompleteJobPage = () => {
       setTimeout(() => setUploadError(null), 3000);
       return;
     }
-    
+
     try {
       setUploadingBefore(true);
       setUploadError(null);
-      
+
       const response = await jobPhotosAPI.uploadBeforePhotos(jobId, selectedFiles);
-      
+
       if (response.success) {
         setUploadedPhotos(response.data.beforePhotos || []);
         setBeforePhotosUploaded(true);
@@ -199,22 +200,41 @@ const CompleteJobPage = () => {
     try {
       setCompletingJob(true);
       setUploadError(null);
-      
+      console.log("done jobs");
+
+      // First, try to capture the payment if job has an authorized payment
+      try {
+        console.log(`🔌 Attempting to capture payment for job ${jobId}...`);
+        const paymentStatusResponse = await paymentService.getPaymentStatus(jobId);
+        console.log("paymentStatusResponse", paymentStatusResponse);
+
+        if (paymentStatusResponse?.success && paymentStatusResponse?.data?.payment?._id) {
+          const paymentId = paymentStatusResponse.data.payment._id;
+          const paymentStatus = paymentStatusResponse.data.payment.status;
+
+          if (paymentStatus === 'authorized') {
+            console.log(`💰 Capturing payment ${paymentId}...`);
+            const captureResponse = await paymentService.capturePayment(paymentId);
+            if (captureResponse.success) {
+              console.log(`✅ Payment captured successfully for job ${jobId}`);
+              setSuccessMessage('Payment captured and job completed successfully!');
+            }
+          } else {
+            console.log(`ℹ️ Payment status is ${paymentStatus}, not capturing. Proceeding with job completion.`);
+          }
+        }
+      } catch (paymentError) {
+        console.warn('⚠️ Could not capture payment automatically:', paymentError);
+        // Continue with job completion even if payment capture fails
+      }
+
       // Update job status to pending_customer_confirmation
       const response = await jobPhotosAPI.updateJobStatus(jobId, 'pending_customer_confirmation');
-      
+
       if (response.success) {
-        // Store completion data for customer notification
-        const completedJobData = {
-          jobId: jobId,
-          cleanerName: user?.name || user?.firstName || "Cleaner", // Use dynamic user data
-          jobTitle: job?.title || job?.serviceType || "Cleaning Service",
-          completedAt: new Date().toISOString(),
-          status: 'pending_customer_confirmation'
-        };
-        
-        
-        setSuccessMessage('Job completed successfully! Redirecting...');
+        if (!successMessage) {
+          setSuccessMessage('Job completed successfully! Redirecting...');
+        }
         setTimeout(() => {
           navigate('/cleaner-dashboard');
         }, 1500);
@@ -247,13 +267,13 @@ const CompleteJobPage = () => {
       setTimeout(() => setUploadError(null), 3000);
       return;
     }
-    
+
     try {
       setUploadingAfter(true);
       setUploadError(null);
-      
+
       const response = await jobPhotosAPI.uploadAfterPhotos(jobId, selectedAfterFiles);
-      
+
       if (response.success) {
         setAfterPhotos(response.data.afterPhotos || []);
         setAfterPhotosUploaded(true);
@@ -280,12 +300,12 @@ const CompleteJobPage = () => {
     try {
       setSubmittingRequest(true);
       setUploadError(null);
-      
+
       await jobsAPI.requestExtraTime(jobId, { time: extraTime, amount: extraAmount, reason: extraReason });
-      
+
       setSuccessMessage('Extra time request sent to customer successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
-      
+
       // Reset form
       setNeedExtraTime(false);
       setExtraTime('');
@@ -400,27 +420,25 @@ const CompleteJobPage = () => {
           {!timerCompleted && (
             <div className="bg-[linear-gradient(126.14deg,_#E9EEFC_-59.36%,_#FFFFFF_73.02%)] rounded-2xl p-6 shadow-sm border border-[#D5DEFA]">
               <div className="mb-4">
-              <h3 className="text-lg font-semibold text-primary-500">
-                Have you review property?
-              </h3>
-              <p className="text-sm text-primary-200 font-medium mb-2">
-                If yes, are you thinking that it will take extra hours
-              </p>
+                <h3 className="text-lg font-semibold text-primary-500">
+                  Have you review property?
+                </h3>
+                <p className="text-sm text-primary-200 font-medium mb-2">
+                  If yes, are you thinking that it will take extra hours
+                </p>
               </div>
-              
+
               <div className="flex items-center mb-4">
                 <span className="text-sm font-medium text-primary-500 mr-4">Need extra time?</span>
                 <button
                   type="button"
                   onClick={() => setNeedExtraTime(!needExtraTime)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-                    needExtraTime ? 'bg-[#1F6FEB]' : 'bg-gray-200'
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${needExtraTime ? 'bg-[#1F6FEB]' : 'bg-gray-200'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      needExtraTime ? 'translate-x-6' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${needExtraTime ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
@@ -479,9 +497,9 @@ const CompleteJobPage = () => {
                   </p>
                   <div className="relative">
                     <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                      <div 
+                      <div
                         className="h-4 rounded-full transition-all duration-1000 ease-out relative"
-                        style={{ 
+                        style={{
                           width: `${progressPercentage}%`,
                           background: 'linear-gradient(45deg, #1EB154 25%, #05C34B 25%, #05C34B 50%, #1EB154 50%, #1EB154 75%, #05C34B 75%, #05C34B)',
                           backgroundSize: '20px 20px',
@@ -489,7 +507,7 @@ const CompleteJobPage = () => {
                         }}
                       ></div>
                     </div>
-                    <div className="absolute right-0 top-0 -mt-6"> 
+                    <div className="absolute right-0 top-0 -mt-6">
                       <span className="text-sm font-semibold text-green-500">
                         {formatTime(timeLeft)}
                       </span>
@@ -504,14 +522,14 @@ const CompleteJobPage = () => {
           {!beforePhotosUploaded && (
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-primary-500 mb-2">Upload Before Photo</h3>
-              
+
               {/* Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center bg-gray-50 mx-auto">
                 <div className='rounded-full p-3 bg-primary-200 w-fit mx-auto mb-3'>
                   <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8" />
                 </div>
                 <p className="text-primary-500 mb-4 font-medium">Select photos/videos to upload</p>
-                
+
                 <input
                   type="file"
                   multiple
@@ -520,7 +538,7 @@ const CompleteJobPage = () => {
                   className="hidden"
                   id="file-upload"
                 />
-                
+
                 <label
                   htmlFor="file-upload"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors bg-primary-500 text-white hover:bg-blue-700"
@@ -553,16 +571,16 @@ const CompleteJobPage = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end">    
-                  <Button
-                    onClick={handleSubmitPhoto}
-                    disabled={uploadingBefore}
-                    loading={uploadingBefore}
-                    variant="primary"
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSubmitPhoto}
+                      disabled={uploadingBefore}
+                      loading={uploadingBefore}
+                      variant="primary"
 
-                  >
-                    {uploadingBefore ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
-                  </Button>
+                    >
+                      {uploadingBefore ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -590,14 +608,14 @@ const CompleteJobPage = () => {
           {beforePhotosUploaded && !afterPhotosUploaded && (
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-primary-500 mb-2">Upload After Photo</h3>
-              
+
               {/* Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center bg-gray-50 mx-auto">
                 <div className='rounded-full p-3 bg-primary-200 w-fit mx-auto mb-3'>
                   <img src={UploadCloudIcon} alt="Upload" className="w-8 h-8" />
                 </div>
                 <p className="text-primary-500 mb-4 font-medium">Select photos/videos to upload</p>
-                
+
                 <input
                   type="file"
                   multiple
@@ -606,7 +624,7 @@ const CompleteJobPage = () => {
                   className="hidden"
                   id="after-file-upload"
                 />
-                
+
                 <label
                   htmlFor="after-file-upload"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium cursor-pointer transition-colors bg-primary-500 text-white hover:bg-blue-700"
@@ -639,16 +657,16 @@ const CompleteJobPage = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end">    
-                  <Button
-                    onClick={handleSubmitAfterPhoto}
-                    disabled={uploadingAfter}
-                    loading={uploadingAfter}
-                    variant="primary"
-                    size="lg"
-                  >
-                    {uploadingAfter ? 'Uploading...' : `Upload ${selectedAfterFiles.length} Photo${selectedAfterFiles.length > 1 ? 's' : ''}`}
-                  </Button>
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSubmitAfterPhoto}
+                      disabled={uploadingAfter}
+                      loading={uploadingAfter}
+                      variant="primary"
+                      size="lg"
+                    >
+                      {uploadingAfter ? 'Uploading...' : `Upload ${selectedAfterFiles.length} Photo${selectedAfterFiles.length > 1 ? 's' : ''}`}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -677,18 +695,17 @@ const CompleteJobPage = () => {
             <Button
               onClick={handleCompleteJob}
               variant="secondary"
-              className={` rounded-xl font-semibold text-lg transition-colors ${
-                beforePhotosUploaded && afterPhotosUploaded && !completingJob
-                  ? 'bg-gray-200 text-gray-900 hover:bg-gray-300 cursor-pointer'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
+              className={` rounded-xl font-semibold text-lg transition-colors ${beforePhotosUploaded && afterPhotosUploaded && !completingJob
+                ? 'bg-gray-200 text-gray-900 hover:bg-gray-300 cursor-pointer'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
               disabled={!beforePhotosUploaded || !afterPhotosUploaded || completingJob}
             >
-              {completingJob 
+              {completingJob
                 ? 'Completing Job...'
                 : beforePhotosUploaded && afterPhotosUploaded
-                ? 'Complete Job'
-                : 'Upload Photos to Complete Job'
+                  ? 'Complete Job'
+                  : 'Upload Photos to Complete Job'
               }
             </Button>
           </div>

@@ -1,10 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ChevronDown, UserRound, XCircle } from 'lucide-react';
+import { ChevronDown, UserRound, XCircle, X } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button, PageHeader, TierBadge } from '../../components';
 import { paymentService, handlePaymentError } from '../../services/paymentService';
 import { calculatePayoutAmounts } from '../../utils/paymentCalculations';
 import StarIcon from '../../assets/rating.svg';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+const PaymentForm = ({ amount, jobId, paymentId, onClose, onSuccess }) => {
+  console.log('📦 PaymentForm rendered with props:', { amount, jobId, paymentId });
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setProcessing(true);
+    setError(null);
+
+    const returnUrl = `${window.location.origin}/payment/success?job_id=${jobId}&payment_id=${paymentId}`;
+    console.log('🔗 Stripe return_url generated:', returnUrl);
+
+    const { error: submitError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: returnUrl,
+      },
+    });
+
+    if (submitError) {
+      setError(submitError.message);
+      setProcessing(false);
+    } else {
+      // successful payment will redirect to return_url
+      if (onSuccess) onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+
+      {!paymentId && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold">Debug Error:</strong>
+          <span className="block sm:inline"> paymentId is missing in PaymentForm prop. Redirect will fail.</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        disabled={!stripe || processing}
+        loading={processing}
+        className="w-full py-3"
+        size="lg"
+      >
+        Pay ${amount}
+      </Button>
+    </form>
+  );
+};
 
 const ConfirmYourCleanerPage = () => {
   const navigate = useNavigate();
@@ -52,6 +122,9 @@ const ConfirmYourCleanerPage = () => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [showOnlineBreakdown, setShowOnlineBreakdown] = useState(false);
+  const [clientSecret, setClientSecret] = useState(null);
+  const [paymentId, setPaymentId] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
 
   //Correct commission/GST/cleaner payout calculation
@@ -61,20 +134,77 @@ const ConfirmYourCleanerPage = () => {
     try {
       setProcessing(true);
       setError(null);
-  
-      console.log('🔔 Starting createPayment for jobId:', jobId);
-  
-      const response = await paymentService.createPayment(jobId);
-  
+
+      const quoteId = String(quoteData?._id || quoteData?.id || '');
+      const amount = Number(finalCleanerData.total);
+      const serviceProviderId = String(finalCleanerData.id || '');
+
+      const paymentPayload = {
+        jobId: String(jobId),
+        quoteId,
+        amount,
+        serviceProviderId,
+        description: `Payment for job ${jobId}`,
+        currency: 'AUD',
+        metadata: {} // Providing empty object in case backend does metadata.toString()
+      };
+
+      console.log('📡 Sending payment payload:', paymentPayload);
+
+      if (!quoteId || !amount || !serviceProviderId || serviceProviderId === 'Unknown') {
+        throw new Error('Missing required payment information (Quote, Amount, or Cleaner ID)');
+      }
+
+      const response = await paymentService.createPayment(paymentPayload);
+
       console.log('✅ createPayment response:', response);
-      // Backend: { success: true, data: { url, sessionId, paymentId, amount } }
+
+      // Handle Stripe Elements (clientSecret)
+      if (response?.success && (response?.clientSecret || response.data?.clientSecret)) {
+        const secret = response.clientSecret || response.data?.clientSecret;
+        const pid = response.payment?._id || response.data?.payment?._id || response.data?._id || response._id;
+
+        console.log('🆔 Captured IDs:', { clientSecret: secret, paymentId: pid });
+
+        if (!pid) {
+          console.error('❌ database paymentId is missing from response!', response);
+          setError('Failed to initialize payment record. Please try again.');
+          return;
+        }
+
+        setClientSecret(secret);
+        setPaymentId(pid);
+        setShowPaymentModal(true);
+        return;
+      }
+
+      // Handle fallback or different structure
+      if (response?.clientSecret || response.data?.clientSecret) {
+        const secret = response.clientSecret || response.data?.clientSecret;
+        const pid = response.payment?._id || response.data?.payment?._id || response.data?._id || response._id;
+
+        console.log('🆔 Captured IDs (fallback):', { clientSecret: secret, paymentId: pid });
+
+        if (!pid) {
+          console.error('❌ database paymentId is missing from response!', response);
+          setError('Failed to initialize payment record. Please try again.');
+          return;
+        }
+
+        setClientSecret(secret);
+        setPaymentId(pid);
+        setShowPaymentModal(true);
+        return;
+      }
+
+      // Handle Stripe Checkout (URL)
       if (response?.success && response?.data?.url) {
         const checkoutUrl = response.data.url;
         console.log('🌐 Redirecting to Stripe Checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
         return;
       }
-  
+
       console.error('❌ Unexpected payment response:', response);
       const msg =
         response?.error ||
@@ -243,6 +373,31 @@ const ConfirmYourCleanerPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && clientSecret && paymentId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative animate-fade-in shadow-xl max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowPaymentModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Complete Payment</h3>
+
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <PaymentForm
+                amount={finalCleanerData.total}
+                jobId={jobId}
+                paymentId={paymentId}
+                onClose={() => setShowPaymentModal(false)}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
     </>
   );
 };

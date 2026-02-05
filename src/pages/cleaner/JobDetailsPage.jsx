@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader, JobOverviewCard } from '../../components';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI } from '../../services/api';
+import { Wallet, Clock3, Home as HomeIcon, Ruler, AlertTriangle, CalendarDays } from 'lucide-react';
 
 const JobDetailsPage = () => {
   const navigate = useNavigate();
@@ -88,9 +89,105 @@ const JobDetailsPage = () => {
     });
   };
 
+  const getPreferredDaysDisplay = (preferredDays) => {
+    if (!preferredDays || typeof preferredDays !== 'object') return '';
+    
+    const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
+    if (days.length === 0) return '';
+    
+    return days.join(', ');
+  };
+
+  const getRepeatWeeksDisplay = (repeatWeeks) => {
+    if (!repeatWeeks) return '';
+    return `${repeatWeeks} week${repeatWeeks === '1' ? '' : 's'}`;
+  };
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === '') return '';
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return value;
+    return `$${numeric.toLocaleString('en-AU', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: numeric % 1 === 0 ? 0 : 2,
+    })}`;
+  };
+
   const serviceDetail = getServiceDetail(job);
   const scheduledDateLabel = job?.scheduledDate ? formatDate(job.scheduledDate) : 'Date not set';
   const jobFrequencyLabel = getJobFrequency(job);
+
+  const jobOverviewMeta = useMemo(() => {
+    if (!job) return [];
+    const meta = [];
+
+    const budgetValue = job.budget || job.estimatedPrice || job.priceEstimate || job.priceRange;
+    if (budgetValue) {
+      meta.push({
+        label: 'Budget',
+        value: formatCurrency(budgetValue),
+        icon: <Wallet className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const durationValue = job.estimatedDuration || job.duration || job.timeEstimate;
+    if (durationValue) {
+      meta.push({
+        label: 'Duration',
+        value: typeof durationValue === 'number' ? `${durationValue} hrs` : durationValue,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const propertyTypeValue = job.propertyType || job.propertyCategory;
+    if (propertyTypeValue) {
+      meta.push({
+        label: 'Property Type',
+        value: propertyTypeValue,
+        icon: <HomeIcon className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const propertySizeValue = job.propertySize || job.squareFootage || job.propertyArea;
+    if (propertySizeValue) {
+      meta.push({
+        label: 'Property Size',
+        value: propertySizeValue,
+        icon: <Ruler className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    const priorityValue = job.priority || job.priorityLevel;
+    if (priorityValue) {
+      meta.push({
+        label: 'Priority',
+        value: priorityValue,
+        icon: <AlertTriangle className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    // Add preferred days if available
+    const preferredDaysDisplay = getPreferredDaysDisplay(job?.preferredDays);
+    if (preferredDaysDisplay) {
+      meta.push({
+        label: 'Preferred Days',
+        value: preferredDaysDisplay,
+        icon: <CalendarDays className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    // Add repeat weeks if available
+    const repeatWeeksDisplay = getRepeatWeeksDisplay(job?.repeatWeeks);
+    if (repeatWeeksDisplay) {
+      meta.push({
+        label: 'Duration',
+        value: repeatWeeksDisplay,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    return meta;
+  }, [job]);
 
   const handleChatWithCustomer = () => {
     navigate(`/chat/${jobId}`);
@@ -150,6 +247,7 @@ const JobDetailsPage = () => {
               location={job?.location?.address || job?.address || job?.locationDescription || 'Location not specified'}
               photos={jobPhotos}
               viewerRole="cleaner"
+              metaInfo={jobOverviewMeta}
             />
           </div>
 

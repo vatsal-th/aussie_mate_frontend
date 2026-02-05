@@ -847,7 +847,7 @@ export const jobPhotosAPI = {
   // Upload before photos
   uploadBeforePhotos: async (jobId, files) => {
     const formData = new FormData();
-    files.forEach(file => formData.append('files', file));
+    files.forEach(file => formData.append('photos', file));
 
     const token = getAuthToken();
     if (!token) {
@@ -879,7 +879,7 @@ export const jobPhotosAPI = {
   // Upload after photos
   uploadAfterPhotos: async (jobId, files) => {
     const formData = new FormData();
-    files.forEach(file => formData.append('files', file));
+    files.forEach(file => formData.append('photos', file));
 
     const token = getAuthToken();
     if (!token) {

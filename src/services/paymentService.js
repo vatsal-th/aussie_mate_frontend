@@ -45,26 +45,26 @@ const paymentApiRequest = async (endpoint, options = {}) => {
   return data;
 };
 
-// Payment API Service (only existing backend routes)
+// Payment API Service (aligned with backend routes)
 export const paymentService = {
-  // Create Stripe Checkout payment
-  createPayment: async (jobId) => {
+  // Create payment (customer initiates payment)
+  createPayment: async (paymentData) => {
     return paymentApiRequest('/payments/create', {
       method: 'POST',
-      body: JSON.stringify({ jobId }),
+      body: JSON.stringify(paymentData),
     });
   },
 
-  // Manual capture (if you call it from admin/dev tools)
+  // Verify payment status
+  verifyPayment: async (paymentId) => {
+    return paymentApiRequest(`/payments/${paymentId}/verify`);
+  },
+
+  // Capture payment (Manual capture if needed, though usually automatic via webhook)
   capturePayment: async (paymentId) => {
-    return paymentApiRequest(`/payments/capture/${paymentId}`, {
+    return paymentApiRequest(`/payments/${paymentId}/capture`, {
       method: 'POST',
     });
-  },
-
-  // Get payment status by job
-  getPaymentStatus: async (jobId) => {
-    return paymentApiRequest(`/payments/status/${jobId}`);
   },
 
   // Stripe Connect (cleaner onboarding)
@@ -88,6 +88,16 @@ export const paymentService = {
   // Get payment history (all payments for current user)
   getPaymentHistory: async () => {
     return paymentApiRequest('/payments');
+  },
+
+  // Get payment status by job ID
+  getPaymentStatus: async (jobId) => {
+    return paymentApiRequest(`/payments/job/${jobId}/status`);
+  },
+
+  // Confirm checkout session (Stripe redirect success)
+  confirmCheckoutSession: async (sessionId) => {
+    return paymentApiRequest(`/payments/confirm-checkout?session_id=${sessionId}`);
   },
 };
 

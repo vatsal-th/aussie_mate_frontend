@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, UserRound, X } from 'lucide-react';
+import { AlertTriangle, UserRound, X, CalendarDays, Clock3, CheckCircle, Circle } from 'lucide-react';
 import { Button, MapWithPolyline, PageHeader } from '../../components';
 import CalendarIcon from '../../assets/Calendar.svg';
 import MapPinIcon from '../../assets/map-pin 1.png';
@@ -11,6 +11,53 @@ import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI, userAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
+
+// Helper functions for weekly job history
+const getPreferredDaysDisplay = (preferredDays) => {
+  if (!preferredDays || typeof preferredDays !== 'object') return '';
+  
+  const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
+  if (days.length === 0) return '';
+  
+  return days.join(', ');
+};
+
+const generateWeeklySchedule = (job) => {
+  if (!job?.preferredDays || !job?.repeatWeeks) return [];
+  
+  const preferredDays = Object.keys(job.preferredDays).filter(day => job.preferredDays[day] === true);
+  const repeatWeeks = parseInt(job.repeatWeeks);
+  const scheduledDate = new Date(job.scheduledDate);
+  
+  const schedule = [];
+  const dayOrder = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  for (let week = 1; week <= repeatWeeks; week++) {
+    preferredDays.forEach(day => {
+      const dayIndex = dayOrder.indexOf(day);
+      const weekStart = new Date(scheduledDate);
+      weekStart.setDate(scheduledDate.getDate() + (week - 1) * 7);
+      
+      const targetDate = new Date(weekStart);
+      targetDate.setDate(weekStart.getDate() + (dayIndex - weekStart.getDay()));
+      
+      const isCompleted = week === 1 && ['Monday', 'Saturday'].includes(day); // Mock completed for demo
+      const isInProgress = week === 2 && day === 'Monday'; // Mock in progress for demo
+      
+      schedule.push({
+        id: `${week}-${day}`,
+        week,
+        day,
+        date: targetDate,
+        status: isCompleted ? 'completed' : isInProgress ? 'in-progress' : 'pending',
+        photos: isCompleted ? (day === 'Monday' ? 2 : 1) : 0,
+        amount: 50
+      });
+    });
+  }
+  
+  return schedule;
+};
 
 
 const InProgressJobDetailsPage = () => {
@@ -28,6 +75,7 @@ const InProgressJobDetailsPage = () => {
     const [customerLocation, setCustomerLocation] = useState(null);
     const [isTrackingLocation, setIsTrackingLocation] = useState(false);
     const [locationError, setLocationError] = useState(null);
+    const [weeklySchedule, setWeeklySchedule] = useState([]);
     const cleanerLocationRef = useRef(null);
 
     useEffect(() => {
@@ -35,7 +83,7 @@ const InProgressJobDetailsPage = () => {
             try {
                 setLoading(true);
 
-                // Fetch job details and payment history in parallel
+                // Fetch job details and payment history
                 const [jobResponse, paymentResponse] = await Promise.all([
                     jobsAPI.getJobById(jobId),
                     paymentService.getPaymentHistory().catch(() => null)
@@ -48,6 +96,12 @@ const InProgressJobDetailsPage = () => {
                     }
 
                     setJob(jobResponse.data);
+                    
+                    // Generate weekly schedule for weekly jobs
+                    if (jobResponse.data.frequency === 'Weekly' && jobResponse.data.preferredDays) {
+                        const schedule = generateWeeklySchedule(jobResponse.data);
+                        setWeeklySchedule(schedule);
+                    }
 
                     // Set customer location from job data
                     const coords = jobResponse.data.location?.coordinates;
@@ -56,7 +110,7 @@ const InProgressJobDetailsPage = () => {
                         if (typeof coords === 'string') {
                             const coordsArr = coords.split(',').map(coord => parseFloat(coord.trim()));
                             lat = coordsArr[1];
-                            lng = coordsArr[0];
+                            lng = coordsArr[0]
                         } else if (coords.lat && coords.lng) {
                             lat = coords.lat;
                             lng = coords.lng;
@@ -381,15 +435,13 @@ const InProgressJobDetailsPage = () => {
     const getPaymentSummary = () => {
         const totalAmount = acceptedQuote?.price || job?.estimatedPrice || 0;
 
-        // Find payment for this job from payment history (try different field names and structures)
-        const paymentsArray = paymentStatus?.data?.payments || paymentStatus?.payments || paymentStatus?.data || [];
-
-        const jobPayment = Array.isArray(paymentsArray) ? paymentsArray.find(payment =>
+        // Find payment for this job from payment history (try different field names)
+        const jobPayment = paymentStatus?.data?.payments?.find(payment =>
             payment.jobId === jobId ||
             payment.jobId === job?.jobId ||
             payment.jobId === job?._id ||
             payment._id === jobId
-        ) : null;
+        );
 
         const paidAmount = jobPayment?.amount ?? totalAmount;
         const cleanerAmount = jobPayment?.cleanerAmount ?? Math.round(paidAmount * 0.9);
@@ -589,6 +641,91 @@ const InProgressJobDetailsPage = () => {
                                 {acceptedQuote.description && (
                                     <p className="text-sm text-gray-600">{acceptedQuote.description}</p>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Work Progress Section for Weekly Jobs */}
+                    {weeklySchedule.length > 0 && (
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-primary-500 mb-3">Work Progress</h3>
+                            <div className="bg-white rounded-2xl p-4 shadow-sm">
+                                <div className="space-y-3">
+                                    {weeklySchedule.map((item) => (
+                                        <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-shrink-0">
+                                                    {item.status === 'completed' ? (
+                                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                                    ) : item.status === 'in-progress' ? (
+                                                        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                                    ) : (
+                                                        <Circle className="w-5 h-5 text-gray-400" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-primary-500">
+                                                        {item.day} - Week {item.week}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {item.date.toLocaleDateString('en-US', { 
+                                                            month: 'short', 
+                                                            day: 'numeric',
+                                                            year: 'numeric'
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <div className="text-sm font-medium text-primary-600">
+                                                        ${item.amount}
+                                                    </div>
+                                                    {item.photos > 0 && (
+                                                        <div className="text-xs text-gray-500">
+                                                            {item.photos} photo{item.photos > 1 ? 's' : ''}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {item.status === 'completed' && (
+                                                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                        Completed
+                                                    </span>
+                                                )}
+                                                {item.status === 'in-progress' && (
+                                                    <Button size="sm" variant="primary">
+                                                        Mark Complete
+                                                    </Button>
+                                                )}
+                                                {item.status === 'pending' && (
+                                                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                                        Pending
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {/* Progress Summary */}
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-gray-600">
+                                            <span className="font-medium text-green-600">
+                                                {weeklySchedule.filter(item => item.status === 'completed').length}
+                                            </span> completed • 
+                                            <span className="font-medium text-blue-600 ml-1">
+                                                {weeklySchedule.filter(item => item.status === 'in-progress').length}
+                                            </span> in progress • 
+                                            <span className="font-medium text-gray-600 ml-1">
+                                                {weeklySchedule.filter(item => item.status === 'pending').length}
+                                            </span> pending
+                                        </div>
+                                        <div className="text-sm font-medium text-primary-600">
+                                            Total: ${weeklySchedule.reduce((sum, item) => sum + item.amount, 0)}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
- Wallet,
+  Wallet,
   Clock3,
   Home as HomeIcon,
   Ruler,
   AlertTriangle,
+  CalendarDays,
 } from 'lucide-react';
 import { Button, ConfirmationModal, PageHeader, JobOverviewCard } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
@@ -135,6 +136,38 @@ const CustomerJobDetailsPage = () => {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const getPreferredDaysDisplay = (preferredDays) => {
+    if (!preferredDays || typeof preferredDays !== 'object') return '';
+    
+    const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
+    if (days.length === 0) return '';
+    
+    return days.join(', ');
+  };
+
+  const getRepeatWeeksDisplay = (repeatWeeks) => {
+    if (!repeatWeeks) return '';
+    return `${repeatWeeks} week${repeatWeeks === '1' ? '' : 's'}`;
+  };
+
+  const getFrequencyDisplay = (job) => {
+    const frequency = getJobFrequency(job);
+    const preferredDays = getPreferredDaysDisplay(job?.preferredDays);
+    const repeatWeeks = getRepeatWeeksDisplay(job?.repeatWeeks);
+    
+    let display = frequency;
+    
+    if (preferredDays && repeatWeeks) {
+      display += ` • ${preferredDays} • ${repeatWeeks}`;
+    } else if (preferredDays) {
+      display += ` • ${preferredDays}`;
+    } else if (repeatWeeks) {
+      display += ` • ${repeatWeeks}`;
+    }
+    
+    return display;
   };
 
   const handleDropdownToggle = () => {
@@ -275,7 +308,7 @@ const CustomerJobDetailsPage = () => {
 
   const serviceDetail = getServiceDetail(job);
   const scheduledDateLabel = job?.scheduledDate ? formatDate(job.scheduledDate) : 'Date not set';
-  const jobFrequencyLabel = getJobFrequency(job);
+  const jobFrequencyLabel = getFrequencyDisplay(job);
   const jobOverviewMeta = useMemo(() => {
     if (!job) return [];
     const meta = [];
@@ -325,8 +358,28 @@ const CustomerJobDetailsPage = () => {
       });
     }
 
+    // Add preferred days if available
+    const preferredDaysDisplay = getPreferredDaysDisplay(job?.preferredDays);
+    if (preferredDaysDisplay) {
+      meta.push({
+        label: 'Preferred Days',
+        value: preferredDaysDisplay,
+        icon: <CalendarDays className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
+    // Add repeat weeks if available
+    const repeatWeeksDisplay = getRepeatWeeksDisplay(job?.repeatWeeks);
+    if (repeatWeeksDisplay) {
+      meta.push({
+        label: 'Duration',
+        value: repeatWeeksDisplay,
+        icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
+      });
+    }
+
     return meta;
-  }, [job]);
+  }, [job, getPreferredDaysDisplay, getRepeatWeeksDisplay]);
 
   const roleSections = useMemo(() => {
     if (!job) return {};

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { UserRound } from 'lucide-react';
+import { UserRound, CalendarDays, Clock3 } from 'lucide-react';
 import { Button, Loader, JobOverviewCard } from '../../components';
 import MessageIcon from '../../assets/message2.svg';
 import CallIcon from '../../assets/phone2.svg';
@@ -8,7 +8,41 @@ import CallIcon2 from '../../assets/phone.svg';
 import InfoIcon from '../../assets/info.svg';
 import JobLiveIcon from '../../assets/joblive.gif';
 import { jobsAPI, userAPI } from '../../services/api';
-import { paymentService } from '../../services/paymentService';
+
+// Helper functions moved outside component
+const getPreferredDaysDisplay = (preferredDays) => {
+  if (!preferredDays || typeof preferredDays !== 'object') return '';
+  
+  const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
+  if (days.length === 0) return '';
+  
+  return days.join(', ');
+};
+
+const getRepeatWeeksDisplay = (repeatWeeks) => {
+  if (!repeatWeeks) return '';
+  return `${repeatWeeks} week${repeatWeeks === '1' ? '' : 's'}`;
+};
+
+const getFrequencyDisplay = (job) => {
+  if (!job) return 'One-time';
+  const frequency = job.frequency || job.serviceFrequency || job.schedule?.frequency || 'One-time';
+  const preferredDays = getPreferredDaysDisplay(job?.preferredDays);
+  const repeatWeeks = getRepeatWeeksDisplay(job?.repeatWeeks);
+  
+  let display = frequency;
+  
+  if (preferredDays && repeatWeeks) {
+    display += ` • ${preferredDays} • ${repeatWeeks}`;
+  } else if (preferredDays) {
+    display += ` • ${preferredDays}`;
+  } else if (repeatWeeks) {
+    display += ` • ${repeatWeeks}`;
+  }
+  
+  return display;
+};
+
 
 const JobBookedSuccessfullyPage = () => {
   const navigate = useNavigate();
@@ -101,18 +135,8 @@ const JobBookedSuccessfullyPage = () => {
             : cleanerInfo.name || 'Cleaner';
 
           let paymentMethod = 'online';
-          let onlineAmount = acceptedQuote.price || 0;
-          let cashAmount = 0;
-
-          try {
-            const paymentResponse = await paymentService.getPaymentStatus(jobId);
-            if (paymentResponse.success && paymentResponse.data?.paymentMethod === 'online') {
-              onlineAmount = paymentResponse.data.amount || (acceptedQuote.price || 0);
-            }
-          } catch (paymentError) {
-            onlineAmount = Math.round((acceptedQuote.price || 0) * 0.1);
-            cashAmount = Math.round((acceptedQuote.price || 0) * 0.9);
-          }
+          let onlineAmount = Math.round((acceptedQuote.price || 0) * 0.1);
+          let cashAmount = Math.round((acceptedQuote.price || 0) * 0.9);
 
           // Set job data for payment summary
           setJob({
@@ -278,12 +302,22 @@ const JobBookedSuccessfullyPage = () => {
               serviceDetail={jobData.selectedServiceDetail || jobData.serviceDetail || jobData.service?.name || ''}
               instructions={jobData.specialInstructions || jobData.instructions || jobData.additionalNotes || ''}
               scheduledDate={job?.scheduledDate || ''}
-              frequency={jobData.frequency || jobData.serviceFrequency || jobData.schedule?.frequency || 'One-time'}
+              frequency={getFrequencyDisplay(jobData)}
               location={jobData.location?.address || jobData.location?.fullAddress || jobData.address || 'Location not specified'}
               photos={jobPhotos}
               viewerRole="customer"
               metaInfo={[
                 { label: 'Total Amount', value: `$${job?.total || 0}` },
+                ...(getPreferredDaysDisplay(jobData?.preferredDays) ? [{
+                  label: 'Preferred Days',
+                  value: getPreferredDaysDisplay(jobData?.preferredDays),
+                  icon: <CalendarDays className="w-4 h-4 text-primary-400" strokeWidth={2.2} />
+                }] : []),
+                ...(getRepeatWeeksDisplay(jobData?.repeatWeeks) ? [{
+                  label: 'Duration',
+                  value: getRepeatWeeksDisplay(jobData?.repeatWeeks),
+                  icon: <Clock3 className="w-4 h-4 text-primary-400" strokeWidth={2.2} />
+                }] : []),
               ]}
             />
           </div>
