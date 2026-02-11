@@ -11,7 +11,7 @@ const AppLayout = ({ children, showHeader = true, usePageLayout = true }) => {
   // Only page content goes inside PageLayout
   if (usePageLayout) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 ">
         {showHeader && <Header />}
         <PageLayout>{children}</PageLayout>
       </div>
