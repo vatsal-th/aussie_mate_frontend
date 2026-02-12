@@ -632,6 +632,65 @@ const CustomerJobDetailsPage = () => {
           />
         </div>
 
+        {/* Custom Job Dates Section */}
+        {job?.frequency === 'Custom' && job?.occurrences && job.occurrences.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6 mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-3 sm:mb-4">
+              Job Schedule
+            </h3>
+            <div className="space-y-2 sm:space-y-3">
+              {job.occurrences.map((occurrence, index) => (
+                <div key={occurrence._id || index} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <div className="font-medium text-primary-500 text-sm sm:text-base">
+                        {occurrence.label || `Job ${index + 1}`}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        {formatDate(occurrence.scheduledDate)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm sm:text-base font-semibold text-primary-600">
+                      ${occurrence.amount || 0}
+                    </div>
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block mt-1 ${
+                      occurrence.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      occurrence.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                      occurrence.status === 'pending_customer_confirmation' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {occurrence.statusDisplay || occurrence.status || 'Pending'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Summary */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium text-green-600">
+                    {job.occurrences.filter(occ => occ.status === 'completed').length}
+                  </span> completed •
+                  <span className="font-medium text-blue-600 ml-1">
+                    {job.occurrences.filter(occ => occ.status === 'in_progress').length}
+                  </span> in progress •
+                  <span className="font-medium text-gray-600 ml-1">
+                    {job.occurrences.filter(occ => occ.status === 'pending' || occ.status === 'pending_customer_confirmation').length}
+                  </span> pending
+                </div>
+                <div className="text-sm font-medium text-primary-600">
+                  Total: ${job.occurrences.reduce((sum, occ) => sum + (occ.amount || 0), 0)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Service Provider Quotes Section */}
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
