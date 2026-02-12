@@ -1,4 +1,5 @@
 import React from 'react'
+import PlatformPolicyPage from './pages/legal/PlatformPolicyPage'
 
 export const CLEANER_ROLES = [
   'Professional Cleaner',
@@ -70,6 +71,7 @@ export const authRoutes = [
   { path: '/ndis-plan-info', component: NDISPlanInfoPage },
   { path: '/forgot-password', component: ForgotPasswordPage },
   { path: '/reset-password', component: ResetPasswordPage },
+  { path: '/platform-policy', component: PlatformPolicyPage, showHeader: true },
 ]
 
 export const customerRoutes = [
@@ -94,6 +96,7 @@ export const customerRoutes = [
   { path: '/booking-confirmation/:jobId', component: JobBookedSuccessfullyPage },
   { path: '/customer-in-progress-job/:jobId', component: CustomerInProgressJobDetailsPage },
   { path: '/payment/success', component: PaymentSuccessCallbackPage },
+  { path: '/platform-policy', component: PlatformPolicyPage },
 ]
 
 export const cleanerRoutes = [
@@ -113,6 +116,7 @@ export const cleanerRoutes = [
   { path: '/chat/:jobId', component: CleanerChatPage },
   { path: '/earnings', component: EarningsPage },
   { path: '/cleaner/stripe/success', component: StripeSuccessPage },
+  { path: '/platform-policy', component: PlatformPolicyPage },
   { path: '/location', component: LocationPage, allowedRoles: ['Customer', ...CLEANER_ROLES], showHeader: false },
 ]
 
