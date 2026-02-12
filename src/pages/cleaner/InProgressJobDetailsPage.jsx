@@ -513,7 +513,10 @@ const InProgressJobDetailsPage = () => {
                 <div className="px-4 py-4">
                     <PageHeader
                         title={headerTitle}
-                        onBack={() => navigate(-1)}
+                        onBack={() => {
+                            const savedTab = localStorage.getItem('cleanerActiveTab');
+                            navigate('/cleaner-jobs', { state: { tab: savedTab || 'accepted' }, replace: true });
+                        }}
                     />
                 </div>
 
@@ -820,8 +823,8 @@ const InProgressJobDetailsPage = () => {
                                             key={item.id}
                                             onClick={() => setSelectedWorkProgressId(item.id)}
                                             className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all cursor-pointer ${isToday(item.date)
-                                                    ? 'bg-blue-50 border-blue-300 shadow-md'
-                                                    : 'bg-gray-50 border-gray-200'
+                                                ? 'bg-blue-50 border-blue-300 shadow-md'
+                                                : 'bg-gray-50 border-gray-200'
                                                 } ${selectedWorkProgressId === item.id
                                                     ? 'ring-2 ring-blue-500 ring-offset-2'
                                                     : ''
@@ -878,8 +881,8 @@ const InProgressJobDetailsPage = () => {
                                                 )}
                                                 {item.status === 'pending' && (
                                                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isToday(item.date)
-                                                            ? 'bg-blue-100 text-blue-700 font-bold'
-                                                            : 'bg-gray-100 text-gray-600'
+                                                        ? 'bg-blue-100 text-blue-700 font-bold'
+                                                        : 'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         Pending
                                                     </span>

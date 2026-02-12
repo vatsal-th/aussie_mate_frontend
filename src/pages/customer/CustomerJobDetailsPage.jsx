@@ -140,10 +140,10 @@ const CustomerJobDetailsPage = () => {
 
   const getPreferredDaysDisplay = (preferredDays) => {
     if (!preferredDays || typeof preferredDays !== 'object') return '';
-    
+
     const days = Object.keys(preferredDays).filter(day => preferredDays[day] === true);
     if (days.length === 0) return '';
-    
+
     return days.join(', ');
   };
 
@@ -156,9 +156,9 @@ const CustomerJobDetailsPage = () => {
     const frequency = getJobFrequency(job);
     const preferredDays = getPreferredDaysDisplay(job?.preferredDays);
     const repeatWeeks = getRepeatWeeksDisplay(job?.repeatWeeks);
-    
+
     let display = frequency;
-    
+
     if (preferredDays && repeatWeeks) {
       display += ` • ${preferredDays} • ${repeatWeeks}`;
     } else if (preferredDays) {
@@ -166,7 +166,7 @@ const CustomerJobDetailsPage = () => {
     } else if (repeatWeeks) {
       display += ` • ${repeatWeeks}`;
     }
-    
+
     return display;
   };
 
@@ -558,7 +558,10 @@ const CustomerJobDetailsPage = () => {
             <div className="text-center py-8">
               <div className="text-red-500 text-lg font-medium">{error || 'Job not found'}</div>
               <Button
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  const savedTab = localStorage.getItem('customerActiveTab');
+                  navigate('/my-jobs', { state: { tab: savedTab || 'all' }, replace: true });
+                }}
                 size="md"
                 className="mt-4"
               >
@@ -576,7 +579,10 @@ const CustomerJobDetailsPage = () => {
       <div className="max-w-6xl mx-auto py-3 sm:py-4 px-3 sm:px-4 md:px-4">
         <PageHeader
           title={`Job Details - ${job.serviceType || 'Cleaning'}`}
-          onBack={() => navigate(-1)}
+          onBack={() => {
+            const savedTab = localStorage.getItem('customerActiveTab');
+            navigate('/my-jobs', { state: { tab: savedTab || 'all' }, replace: true });
+          }}
           titleClassName="text-sm sm:text-base md:text-lg font-semibold text-primary-500 truncate"
           backButtonClassName="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
           rightSlot={
@@ -696,30 +702,30 @@ const CustomerJobDetailsPage = () => {
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
           <div className="mb-3 sm:mb-4">
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1 sm:mb-2">
-              {job.serviceType === 'petSitting' ? 'Pet Sitter Quotes' : 
-               job.serviceType === 'cleaning' ? 'Cleaner Quotes' : 
-               job.serviceType === 'handyman' ? 'Handyman Quotes' : 
-               job.serviceType === 'housekeeping' ? 'Housekeeper Quotes' : 
-               job.serviceType === 'commercialCleaning' ? 'Commercial Cleaner Quotes' : 
-               job.serviceType === 'ndisSupport' ? 'NDIS Support Quotes' : 
-               'Pet Sitting Quote'} ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
+              {job.serviceType === 'petSitting' ? 'Pet Sitter Quotes' :
+                job.serviceType === 'cleaning' ? 'Cleaner Quotes' :
+                  job.serviceType === 'handyman' ? 'Handyman Quotes' :
+                    job.serviceType === 'housekeeping' ? 'Housekeeper Quotes' :
+                      job.serviceType === 'commercialCleaning' ? 'Commercial Cleaner Quotes' :
+                        job.serviceType === 'ndisSupport' ? 'NDIS Support Quotes' :
+                          'Pet Sitting Quote'} ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
             </h3>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">
               {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0
                 ? (job.serviceType === 'petSitting' ? "Pet sitters nearby have sent their offers. Review and chat before choosing." :
-                   job.serviceType === 'cleaning' ? "Cleaners nearby have sent their offers. Review and chat before choosing." :
-                   job.serviceType === 'handyman' ? "Handymen nearby have sent their offers. Review and chat before choosing." :
-                   job.serviceType === 'housekeeping' ? "Housekeepers nearby have sent their offers. Review and chat before choosing." :
-                   job.serviceType === 'commercialCleaning' ? "Commercial cleaners nearby have sent their offers. Review and chat before choosing." :
-                   job.serviceType === 'ndisSupport' ? "NDIS support providers nearby have sent their offers. Review and chat before choosing." :
-                   "Service providers nearby have sent their offers. Review and chat before choosing.")
+                  job.serviceType === 'cleaning' ? "Cleaners nearby have sent their offers. Review and chat before choosing." :
+                    job.serviceType === 'handyman' ? "Handymen nearby have sent their offers. Review and chat before choosing." :
+                      job.serviceType === 'housekeeping' ? "Housekeepers nearby have sent their offers. Review and chat before choosing." :
+                        job.serviceType === 'commercialCleaning' ? "Commercial cleaners nearby have sent their offers. Review and chat before choosing." :
+                          job.serviceType === 'ndisSupport' ? "NDIS support providers nearby have sent their offers. Review and chat before choosing." :
+                            "Service providers nearby have sent their offers. Review and chat before choosing.")
                 : (job.serviceType === 'petSitting' ? "No quotes yet. Pet sitters will send quotes soon." :
-                   job.serviceType === 'cleaning' ? "No quotes yet. Cleaners will send quotes soon." :
-                   job.serviceType === 'handyman' ? "No quotes yet. Handymen will send quotes soon." :
-                   job.serviceType === 'housekeeping' ? "No quotes yet. Housekeepers will send quotes soon." :
-                   job.serviceType === 'commercialCleaning' ? "No quotes yet. Commercial cleaners will send quotes soon." :
-                   job.serviceType === 'ndisSupport' ? "No quotes yet. NDIS support providers will send quotes soon." :
-                   "No quotes yet. Service providers will send quotes soon.")
+                  job.serviceType === 'cleaning' ? "No quotes yet. Cleaners will send quotes soon." :
+                    job.serviceType === 'handyman' ? "No quotes yet. Handymen will send quotes soon." :
+                      job.serviceType === 'housekeeping' ? "No quotes yet. Housekeepers will send quotes soon." :
+                        job.serviceType === 'commercialCleaning' ? "No quotes yet. Commercial cleaners will send quotes soon." :
+                          job.serviceType === 'ndisSupport' ? "No quotes yet. NDIS support providers will send quotes soon." :
+                            "No quotes yet. Service providers will send quotes soon.")
               }
             </p>
           </div>
@@ -866,12 +872,12 @@ const CustomerJobDetailsPage = () => {
             <div className="text-center py-8">
               <div className="text-gray-500 text-sm">
                 {job.serviceType === 'petSitting' ? "Waiting for pet sitters to send quotes..." :
-                 job.serviceType === 'cleaning' ? "Waiting for cleaners to send quotes..." :
-                 job.serviceType === 'handyman' ? "Waiting for handymen to send quotes..." :
-                 job.serviceType === 'housekeeping' ? "Waiting for housekeepers to send quotes..." :
-                 job.serviceType === 'commercialCleaning' ? "Waiting for commercial cleaners to send quotes..." :
-                 job.serviceType === 'ndisSupport' ? "Waiting for NDIS support providers to send quotes..." :
-                 "Waiting for service providers to send quotes..."}
+                  job.serviceType === 'cleaning' ? "Waiting for cleaners to send quotes..." :
+                    job.serviceType === 'handyman' ? "Waiting for handymen to send quotes..." :
+                      job.serviceType === 'housekeeping' ? "Waiting for housekeepers to send quotes..." :
+                        job.serviceType === 'commercialCleaning' ? "Waiting for commercial cleaners to send quotes..." :
+                          job.serviceType === 'ndisSupport' ? "Waiting for NDIS support providers to send quotes..." :
+                            "Waiting for service providers to send quotes..."}
               </div>
             </div>
           )}
