@@ -2,7 +2,7 @@ import './App.css'
 import React, { Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
-import HomePage from './pages/HomePage'
+const HomePage = React.lazy(() => import('./pages/HomePage'))
 import { ProtectedRoute, ScrollToTop, Loader } from './components'
 import { authRoutes, customerRoutes, cleanerRoutes, CLEANER_ROLES } from './routeGroups'
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'))
