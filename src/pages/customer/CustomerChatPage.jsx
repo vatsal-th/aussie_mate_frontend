@@ -155,15 +155,15 @@ const CustomerChatPage = () => {
                 setCleanerName(`${cleanerObj.firstName || ''} ${cleanerObj.lastName || ''}`.trim());
               }
 
-              // Join chat with the actual cleaner ID
+              // Join chat with the actual cleaner ID or room ID
               const actualCleanerId = cleanerQuote.cleanerId?._id || cleanerQuote.cleanerId?.id || cleanerQuote.cleanerId || cleanerQuote.id;
               
-              // CRITICAL: If we have a chatRoomId, set it now so we can send messages immediately
               if (cleanerQuote.chatRoomId) {
                 setCurrentChatRoom({ chatRoomId: cleanerQuote.chatRoomId });
+                socketService.joinRoom(cleanerQuote.chatRoomId);
+              } else {
+                socketService.joinChat(jobId, actualCleanerId || cleanerId);
               }
-
-              socketService.joinChat(jobId, actualCleanerId || cleanerId);
             } else {
               // If not found in job data, try to join anyway using the ID from URL
               socketService.joinChat(jobId, cleanerId);
@@ -229,25 +229,33 @@ const CustomerChatPage = () => {
   const handleSendMessage = () => {
     if (newMessage.trim()) {
 
+      const tempMessage = {
+        _id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`,
+        senderId: { _id: currentUser?.id || currentUser?._id || 'user' },
+        content: newMessage.trim(),
+        message: newMessage.trim(),
+        messageType: 'text',
+        createdAt: new Date().toISOString(),
+        time: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).toLowerCase(),
+        isOptimistic: true
+      };
+
       if (currentChatRoom?.chatRoomId && isConnected) {
+        // Optimistically add to state
+        setMessages(prev => [...prev, tempMessage]);
         socketService.sendMessage(currentChatRoom.chatRoomId, newMessage.trim());
         setNewMessage('');
+        scrollToBottom();
       } else {
         // Fallback to static messages when not connected
-        const message = {
-          id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          sender: 'user',
-          message: newMessage.trim(),
-          timestamp: new Date().toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          })
-        };
-        setMessages(prev => {
-          return [...prev, message];
-        });
+        setMessages(prev => [...prev, { ...tempMessage, isOptimistic: false }]);
         setNewMessage('');
+        scrollToBottom();
       }
     }
   };
@@ -262,19 +270,23 @@ const CustomerChatPage = () => {
     try {
       setLoading(true);
       setError('');
+      
+      const cleanerIdToAssign = cleanerId;
+      if (!cleanerIdToAssign) {
+        setError('Cleaner information not found.');
+        return;
+      }
 
-      // Use the job assignment API as requested
-      const response = await jobsAPI.assignCleaner(jobId, cleanerId);
+      const response = await jobsAPI.assignCleaner(jobId, cleanerIdToAssign);
 
       if (response.success) {
-        // Success! Navigate directly to the booking confirmation page
-        navigate(`/booking-confirmation/${jobId}`);
+        navigate(`/booking-confirmation/${jobId}?cleaner=${cleanerIdToAssign}`);
       } else {
-        setError(response.message || 'Failed to accept quote. Please try again.');
+        setError(response.message || response.error || 'Failed to assign cleaner. Please try again.');
       }
     } catch (err) {
-      console.error('Error accepting quote:', err);
-      setError('An error occurred while accepting the quote. Please try again.');
+      console.error('Error assigning cleaner:', err);
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -467,13 +479,13 @@ const CustomerChatPage = () => {
               onClick={handleRejectQuote}
               className="text-red-500 text-sm sm:text-base font-bold hover:text-red-600 transition-colors"
             >
-              Reject Quote
+              Not Interested
             </button>
             <Button
               onClick={handleAcceptQuote}
               className="flex-1 max-w-[240px] bg-[#1D75FF] hover:bg-blue-600 text-white py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold shadow-md transition-all sm:translate-y-0"
             >
-              Accept Quote & Book
+              Assign & Book
             </Button>
           </div>
         </div>

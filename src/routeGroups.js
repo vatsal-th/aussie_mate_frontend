@@ -2,12 +2,7 @@ import React from 'react'
 import PlatformPolicyPage from './pages/legal/PlatformPolicyPage'
 
 export const CLEANER_ROLES = [
-  'Professional Cleaner',
-  'Student Cleaner',
-  'NDIS Assistant',
-  'Retail Auditor',
-  'Pet Sitter',
-  'Housekeeper',
+  'Cleaner',
 ]
 
 // Auth pages
@@ -58,6 +53,8 @@ const CompleteJobPage = React.lazy(() => import('./pages/cleaner/CompleteJobPage
 const ProviderComplianceQuizPage = React.lazy(() => import('./pages/cleaner/ProviderComplianceQuizPage'))
 const CleanerChatPage = React.lazy(() => import('./pages/cleaner/CleanerChatPage'))
 const EarningsPage = React.lazy(() => import('./pages/cleaner/EarningsPage'))
+const MySubscriptionPage = React.lazy(() => import('./pages/cleaner/MySubscriptionPage'))
+const SubscriptionSuccessPage = React.lazy(() => import('./pages/cleaner/SubscriptionSuccessPage'))
 
 // Shared pages
 const StripeSuccessPage = React.lazy(() => import('./pages/StripeSuccessPage'))
@@ -111,6 +108,8 @@ export const cleanerRoutes = [
   { path: '/cleaner/compliance-quiz', component: ProviderComplianceQuizPage },
   { path: '/chat/:jobId', component: CleanerChatPage },
   { path: '/earnings', component: EarningsPage },
+  { path: '/my-subscription', component: MySubscriptionPage },
+  { path: '/subscription/success', component: SubscriptionSuccessPage },
   { path: '/cleaner/stripe/success', component: StripeSuccessPage },
   { path: '/platform-policy', component: PlatformPolicyPage },
   { path: '/location', component: LocationPage, allowedRoles: ['Customer', ...CLEANER_ROLES], showHeader: false },

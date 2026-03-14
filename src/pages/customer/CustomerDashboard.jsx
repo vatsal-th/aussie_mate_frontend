@@ -99,7 +99,11 @@ const CustomerDashboard = () => {
 
       try {
         setLoading(true);
-        const res = await jobsAPI.getCustomerJobs(currentUserId, { page: 1, limit: 10 });
+        const res = await jobsAPI.getMyJobs({ 
+          page: 1, 
+          limit: 10,
+          tab: 'all'
+        });
         const list = res?.data || res || [];
 
         const normalized = list.map((j) => {

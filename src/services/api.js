@@ -50,13 +50,19 @@ const setMockBankAccounts = (accounts) => {
 const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
 
+  const headers = {
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  // Only add Content-Type: application/json if there's a body and it's not already set
+  if (options.body && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
     ...options,
+    headers,
   };
 
   try {
@@ -93,10 +99,10 @@ const apiRequest = async (endpoint, options = {}) => {
 // Authentication API
 export const authAPI = {
   // Login user
-  login: async (email, password, userType) => {
+  login: async (email, password, role) => {
     const response = await apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password, userType }),
+      body: JSON.stringify({ email, password, role }),
     });
 
     // Store token and user data
@@ -317,15 +323,15 @@ export const jobsAPI = {
   getWeeklyJobProgress: async (jobId) => {
     return apiRequest(`/jobs/${jobId}/weekly-progress`);
   },
-  getCustomerJobs: async (customerId, params = {}) => {
+  getMyJobs: async (params = {}) => {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== '' && value !== 'null') {
         query.set(key, value);
       }
     });
     const qs = query.toString();
-    return apiRequest(`/jobs?customerId=${customerId}${qs ? `&${qs}` : ''}`);
+    return apiRequest(`/jobs/my-jobs${qs ? `?${qs}` : ''}`);
   },
 
   // Get all jobs (supports backend pagination/filters)
@@ -341,6 +347,20 @@ export const jobsAPI = {
     if (quotedBy) params.set('quotedBy', quotedBy);
     const qs = params.toString();
     return apiRequest(`/jobs${qs ? `?${qs}` : ''}`);
+  },
+
+  // Get cleaner job feed with tabs and subfilters
+  getCleanerJobFeed: async ({ tab, subFilter, page = 1, limit = 20, categoryId, location } = {}) => {
+    const params = new URLSearchParams();
+    if (tab) params.set('tab', tab);
+    if (subFilter) params.set('subFilter', subFilter);
+    if (page) params.set('page', String(page));
+    if (limit) params.set('limit', String(limit));
+    if (categoryId) params.set('categoryId', categoryId);
+    if (location) params.set('location', location);
+    
+    const qs = params.toString();
+    return apiRequest(`/jobs/feed/cleaner${qs ? `?${qs}` : ''}`);
   },
 
   // Get job by ID (alias for getJobDetails)
@@ -421,6 +441,14 @@ export const jobsAPI = {
   assignCleaner: async (jobId, cleanerId) => {
     return apiRequest(`/jobs/${jobId}/assign/${cleanerId}`, {
       method: 'POST',
+    });
+  },
+
+  // Initiate contact with a job (Cleaner)
+  contactJob: async (jobId, { message }) => {
+    return apiRequest(`/jobs/${jobId}/contact`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
     });
   },
 };
@@ -1044,6 +1072,41 @@ export const reviewsAPI = {
   }
 };
 
+// Subscriptions API
+export const subscriptionsAPI = {
+  // Get all subscription plans
+  getPlans: async () => {
+    return apiRequest('/subscriptions/plans', {
+      method: 'GET',
+      // No body sent to match Postman exactly
+    });
+  },
+
+  // Checkout a subscription plan
+  checkoutPlan: async (planId) => {
+    return apiRequest('/subscriptions/checkout-plan', {
+      method: 'POST',
+      body: JSON.stringify({ planId }),
+    });
+  },
+
+  // Get current subscription status
+  getMyStatus: async (planId) => {
+    const options = { method: 'GET' };
+
+    
+    return apiRequest('/subscriptions/my-status', options);
+  },
+
+  // Get subscription history
+  getHistory: async (page = 1, limit = 20) => {
+    return apiRequest('/subscriptions/history', {
+      method: 'POST',
+      body: JSON.stringify({ page, limit }),
+    });
+  },
+};
+
 // Job Details API
 export const jobDetailsAPI = {
   // Get completed job details
@@ -1224,6 +1287,7 @@ export default {
   reviewsAPI,
   jobDetailsAPI,
   categoriesAPI,
+  subscriptionsAPI,
   uploadFile,
   uploadFileToCloudinary,
   uploadMultipleFilesToCloudinary,
