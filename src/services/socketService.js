@@ -32,18 +32,24 @@ class SocketService {
       return;
     }
 
-    if (backendURL.startsWith('https://')) {
-      backendURL = backendURL.replace('https://', 'wss://');
-    } else if (backendURL.startsWith('http://')) {
-      backendURL = backendURL.replace('http://', 'ws://');
-    }
+    // Let Socket.IO handle the protocol upgrade (ws/wss) automatically
+    // Manual replacement can sometimes cause issues with proxies/load balancers
 
 
+    console.log('🔌 [SOCKET] Connecting with multi-layer auth...');
+    
     this.socket = io(backendURL, {
       auth: { token },
+      query: { token },
+      extraHeaders: {
+        'Authorization': `Bearer ${token}`
+      },
       transports: ["websocket"],
-      timeout: 5000,
-      forceNew: true
+      timeout: 10000,
+      forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
 
     this.socket.on('connect', () => {
@@ -147,10 +153,13 @@ class SocketService {
     });
 
     this.socket.on('error', (error) => {
-      console.error('❌ Socket error:', error);
+      console.error('❌ [SOCKET ERROR]', error);
+      console.error('📊 [SOCKET STATE] isConnected:', this.isConnected, 'socketId:', this.socket?.id);
+      
       if (error.message === 'Failed to join chat') {
         return;
       } else if (error.message === 'Access denied') {
+        console.error('🚫 [AUTH ERROR] Access denied for socket session');
         this.notifyListeners('error', { 
           message: 'Access denied. Please check your login status or contact support.' 
         });
@@ -202,8 +211,10 @@ class SocketService {
   // Socket actions
   joinChat(jobId, cleanerId) {
     if (this.socket && this.isConnected) {
+      console.log('📤 [SOCKET] Emitting join_chat:', { jobId, cleanerId });
       this.socket.emit('join_chat', { jobId, cleanerId });
     } else {
+      console.warn('⚠️ [SOCKET] Cannot join chat: Socket not connected', { isConnected: this.isConnected, hasSocket: !!this.socket });
     }
   }
 

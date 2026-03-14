@@ -123,6 +123,11 @@ const CustomerChatPage = () => {
       // First, let's verify the cleaner has actually quoted for this job
       const verifyCleanerQuote = async () => {
         try {
+          const userStr = localStorage.getItem('user');
+          const currentUser = userStr ? JSON.parse(userStr) : null;
+          console.log('🔍 [CHAT DIAGNOSTIC] Current User:', currentUser);
+
+          setLoading(true);
           const jobResponse = await jobsAPI.getJobById(jobId);
           if (jobResponse.success && jobResponse.data) {
             const job = jobResponse.data;
@@ -130,18 +135,21 @@ const CustomerChatPage = () => {
 
             // Try to find the cleaner in the job data
             let cleanerQuote = cleaners.find(item => {
-              const itemCleanerId = item.cleanerId?._id || item.cleanerId || item.id;
-              return itemCleanerId === cleanerId || String(itemCleanerId) === String(cleanerId);
+              const itemCleanerId = item.cleanerId?._id || item.cleanerId?.id || item.cleanerId || item.id || item._id;
+              const targetId = String(cleanerId);
+              return String(itemCleanerId) === targetId || 
+                     (item.cleanerId?._id && String(item.cleanerId._id) === targetId);
             });
 
-            if (!cleanerQuote) {
-              cleanerQuote = cleaners.find(item => {
-                const itemId = item._id || item.id;
-                return itemId === cleanerId || String(itemId) === String(cleanerId);
-              });
+            if (!cleanerQuote && job.assignedCleaner) {
+              const assignedId = job.assignedCleaner._id || job.assignedCleaner.id;
+              if (String(assignedId) === String(cleanerId)) {
+                cleanerQuote = { cleaner: job.assignedCleaner, isConnected: true };
+              }
             }
 
             if (cleanerQuote) {
+              console.log('✅ [CHAT] Resolved cleaner quote:', cleanerQuote);
               // Set quote data for display
               setQuoteData({
                 baseQuote: cleanerQuote.basePrice || cleanerQuote.price || 0,
@@ -155,26 +163,89 @@ const CustomerChatPage = () => {
                 setCleanerName(`${cleanerObj.firstName || ''} ${cleanerObj.lastName || ''}`.trim());
               }
 
-              // Join chat with the actual cleaner ID
-              const actualCleanerId = cleanerQuote.cleanerId?._id || cleanerQuote.cleanerId?.id || cleanerQuote.cleanerId || cleanerQuote.id;
+              // Join chat with the actual cleaner ID and the MongoDB _id of the job
+              const resolvedCleanerId = cleanerQuote.cleaner?._id || 
+                                      cleanerQuote.cleanerId?._id || 
+                                      cleanerQuote.cleanerId?.id || 
+                                      cleanerQuote.cleanerId || 
+                                      cleanerQuote.id || 
+                                      cleanerQuote._id ||
+                                      cleanerQuote.cleaner?.id;
               
-              // CRITICAL: If we have a chatRoomId, set it now so we can send messages immediately
+              console.log('🔍 [CHAT DIAGNOSTIC] Cleaner ID Resolution:', {
+                urlCleanerId: cleanerId,
+                resolvedCleanerId,
+                quoteCleaner: cleanerQuote.cleaner,
+                quoteCleanerId: cleanerQuote.cleanerId
+              });
+
+              if (!resolvedCleanerId || resolvedCleanerId === 'undefined') {
+                console.warn('⚠️ [CHAT] Could not resolve actual cleaner ID from quote, using URL param');
+              }
+              
+              const actualJobId = jobResponse.data._id || jobId;
+              const actualCleanerIdToUse = resolvedCleanerId || cleanerId;
+
+              console.log('🔍 [CHAT DIAGNOSTIC] IDs used for Join:', {
+                actualJobId,
+                actualCleanerIdToUse,
+                fromJobResponse: jobResponse.data._id,
+                fromUrl: jobId
+              });
+
               if (cleanerQuote.chatRoomId) {
+                console.log('🚪 [CHAT] Found existing chatRoomId from quote:', cleanerQuote.chatRoomId);
                 setCurrentChatRoom({ chatRoomId: cleanerQuote.chatRoomId });
               }
 
-              socketService.joinChat(jobId, actualCleanerId || cleanerId);
+              // Verify room exists via chatAPI
+              try {
+                console.log('🔍 [CHAT DIAGNOSTIC] Checking chat history via REST API...');
+                const historyResp = await chatAPI.getChatHistory(actualJobId, actualCleanerIdToUse);
+                console.log('🔍 [CHAT DIAGNOSTIC] Chat history response:', historyResp);
+                if (historyResp.success && historyResp.data?.messages) {
+                  setMessages(historyResp.data.messages);
+                  const room = historyResp.room; // We'll update chatAPI to return the room object
+                  if (room && room._id) {
+                    console.log('🚪 [CHAT] Found chatRoomId from history:', room._id);
+                    setCurrentChatRoom({ chatRoomId: room._id });
+                  }
+                }
+              } catch (historyErr) {
+                console.warn('⚠️ [CHAT] Failed to fetch chat history:', historyErr.message);
+              }
+
+              // CRITICAL: Call connect API to ensure backend authorizes this connection
+              try {
+                console.log('🔗 [CHAT] Establishing backend connection:', { jobId: actualJobId, cleanerId: actualCleanerIdToUse });
+                const connectResp = await jobsAPI.connectCleaner(actualJobId, actualCleanerIdToUse);
+                console.log('✅ [CHAT] Backend connection response:', connectResp);
+              } catch (connectErr) {
+                console.warn('⚠️ [CHAT] Backend connect failed (might already be connected):', connectErr.message);
+              }
+
+              console.log('📤 [CHAT] Attempting socket join with:', { jobId: actualJobId, cleanerId: actualCleanerIdToUse });
+              socketService.joinChat(actualJobId, actualCleanerIdToUse);
             } else {
-              // If not found in job data, try to join anyway using the ID from URL
-              socketService.joinChat(jobId, cleanerId);
+              console.warn('⚠️ [CHAT] No matching cleaner found in job data, trying to connect with URL params');
+              const actualJobId = jobResponse.data._id || jobId;
+              
+              try {
+                await jobsAPI.connectCleaner(actualJobId, cleanerId);
+              } catch (e) {}
+
+              socketService.joinChat(actualJobId, cleanerId);
             }
           } else {
-            // Job fetch failed, try to join anyway
+            console.error('❌ [CHAT] Job fetch failed or no data:', jobResponse);
+            try {
+              await jobsAPI.connectCleaner(jobId, cleanerId);
+            } catch (e) {}
             socketService.joinChat(jobId, cleanerId);
           }
           setLoading(false);
         } catch (err) {
-          // If verification fails, try to join anyway before giving up
+          console.error('❌ [CHAT] verification failed:', err);
           socketService.joinChat(jobId, cleanerId);
           setLoading(false);
         }

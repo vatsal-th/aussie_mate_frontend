@@ -5,7 +5,6 @@ import {
   Clock3,
   Home as HomeIcon,
   Ruler,
-  AlertTriangle,
   CalendarDays,
   Phone,
 } from 'lucide-react';
@@ -395,15 +394,6 @@ const CustomerJobDetailsPage = () => {
       });
     }
 
-    const priorityValue = job.priority || job.priorityLevel;
-    if (priorityValue) {
-      meta.push({
-        label: 'Priority',
-        value: priorityValue,
-        icon: <AlertTriangle className="w-4 h-4 text-primary-400" strokeWidth={2.2} />,
-      });
-    }
-
     // Add preferred days if available
     const preferredDaysDisplay = getPreferredDaysDisplay(job?.preferredDays);
     if (preferredDaysDisplay) {
@@ -490,8 +480,11 @@ const CustomerJobDetailsPage = () => {
       assignedCleanerRating
         ? { label: 'Cleaner Rating', value: `${assignedCleanerRating}⭐` }
         : null,
-      job.specialInstructions
-        ? { label: 'Special Instructions', value: job.specialInstructions }
+      job.specialInstructions ||
+        job.instructions ||
+        job.additionalNotes ||
+        ''
+        ? { label: 'Special Instructions', value: job.specialInstructions || job.instructions || job.additionalNotes }
         : null,
     ].filter(Boolean);
 
@@ -508,9 +501,6 @@ const CustomerJobDetailsPage = () => {
         : null,
       job.accessInstructions
         ? { label: 'Access Notes', value: job.accessInstructions }
-        : null,
-      job.petDetails
-        ? { label: 'Pet Details', value: job.petDetails }
         : null,
     ].filter(Boolean);
 
@@ -704,30 +694,12 @@ const CustomerJobDetailsPage = () => {
         <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
           <div className="mb-3 sm:mb-4">
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1 sm:mb-2">
-              {job.serviceType === 'petSitting' ? 'Pet Sitter Quotes' :
-                job.serviceType === 'cleaning' ? 'Cleaner Quotes' :
-                  job.serviceType === 'handyman' ? 'Handyman Quotes' :
-                    job.serviceType === 'housekeeping' ? 'Housekeeper Quotes' :
-                      job.serviceType === 'commercialCleaning' ? 'Commercial Cleaner Quotes' :
-                        job.serviceType === 'ndisSupport' ? 'NDIS Support Quotes' :
-                          'Pet Sitting Quote'} ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
+              Cleaner Quotes ({cleanerQuotes.filter(quote => quote.status !== 'rejected').length})
             </h3>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">
               {cleanerQuotes.filter(quote => quote.status !== 'rejected').length > 0
-                ? (job.serviceType === 'petSitting' ? "Pet sitters nearby have sent their offers. Review and chat before choosing." :
-                  job.serviceType === 'cleaning' ? "Cleaners nearby have sent their offers. Review and chat before choosing." :
-                    job.serviceType === 'handyman' ? "Handymen nearby have sent their offers. Review and chat before choosing." :
-                      job.serviceType === 'housekeeping' ? "Housekeepers nearby have sent their offers. Review and chat before choosing." :
-                        job.serviceType === 'commercialCleaning' ? "Commercial cleaners nearby have sent their offers. Review and chat before choosing." :
-                          job.serviceType === 'ndisSupport' ? "NDIS support providers nearby have sent their offers. Review and chat before choosing." :
-                            "Service providers nearby have sent their offers. Review and chat before choosing.")
-                : (job.serviceType === 'petSitting' ? "No quotes yet. Pet sitters will send quotes soon." :
-                  job.serviceType === 'cleaning' ? "No quotes yet. Cleaners will send quotes soon." :
-                    job.serviceType === 'handyman' ? "No quotes yet. Handymen will send quotes soon." :
-                      job.serviceType === 'housekeeping' ? "No quotes yet. Housekeepers will send quotes soon." :
-                        job.serviceType === 'commercialCleaning' ? "No quotes yet. Commercial cleaners will send quotes soon." :
-                          job.serviceType === 'ndisSupport' ? "No quotes yet. NDIS support providers will send quotes soon." :
-                            "No quotes yet. Service providers will send quotes soon.")
+                ? "Cleaners nearby have sent their offers. Review and chat before choosing."
+                : "No quotes yet. Cleaners will send quotes soon."
               }
             </p>
           </div>
@@ -804,7 +776,7 @@ const CustomerJobDetailsPage = () => {
                         <Button
                           onClick={() => {
                             if (quote.status === 'accepted' || quote.isConnected) {
-                              navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`);
+                              navigate(`/customer-chat/${job._id || jobId}?cleaner=${cleaner._id || cleaner.id}`);
                             } else {
                               handleAcceptQuote(quote._id);
                             }
@@ -812,7 +784,7 @@ const CustomerJobDetailsPage = () => {
                           variant=""
                           className="px-7 py-2 text-sm sm:text-lg font-semibold rounded-full border border-[#DCE4FF] bg-white text-[#1F6FEB] hover:bg-[#1F6FEB] hover:text-white hover:border-[#1F6FEB] shadow-sm transition-all"
                         >
-                          {quote.status === 'accepted' ? 'Message Cleaner' : 'Connect & Message'}
+                          { (quote.status === 'accepted' || quote.isConnected) ? 'Message Cleaner' : 'Connect & Message'}
                         </Button>
                       </div>
 
@@ -834,13 +806,7 @@ const CustomerJobDetailsPage = () => {
           {cleanerQuotes.filter(quote => quote.status !== 'rejected').length === 0 && (
             <div className="text-center py-8">
               <div className="text-gray-500 text-sm">
-                {job.serviceType === 'petSitting' ? "Waiting for pet sitters to send quotes..." :
-                  job.serviceType === 'cleaning' ? "Waiting for cleaners to send quotes..." :
-                    job.serviceType === 'handyman' ? "Waiting for handymen to send quotes..." :
-                      job.serviceType === 'housekeeping' ? "Waiting for housekeepers to send quotes..." :
-                        job.serviceType === 'commercialCleaning' ? "Waiting for commercial cleaners to send quotes..." :
-                          job.serviceType === 'ndisSupport' ? "Waiting for NDIS support providers to send quotes..." :
-                            "Waiting for service providers to send quotes..."}
+                Waiting for cleaners to send quotes...
               </div>
             </div>
           )}

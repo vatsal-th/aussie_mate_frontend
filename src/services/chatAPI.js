@@ -38,9 +38,10 @@ export const chatAPI = {
 
   // Mark chat as read
   async markChatAsRead(chatRoomId) {
-    const response = await fetch(`${API_BASE}/chat/rooms/${chatRoomId}/read`, {
+    const response = await fetch(`${API_BASE}/chat/rooms`, {
       method: 'PUT',
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ chatRoomId })
     });
     return response.json();
   },
@@ -87,7 +88,11 @@ export const chatAPI = {
       const messagesData = await messagesResponse.json();
       
       if (messagesData.success) {
-        return { success: true, data: { messages: messagesData.data.messages || [] } };
+        return { 
+          success: true, 
+          data: { messages: messagesData.data.messages || [] },
+          room: chatRoom
+        };
       } else {
         return { success: false, error: 'Failed to get messages' };
       }
