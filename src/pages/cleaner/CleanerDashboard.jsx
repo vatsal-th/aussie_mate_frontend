@@ -386,23 +386,43 @@ const CleanerDashboard = () => {
                     </button>
                   </div>
 
-                  <div className="mb-4">
-                    <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-100 mb-2">
+                  <div className="mb-8 relative">
+                    <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden border border-gray-100 mb-6 relative">
                       <div 
-                        className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000"
+                        className="h-full bg-[#22C55E] rounded-full transition-all duration-1000 relative"
                         style={{ 
-                          width: `${Math.min(100, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%` 
+                          width: `${Math.min(100, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`,
+                          backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
+                          backgroundSize: '1rem 1rem'
                         }}
                       />
                     </div>
-                    <div className="flex justify-between items-center px-1">
-                      <p className="text-xs sm:text-sm font-bold text-primary-700">
-                        {subscriptionStatus.availableCredits} <span className="text-gray-400 font-medium">available of</span> {subscriptionStatus.subscription?.planId?.creditsPerMonth}
-                      </p>
-                      <p className="text-xs sm:text-sm font-bold text-gray-500">
-                        Estimated leads: <span className="text-primary-600">{Math.floor(subscriptionStatus.availableCredits / (subscriptionStatus.subscription?.planId?.creditsPerLead || 1))}</span>
-                      </p>
+                    
+                    {/* Progress Indicator Tooltip */}
+                    <div 
+                      className="absolute left-0 -bottom-2 transform translate-y-full"
+                      style={{ 
+                        left: `${Math.min(90, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`
+                      }}
+                    >
+                      <div className="relative bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm whitespace-nowrap">
+                        {/* Triangle decorator */}
+                        <div className="absolute -top-1 left-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45" />
+                        
+                        <p className="text-sm font-bold text-gray-900">
+                          {subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits} <span className="text-gray-400 font-medium">of</span> {subscriptionStatus.subscription?.planId?.creditsPerMonth} <span className="text-gray-400 font-normal">Credits Used</span>
+                        </p>
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="flex justify-between items-center mt-12 mb-4 px-1">
+                    <p className="text-xs sm:text-sm font-bold text-gray-500">
+                      Remaining Credits: <span className="text-primary-600">{subscriptionStatus.availableCredits}</span>
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-500">
+                      Estimated leads: <span className="text-primary-600">{Math.floor(subscriptionStatus.availableCredits / (subscriptionStatus.subscription?.planId?.creditsPerLead || 1))}</span>
+                    </p>
                   </div>
 
                   <button 
