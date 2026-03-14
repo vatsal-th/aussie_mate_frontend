@@ -311,7 +311,7 @@ const CleanerDashboard = () => {
     const jobIdentifier = job.rawId || job.id
 
     if (!jobIdentifier) {
-      navigate('/cleaner-jobs')
+      navigate('/cleaner-jobs', { state: { tab: 'live-jobs' } })
       return
     }
 
@@ -404,7 +404,7 @@ const CleanerDashboard = () => {
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between sm:justify-end space-x-2">
               <Button
-                onClick={() => navigate('/cleaner-jobs', { state: { tab: 'accepted' } })}
+                onClick={() => navigate('/cleaner-jobs', { state: { tab: 'live-jobs' } })}
                 size="sm"
                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm rounded-full px-2 flex items-center justify-center space-x-1"
                 icon={

@@ -4,7 +4,7 @@ import { Button, PageHeader, PhoneValidationAlert, Loader } from '../../componen
 import InfoIcon from '../../assets/info.svg';
 import MessageIcon from '../../assets/sendChat.svg';
 import UserIcon from '../../assets/user.svg';
-import { jobsAPI } from '../../services/api';
+import { jobsAPI, quotesAPI } from '../../services/api';
 import { chatAPI } from '../../services/chatAPI';
 import { socketService } from '../../services/socketService';
 
@@ -23,6 +23,7 @@ const CustomerChatPage = () => {
   const [loading, setLoading] = useState(true);
   const [phoneValidationError, setPhoneValidationError] = useState('');
   const [showPhoneAlert, setShowPhoneAlert] = useState(false);
+  const [cleanerName, setCleanerName] = useState('');
 
   const [newMessage, setNewMessage] = useState('');
   const [quoteData, setQuoteData] = useState({
@@ -95,17 +96,12 @@ const CustomerChatPage = () => {
       if (error.message && error.message.includes('Phone numbers are not allowed')) {
         setPhoneValidationError(error.message);
         setShowPhoneAlert(true);
-        // No auto-hide - user must manually close
+      } else if (error.message === 'Cleaner has not quoted on this job') {
+        // Suppress this error as we allow connections before quotes
+        console.log('Socket: Cleaner has not quoted yet, but connection exists.');
+        setLoading(false);
       } else {
-        // Handle other errors more gracefully
-        if (error.message === 'Cleaner has not quoted on this job') {
-          setError('Chat system temporarily unavailable');
-        } else {
-          setError(error.message);
-        }
-
-        // Start with empty messages on error
-        setMessages([]);
+        setError(error.message);
         setLoading(false);
       }
     });
@@ -130,71 +126,56 @@ const CustomerChatPage = () => {
           const jobResponse = await jobsAPI.getJobById(jobId);
           if (jobResponse.success && jobResponse.data) {
             const job = jobResponse.data;
+            const cleaners = [...(job.quotes || []), ...(job.contactedCleaners || [])];
 
-            if (job.quotes && job.quotes.length > 0) {
+            // Try to find the cleaner in the job data
+            let cleanerQuote = cleaners.find(item => {
+              const itemCleanerId = item.cleanerId?._id || item.cleanerId || item.id;
+              return itemCleanerId === cleanerId || String(itemCleanerId) === String(cleanerId);
+            });
 
-              // First try to match by quote ID (since cleanerId in URL might be quote ID)
-              let cleanerQuote = job.quotes.find(quote => {
-                const quoteId = quote._id || quote.id;
-                return quoteId === cleanerId || quoteId === String(cleanerId);
+            if (!cleanerQuote) {
+              cleanerQuote = cleaners.find(item => {
+                const itemId = item._id || item.id;
+                return itemId === cleanerId || String(itemId) === String(cleanerId);
+              });
+            }
+
+            if (cleanerQuote) {
+              // Set quote data for display
+              setQuoteData({
+                baseQuote: cleanerQuote.basePrice || cleanerQuote.price || 0,
+                addons: cleanerQuote.addons || [],
+                total: cleanerQuote.totalPrice || cleanerQuote.price || 0
               });
 
-              // If not found by quote ID, try to match by cleaner ID
-              if (!cleanerQuote) {
-                cleanerQuote = job.quotes.find(quote => {
-                  const quoteCleanerId = quote.cleanerId?._id || quote.cleanerId?.id || quote.cleanerId;
-                  const match = quoteCleanerId === cleanerId ||
-                    quoteCleanerId === String(cleanerId) ||
-                    String(quoteCleanerId) === cleanerId ||
-                    quoteCleanerId?.toString() === cleanerId?.toString();
-
-                  return match;
-                });
+              // Set cleaner name
+              const cleanerObj = cleanerQuote.cleaner || cleanerQuote.cleanerId;
+              if (cleanerObj && (cleanerObj.firstName || cleanerObj.lastName)) {
+                setCleanerName(`${cleanerObj.firstName || ''} ${cleanerObj.lastName || ''}`.trim());
               }
 
-              if (cleanerQuote) {
-                // Set quote data for display
-                setQuoteData({
-                  baseQuote: cleanerQuote.basePrice || cleanerQuote.price || 0,
-                  addons: cleanerQuote.addons || [],
-                  total: cleanerQuote.totalPrice || cleanerQuote.price || 0
-                });
-
-                // Get the actual cleaner ID from the quote
-                const actualCleanerId = cleanerQuote.cleanerId?._id || cleanerQuote.cleanerId?.id || cleanerQuote.cleanerId;
-
-                // If we don't have cleanerId, try to get it from the cleaner object
-                if (!actualCleanerId) {
-                  // Try to get cleaner ID from the cleaner object
-                  const cleanerObj = cleanerQuote.cleaner;
-                  const cleanerIdFromCleaner = cleanerObj?._id || cleanerObj?.id;
-
-                  if (cleanerIdFromCleaner) {
-                    socketService.joinChat(jobId, cleanerIdFromCleaner);
-                  } else {
-                    // This is a backend data structure issue - the cleaner should have an ID
-                    socketService.joinChat(jobId, cleanerQuote._id);
-
-                    // Show user-friendly message about backend issue
-                    setError('Chat system using demo mode - backend data needs updating. Contact support if this persists.');
-                  }
-                } else {
-                  socketService.joinChat(jobId, actualCleanerId);
-                }
-              } else {
-                setError('This cleaner has not submitted a quote for this job. Please select a cleaner who has quoted.');
-                setMessages([]);
-                setLoading(false);
+              // Join chat with the actual cleaner ID
+              const actualCleanerId = cleanerQuote.cleanerId?._id || cleanerQuote.cleanerId?.id || cleanerQuote.cleanerId || cleanerQuote.id;
+              
+              // CRITICAL: If we have a chatRoomId, set it now so we can send messages immediately
+              if (cleanerQuote.chatRoomId) {
+                setCurrentChatRoom({ chatRoomId: cleanerQuote.chatRoomId });
               }
+
+              socketService.joinChat(jobId, actualCleanerId || cleanerId);
             } else {
-              setError('No quotes found for this job.');
-              setMessages([]);
-              setLoading(false);
+              // If not found in job data, try to join anyway using the ID from URL
+              socketService.joinChat(jobId, cleanerId);
             }
+          } else {
+            // Job fetch failed, try to join anyway
+            socketService.joinChat(jobId, cleanerId);
           }
+          setLoading(false);
         } catch (err) {
-          setError('Unable to verify cleaner quote. Please try again.');
-          setMessages([]);
+          // If verification fails, try to join anyway before giving up
+          socketService.joinChat(jobId, cleanerId);
           setLoading(false);
         }
       };
@@ -277,63 +258,54 @@ const CustomerChatPage = () => {
     }
   };
 
-  const handleAcceptQuote = () => {
-    const addOnsTotal = quoteData.addons?.reduce((sum, addon) => sum + (addon.price || 0), 0) || 0;
-    const addOnsName = quoteData.addons?.map(addon => addon.name).join(', ') || 'Additional Services';
+  const handleAcceptQuote = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-    const currentQuote = {
-      _id: cleanerId,
-      price: quoteData.total,
-      basePrice: quoteData.baseQuote,
-      addOns: addOnsTotal,
-      addOnName: addOnsName,
-      totalPrice: quoteData.total,
-      cleanerId: {
-        _id: cleanerId,
-        firstName: 'Cleaner',
-        lastName: `#${cleanerId}`,
-        rating:
-          quoteData.cleanerId?.averageRating ??
-          quoteData.cleanerId?.rating ??
-          0,
-        tier: quoteData.cleanerId?.tier ?? 'none'
+      // Use the job assignment API as requested
+      const response = await jobsAPI.assignCleaner(jobId, cleanerId);
+
+      if (response.success) {
+        // Success! Navigate directly to the booking confirmation page
+        navigate(`/booking-confirmation/${jobId}`);
+      } else {
+        setError(response.message || 'Failed to accept quote. Please try again.');
       }
-    };
+    } catch (err) {
+      console.error('Error accepting quote:', err);
+      setError('An error occurred while accepting the quote. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const cleanerData = {
-      id: cleanerId,
-      name: `Cleaner #${cleanerId}`,
-      distance: 'Distance not available',
-      rating:
-        quoteData.cleanerId?.averageRating ??
-        quoteData.cleanerId?.rating ??
-        0,
-      tier: quoteData.cleanerId?.tier ?? 'none',
-      baseQuote: quoteData.baseQuote,
-      addOns: addOnsTotal,
-      addOnName: addOnsName,
-      total: quoteData.total
-    };
-
-    navigate(`/confirm-cleaner/${jobId}`, {
-      state: {
-        cleanerData,
-        quoteData: currentQuote,
-        jobData: null
+  const handleRejectQuote = async () => {
+    try {
+      setLoading(true);
+      const response = await quotesAPI.rejectQuote(jobId, cleanerId);
+      if (response.success) {
+        navigate(`/customer-job-details/${jobId}`);
+      } else {
+        setError(response.error || 'Failed to reject quote');
       }
-    });
+    } catch (err) {
+      setError('Failed to reject quote. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
 
 
   return (
     <div className='px-3 md:px-4'>
-      <div className="max-w-6xl mx-auto py-4 px-1">
+      <div className="max-w-7xl mx-auto py-4 px-1">
         <PageHeader
-          title={`Cleaner #${cleanerId || '1047'}`}
+          title={cleanerName || `Cleaner #${cleanerId?.slice(-4) || '1047'}`}
           onBack={() => navigate(-1)}
           titleClassName="text-base sm:text-lg font-semibold text-gray-900"
-          backButtonClassName="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer mr-2 sm:mr-3"
+          backButtonClassName="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
         />
       </div>
 
@@ -488,37 +460,18 @@ const CustomerChatPage = () => {
           </div>
         </div>
 
-        {/* Quote Summary */}
-        <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-primary-200 rounded-t-4xl bg-[#F9FAFB]">
-          <h3 className="text-base sm:text-lg font-semibold text-primary-500 mb-2 sm:mb-3">Quote Summary</h3>
-
-          {/* Base Quote */}
-          <div className="flex items-center py-1 sm:py-2 space-x-2">
-            <span className="text-xs sm:text-sm text-primary-200 font-medium">Base Quote:</span>
-            <span className="text-xs sm:text-sm font-bold text-primary-500">${quoteData.baseQuote}</span>
-          </div>
-
-          {/* Add-ons */}
-          {quoteData.addons && quoteData.addons.length > 0 && quoteData.addons.map((addon, index) => (
-            <div key={index} className="flex justify-between items-center py-1">
-              <span className="text-xs sm:text-sm text-primary-200 font-medium">Add-on: +$ <span className="text-primary-600 font-bold">{addon.price}</span> ({addon.name})</span>
-            </div>
-          ))}
-
-          {/* Total */}
-          <div className="border-t border-gray-200 pt-2 mt-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm sm:text-base font-semibold text-gray-900">Total:</span>
-              <span className="text-base sm:text-lg font-bold text-blue-600">${quoteData.total}</span>
-            </div>
-          </div>
-
-          {/* Accept Button Only */}
-          <div className="mt-3 sm:mt-4 flex justify-end">
+        {/* Sticky Action Footer */}
+        <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.05)] rounded-t-[32px] mt-auto">
+          <div className="flex items-center justify-between gap-4">
+            <button
+              onClick={handleRejectQuote}
+              className="text-red-500 text-sm sm:text-base font-bold hover:text-red-600 transition-colors"
+            >
+              Reject Quote
+            </button>
             <Button
               onClick={handleAcceptQuote}
-              size="sm"
-              className="px-3 sm:px-4 py-2 sm:py-2.5"
+              className="flex-1 max-w-[240px] bg-[#1D75FF] hover:bg-blue-600 text-white py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold shadow-md transition-all sm:translate-y-0"
             >
               Accept Quote & Book
             </Button>

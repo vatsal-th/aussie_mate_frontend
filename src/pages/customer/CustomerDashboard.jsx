@@ -65,7 +65,7 @@ const CustomerDashboard = () => {
     return 'View Quotes';
   };
   const handleViewJobs = () => {
-    navigate('/my-jobs');
+    navigate('/my-jobs', { state: { tab: 'all' } });
   };
   const handleViewRewards = () => {
     navigate('/rewards');
@@ -177,26 +177,38 @@ const CustomerDashboard = () => {
     <>
       {/* Main Content Container */}
       <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8 pb-6">
-        {/* Search Section */}
-        <div className="bg-white px-4 sm:px-6 py-4 rounded-2xl mb-4 sm:mb-6 mt-4 shadow-custom">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center">
-                <img src={SearchIcon} alt="Search" className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search services, e.g. bond clean..."
-                className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-gray-100 rounded-lg text-sm text-primary-200 font-medium focus:outline-none"
-              />
+        {/* Combined Search and Post Job Section */}
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-custom space-y-6 mt-4 mb-4 sm:mb-6 border border-gray-50">
+          {/* Search Bar */}
+          <div className="relative w-full">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center">
+              <img src={SearchIcon} alt="Search" className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search services, e.g. bond clean..."
+              className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 bg-gray-50 rounded-xl text-sm text-primary-200 font-medium focus:outline-none focus:ring-1 focus:ring-primary-500/10 transition-all"
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gray-100 w-full"></div>
+
+          {/* Post Job Layout Section */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h2 className="text-sm sm:text-xl font-bold text-[#111827] mb-1">Book a cleaner in minutes</h2>
+              <p className="text-sm sm:text-base text-gray-400 font-medium">
+                Post job &rarr; Receive quotes &rarr; Choose &amp; pay securely
+              </p>
             </div>
             <Button
               onClick={() => navigate('/post-new-job')}
-              size="sm"
+              size="lg"
               icon={PlusIcon}
+              className="w-full sm:w-auto px-7 sm:px-10 py-2 sm:py-3 rounded-full shadow-lg shadow-blue-500/20"
             >
-              <span className="hidden sm:inline">Post New Job</span>
-              <span className="sm:hidden">Post Job</span>
+              Post New Job
             </Button>
           </div>
         </div>
@@ -334,12 +346,12 @@ const CustomerDashboard = () => {
                           <div className="text-xs sm:text-sm text-primary-200 font-medium">#{job.id}</div>
                           {job.status && (
                             <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${job.rawStatus === 'quoted' || job.rawStatus === 'posted'
-                                ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
-                                : job.rawStatus === 'in_progress'
-                                  ? 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500'
-                                  : job.rawStatus === 'completed'
-                                    ? 'bg-green-500 text-[#10B981] border border-[#D2F8E0]'
-                                    : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
+                              ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
+                              : job.rawStatus === 'in_progress'
+                                ? 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500'
+                                : job.rawStatus === 'completed'
+                                  ? 'bg-green-500 text-[#10B981] border border-[#D2F8E0]'
+                                  : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
                               }`}>
                               {job.status}
                             </span>

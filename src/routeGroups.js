@@ -27,12 +27,10 @@ const MyJobsPage = React.lazy(() => import('./pages/customer/MyJobsPage'))
 const CustomerJobDetailsPage = React.lazy(() => import('./pages/customer/CustomerJobDetailsPage'))
 const JobDetailsCompletedPage = React.lazy(() => import('./pages/customer/JobDetailsCompletedPage'))
 const CustomerChatPage = React.lazy(() => import('./pages/customer/CustomerChatPage'))
-const ConfirmYourCleanerPage = React.lazy(() => import('./pages/customer/ConfirmYourCleanerPage'))
 const JobBookedSuccessfullyPage = React.lazy(() => import('./pages/customer/JobBookedSuccessfullyPage'))
 const CustomerInProgressJobDetailsPage = React.lazy(() => import('./pages/customer/CustomerInProgressJobDetailsPage'))
 const JobDetailsPage = React.lazy(() => import('./pages/cleaner/JobDetailsPage'))
 const LocationPage = React.lazy(() => import('./pages/customer/LocationPage'))
-const PaymentSuccessCallbackPage = React.lazy(() => import('./pages/customer/PaymentSuccessCallbackPage'))
 
 // Profile pages
 const ProfilePage = React.lazy(() => import('./pages/profile/ProfilePage'))
@@ -92,10 +90,8 @@ export const customerRoutes = [
   { path: '/customer-job-details/:jobId', component: CustomerJobDetailsPage },
   { path: '/job-completed/:jobId', component: JobDetailsCompletedPage },
   { path: '/customer-chat/:jobId', component: CustomerChatPage },
-  { path: '/confirm-cleaner/:jobId', component: ConfirmYourCleanerPage },
   { path: '/booking-confirmation/:jobId', component: JobBookedSuccessfullyPage },
   { path: '/customer-in-progress-job/:jobId', component: CustomerInProgressJobDetailsPage },
-  { path: '/payment/success', component: PaymentSuccessCallbackPage },
   { path: '/platform-policy', component: PlatformPolicyPage },
 ]
 
