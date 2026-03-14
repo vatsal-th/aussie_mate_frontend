@@ -359,7 +359,7 @@ const CleanerDashboard = () => {
         {/* Top Greeting + Availability */}
         <div className="flex flex-row sm:items-center justify-between pt-3 sm:pt-4 gap-3 sm:gap-0">
           <div>
-            <h2 className="text-lg sm:text-[22px] md:text-2xl lg:text-3xl font-bold text-primary-500 leading-tight">Hi, {greetingName}</h2>
+            <h2 className="text-lg sm:text-[22px] md:text-2xl lg:text-3xl font-semibold text-primary-500 leading-tight">Hi, {greetingName}</h2>
             <p className="text-xs sm:text-sm text-primary-200 font-medium">Welcome back</p>
           </div>
         </div>
