@@ -1,32 +1,42 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Autoplay } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/navigation'
-import 'swiper/css/pagination'
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, BriefcaseBusiness, Calendar, CheckCircle2, PlusCircle, TrendingUp } from 'lucide-react'
-import { Button, Loader } from '../../components'
-import { useAuth } from '../../contexts/AuthContext'
-import { jobsAPI, authAPI, subscriptionsAPI } from '../../services/api'
-import { getStatusColors } from '../../utils/statusUtils'
-import CleanerBG from '../../assets/cleanerBG.jpg'
-import BoldJobIcon from '../../assets/boldJob.svg'
-import Coin3 from '../../assets/coin3.svg'
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  BriefcaseBusiness,
+  Calendar,
+  CheckCircle2,
+  Plus,
+  TrendingUp,
+} from "lucide-react";
+import { Button, Loader } from "../../components";
+import { useAuth } from "../../contexts/AuthContext";
+import { jobsAPI, authAPI, subscriptionsAPI } from "../../services/api";
+import { getStatusColors } from "../../utils/statusUtils";
+import CleanerBG from "../../assets/cleanerbg.svg";
+import BoldJobIcon from "../../assets/boldJob.svg";
+import Coin3 from "../../assets/coin3.svg";
 
 const CleanerDashboard = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isAvailable, setIsAvailable] = useState(true);
   const swiperRef = useRef(null);
-  const [activeJobs, setActiveJobs] = useState([])
-  const [completedJobs, setCompletedJobs] = useState([])
-  const [liveJobsCount, setLiveJobsCount] = useState(0)
-  const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 })
-  const [loadingDashboard, setLoadingDashboard] = useState(false)
-  const [dashboardError, setDashboardError] = useState('')
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null)
-  const [loadingSubscription, setLoadingSubscription] = useState(true)
+  const [activeJobs, setActiveJobs] = useState([]);
+  const [completedJobs, setCompletedJobs] = useState([]);
+  const [liveJobsCount, setLiveJobsCount] = useState(0);
+  const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 });
+  const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [dashboardError, setDashboardError] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   const formatLabel = (str) =>
     (str || "")
@@ -36,12 +46,11 @@ const CleanerDashboard = () => {
       .trim()
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
-
   const formatCurrency = (value) => {
-    const amount = Number(value)
-    if (Number.isNaN(amount)) return '$0'
-    return `$${Math.round(amount).toLocaleString('en-AU')}`
-  }
+    const amount = Number(value);
+    if (Number.isNaN(amount)) return "$0";
+    return `$${Math.round(amount).toLocaleString("en-AU")}`;
+  };
 
   const goToPrev = () => {
     if (swiperRef.current) {
@@ -56,34 +65,35 @@ const CleanerDashboard = () => {
   };
 
   useEffect(() => {
-    if (user && typeof user.isAvailable === 'boolean') {
-      setIsAvailable(user.isAvailable)
-    } else if (user && typeof user.isActive === 'boolean') {
-      setIsAvailable(user.isActive)
+    if (user && typeof user.isAvailable === "boolean") {
+      setIsAvailable(user.isAvailable);
+    } else if (user && typeof user.isActive === "boolean") {
+      setIsAvailable(user.isActive);
     }
-  }, [user])
+  }, [user]);
 
   const liveJobsLabel = loadingDashboard
-    ? 'Loading...'
-    : `${liveJobsCount || 0} ${liveJobsCount === 1 ? 'Job' : 'Jobs'} Found`;
+    ? "Loading..."
+    : `${liveJobsCount || 0} ${liveJobsCount === 1 ? "Job" : "Jobs"} Found`;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!user) {
-        setActiveJobs([])
-        setCompletedJobs([])
-        setLiveJobsCount(0)
-        setStats({ weeklyEarnings: 0, completedJobs: 0 })
-        setLoadingDashboard(false)
-        return
+        setActiveJobs([]);
+        setCompletedJobs([]);
+        setLiveJobsCount(0);
+        setStats({ weeklyEarnings: 0, completedJobs: 0 });
+        setLoadingDashboard(false);
+        return;
       }
 
-      setLoadingDashboard(true)
-      setDashboardError('')
+      setLoadingDashboard(true);
+      setDashboardError("");
 
-      const cleanerId = (user.id || user._id || '').toString()
+      const cleanerId = (user.id || user._id || "").toString();
 
-      const extractJobs = (response) => response?.data?.jobs || response?.data || []
+      const extractJobs = (response) =>
+        response?.data?.jobs || response?.data || [];
 
       // Checks if ANY cleanerId inside job matches logged-in cleaner
       const doesJobBelongToCleaner = (job, cleanerId) => {
@@ -93,19 +103,16 @@ const CleanerDashboard = () => {
         return jobString.includes(cleanerId);
       };
 
-
       const buildJobTitle = (job) =>
         job.title ||
         job.jobTitle ||
-        (job.serviceTypeDisplay ? `${job.serviceTypeDisplay}${job.propertyType ? ` – ${formatLabel(job.propertyType)}` : ''}` : `${formatLabel(job.serviceType)} – ${formatLabel(job.propertyType)}`) ||
+        (job.serviceTypeDisplay
+          ? `${job.serviceTypeDisplay}${job.propertyType ? ` – ${formatLabel(job.propertyType)}` : ""}`
+          : `${formatLabel(job.serviceType)} – ${formatLabel(job.propertyType)}`) ||
         "Job Detail";
 
       const getJobIdentifier = (job) =>
-        job.jobId ||
-        job._id ||
-        job.id ||
-        job.referenceId ||
-        "Unknown Job";
+        job.jobId || job._id || job.id || job.referenceId || "Unknown Job";
 
       const getJobPrice = (job) =>
         Number(
@@ -117,19 +124,18 @@ const CleanerDashboard = () => {
             job?.quotedAmount,
             job?.quotedPrice,
             job?.price,
-            job?.budget
-          ].find(v => v !== undefined)
+            job?.budget,
+          ].find((v) => v !== undefined),
         ) || 0;
 
-
       const getJobNote = (job) => {
-        if (job.paymentStatus) return formatLabel(job.paymentStatus)
-        if (job.payoutStatus) return formatLabel(job.payoutStatus)
-        if (job.quoteStatus) return formatLabel(job.quoteStatus)
-        if (job.statusNote) return formatLabel(job.statusNote)
-        if (job.note) return formatLabel(job.note)
-        return ''
-      }
+        if (job.paymentStatus) return formatLabel(job.paymentStatus);
+        if (job.payoutStatus) return formatLabel(job.payoutStatus);
+        if (job.quoteStatus) return formatLabel(job.quoteStatus);
+        if (job.statusNote) return formatLabel(job.statusNote);
+        if (job.note) return formatLabel(job.note);
+        return "";
+      };
 
       const getJobLocation = (job) => {
         if (job.location?.fullAddress) {
@@ -141,45 +147,52 @@ const CleanerDashboard = () => {
         if (job.address) {
           return job.address;
         }
-        return 'Location not specified'
-      }
+        return "Location not specified";
+      };
 
       const getJobDate = (job) => {
         // Prefer scheduledDate, fallback to createdAt
         const dateToUse = job.scheduledDate || job.createdAt || job.updatedAt;
-        if (!dateToUse) return 'Date not specified';
+        if (!dateToUse) return "Date not specified";
 
         try {
           const date = new Date(dateToUse);
-          if (Number.isNaN(date.getTime())) return 'Date not specified';
+          if (Number.isNaN(date.getTime())) return "Date not specified";
 
-          const day = date.getDate().toString().padStart(2, '0');
-          const month = date.toLocaleDateString('en-AU', { month: 'short' });
+          const day = date.getDate().toString().padStart(2, "0");
+          const month = date.toLocaleDateString("en-AU", { month: "short" });
           const year = date.getFullYear();
 
           return `${day} ${month} ${year}`;
         } catch (error) {
-          return 'Date not specified';
+          return "Date not specified";
         }
-      }
+      };
 
       const getAcceptedQuotePrice = (job, cleanerId) => {
-        if (!job.quotes || !Array.isArray(job.quotes) || !cleanerId) return null;
+        if (!job.quotes || !Array.isArray(job.quotes) || !cleanerId)
+          return null;
 
         // Find accepted quote for this cleaner
-        const acceptedQuote = job.quotes.find(quote => {
-          const quoteCleanerId = quote.cleanerId?._id || quote.cleanerId?.id || quote.cleanerId;
+        const acceptedQuote = job.quotes.find((quote) => {
+          const quoteCleanerId =
+            quote.cleanerId?._id || quote.cleanerId?.id || quote.cleanerId;
           const isMyQuote = quoteCleanerId?.toString() === cleanerId.toString();
-          const isAccepted = quote.status === 'accepted';
+          const isAccepted = quote.status === "accepted";
           return isMyQuote && isAccepted;
         });
 
         if (acceptedQuote) {
-          return acceptedQuote.price || acceptedQuote.quoteAmount || acceptedQuote.amount || null;
+          return (
+            acceptedQuote.price ||
+            acceptedQuote.quoteAmount ||
+            acceptedQuote.amount ||
+            null
+          );
         }
 
         return null;
-      }
+      };
 
       const getStatusRaw = (job) =>
         job.status ||
@@ -187,48 +200,60 @@ const CleanerDashboard = () => {
         job.currentStatus ||
         job.state ||
         job.assignmentStatus ||
-        ''
+        "";
 
-      const normalizeStatus = (status) => (status || '').toString().toLowerCase().trim()
+      const normalizeStatus = (status) =>
+        (status || "").toString().toLowerCase().trim();
 
       const inProgressStatuses = new Set([
-        'in_progress',
-        'in progress',
-        'in-progress',
-        'accepted',
-        'pending_customer_confirmation',
-      ])
+        "in_progress",
+        "in progress",
+        "in-progress",
+        "accepted",
+        "pending_customer_confirmation",
+      ]);
 
-      const completedStatuses = new Set(['completed'])
+      const completedStatuses = new Set(["completed"]);
 
       try {
         // Fetch current user details to get the most accurate completedJobs count
-        const profileResponse = await authAPI.getCurrentUser().catch(() => null);
-        const freshUser = profileResponse?.data?.user || profileResponse?.user || (profileResponse?.success ? profileResponse.data : null);
+        const profileResponse = await authAPI
+          .getCurrentUser()
+          .catch(() => null);
+        const freshUser =
+          profileResponse?.data?.user ||
+          profileResponse?.user ||
+          (profileResponse?.success ? profileResponse.data : null);
 
         // Use the new feed API for live jobs (posted jobs)
-        const allJobsResponse = await jobsAPI.getCleanerJobFeed({ tab: 'posted', page: 1, limit: 200 }).catch(() => null)
-        const allJobs = extractJobs(allJobsResponse)
+        const allJobsResponse = await jobsAPI
+          .getCleanerJobFeed({ tab: "posted", page: 1, limit: 200 })
+          .catch(() => null);
+        const allJobs = extractJobs(allJobsResponse);
 
         const inProgressJobs = allJobs
           .filter((job) => doesJobBelongToCleaner(job, cleanerId))
-          .filter((job) => inProgressStatuses.has(normalizeStatus(getStatusRaw(job))))
+          .filter((job) =>
+            inProgressStatuses.has(normalizeStatus(getStatusRaw(job))),
+          )
           .filter(
             (job, index, self) =>
               getJobIdentifier(job) &&
               index ===
-              self.findIndex(
-                (other) => getJobIdentifier(other)?.toString() === getJobIdentifier(job)?.toString()
-              )
+                self.findIndex(
+                  (other) =>
+                    getJobIdentifier(other)?.toString() ===
+                    getJobIdentifier(job)?.toString(),
+                ),
           )
           .sort(
             (a, b) =>
               new Date(b.updatedAt || b.completedAt || b.createdAt || 0) -
-              new Date(a.updatedAt || a.completedAt || a.createdAt || 0)
-          )
+              new Date(a.updatedAt || a.completedAt || a.createdAt || 0),
+          );
 
         const formattedActiveJobs = inProgressJobs.slice(0, 12).map((job) => {
-          const statusRaw = getStatusRaw(job)
+          const statusRaw = getStatusRaw(job);
           const quotePrice = getAcceptedQuotePrice(job, cleanerId);
           const jobLocation = getJobLocation(job);
           const jobDate = getJobDate(job);
@@ -237,130 +262,153 @@ const CleanerDashboard = () => {
             id: getJobIdentifier(job),
             rawId: job._id || job.id || job.jobId,
             title: buildJobTitle(job),
-            status: formatLabel(statusRaw || 'In Progress'),
+            status: formatLabel(statusRaw || "In Progress"),
             statusRaw,
             price: getJobPrice(job),
             quotePrice: quotePrice, // Quote price for in-progress jobs
             location: jobLocation,
             date: jobDate,
             note: getJobNote(job),
-          }
-        })
+          };
+        });
 
-        setActiveJobs(formattedActiveJobs)
+        setActiveJobs(formattedActiveJobs);
 
         const completedJobEntries = allJobs
           .filter((job) => doesJobBelongToCleaner(job, cleanerId))
-          .filter((job) => completedStatuses.has(normalizeStatus(getStatusRaw(job))))
+          .filter((job) =>
+            completedStatuses.has(normalizeStatus(getStatusRaw(job))),
+          )
           .filter((job, index, self) => {
-            const id = getJobIdentifier(job)
-            return id && index === self.findIndex((other) => getJobIdentifier(other) === id)
+            const id = getJobIdentifier(job);
+            return (
+              id &&
+              index ===
+                self.findIndex((other) => getJobIdentifier(other) === id)
+            );
           })
           .sort(
             (a, b) =>
               new Date(b.completedAt || b.updatedAt || b.createdAt || 0) -
-              new Date(a.completedAt || a.updatedAt || a.createdAt || 0)
-          )
+              new Date(a.completedAt || a.updatedAt || a.createdAt || 0),
+          );
 
-        const formattedCompletedJobs = completedJobEntries.slice(0, 12).map((job) => ({
-          id: getJobIdentifier(job),
-          rawId: job._id || job.id || job.jobId,
-          title: buildJobTitle(job),
-          price: getJobPrice(job),
-          location: getJobLocation(job),
-          date: getJobDate(job),
-          completedAt: job.completedAt || job.updatedAt || job.createdAt || null,
-          note: getJobNote(job),
-          status: 'Completed',
-          statusRaw: 'completed',
-        }))
+        const formattedCompletedJobs = completedJobEntries
+          .slice(0, 12)
+          .map((job) => ({
+            id: getJobIdentifier(job),
+            rawId: job._id || job.id || job.jobId,
+            title: buildJobTitle(job),
+            price: getJobPrice(job),
+            location: getJobLocation(job),
+            date: getJobDate(job),
+            completedAt:
+              job.completedAt || job.updatedAt || job.createdAt || null,
+            note: getJobNote(job),
+            status: "Completed",
+            statusRaw: "completed",
+          }));
 
-        setCompletedJobs(formattedCompletedJobs)
+        setCompletedJobs(formattedCompletedJobs);
 
-        const liveStatuses = new Set(['posted', 'quoted'])
+        const liveStatuses = new Set(["posted", "quoted"]);
         const liveJobs = allJobs
           .filter((job) => !doesJobBelongToCleaner(job, cleanerId))
-          .filter((job) => liveStatuses.has(normalizeStatus(getStatusRaw(job))))
-        
+          .filter((job) =>
+            liveStatuses.has(normalizeStatus(getStatusRaw(job))),
+          );
+
         // Use totalAvailable from response if provided, otherwise fallback to local filter length
-        setLiveJobsCount(allJobsResponse?.totalAvailable ?? liveJobs.length)
+        setLiveJobsCount(allJobsResponse?.totalAvailable ?? liveJobs.length);
 
         const recentCompleted = completedJobEntries.filter((job) => {
-          const completedAt = new Date(job.completedAt || job.updatedAt || job.createdAt || 0)
-          if (Number.isNaN(completedAt.getTime())) return false
-          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-          return completedAt.getTime() >= sevenDaysAgo
-        })
+          const completedAt = new Date(
+            job.completedAt || job.updatedAt || job.createdAt || 0,
+          );
+          if (Number.isNaN(completedAt.getTime())) return false;
+          const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+          return completedAt.getTime() >= sevenDaysAgo;
+        });
 
         const fallbackWeeklyEarnings = recentCompleted.reduce(
           (total, job) => total + getJobPrice(job),
-          0
-        )
+          0,
+        );
 
         setStats({
           weeklyEarnings: fallbackWeeklyEarnings,
-          completedJobs: freshUser?.completedJobs ?? user?.completedJobs ?? completedJobEntries.length ?? 0,
-        })
+          completedJobs:
+            freshUser?.completedJobs ??
+            user?.completedJobs ??
+            completedJobEntries.length ??
+            0,
+        });
       } catch (error) {
-        setDashboardError(error.message || 'Failed to load dashboard data.')
+        setDashboardError(error.message || "Failed to load dashboard data.");
       } finally {
-        setLoadingDashboard(false)
+        setLoadingDashboard(false);
       }
-    }
+    };
 
-    fetchDashboardData()
+    fetchDashboardData();
 
     const fetchSubscription = async () => {
       try {
-        const res = await subscriptionsAPI.getMyStatus().catch(() => ({ success: false }));
-        if (res.success && res.data?.subscription?.status === 'active') {
+        const res = await subscriptionsAPI
+          .getMyStatus()
+          .catch(() => ({ success: false }));
+        if (res.success && res.data?.subscription?.status === "active") {
           setSubscriptionStatus(res.data);
         }
       } catch (err) {
-        console.error('Error fetching subscription status:', err);
+        console.error("Error fetching subscription status:", err);
       } finally {
         setLoadingSubscription(false);
       }
     };
     fetchSubscription();
-  }, [user])
+  }, [user]);
 
   const handleJobClick = (job) => {
-    const status = (job.statusRaw || job.status || '').toLowerCase().trim()
-    const jobIdentifier = job.rawId || job.id
+    const status = (job.statusRaw || job.status || "").toLowerCase().trim();
+    const jobIdentifier = job.rawId || job.id;
 
     if (!jobIdentifier) {
-      navigate('/cleaner-jobs', { state: { tab: 'live-jobs' } })
-      return
+      navigate("/cleaner-jobs", { state: { tab: "live-jobs" } });
+      return;
     }
 
-    if (status === 'completed') {
-      navigate(`/cleaner-job-completed/${jobIdentifier}`)
-    } else if (['in_progress', 'in progress', 'in-progress'].includes(status)) {
-      navigate(`/in-progress-job/${jobIdentifier}`)
+    if (status === "completed") {
+      navigate(`/cleaner-job-completed/${jobIdentifier}`);
+    } else if (["in_progress", "in progress", "in-progress"].includes(status)) {
+      navigate(`/in-progress-job/${jobIdentifier}`);
     } else {
-      navigate(`/job-details/${jobIdentifier}`)
+      navigate(`/job-details/${jobIdentifier}`);
     }
-  }
+  };
 
   const greetingName = useMemo(() => {
-    const name = user?.firstName || user?.name || ''
-    return name ? formatLabel(name) : 'Cleaner'
-  }, [user])
+    const name = user?.firstName || user?.name || "";
+    return name ? formatLabel(name) : "Cleaner";
+  }, [user]);
 
   const swiperJobs = useMemo(() => {
-    if (activeJobs.length === 0 && completedJobs.length === 0) return []
-    return [...activeJobs, ...completedJobs]
-  }, [activeJobs, completedJobs])
+    if (activeJobs.length === 0 && completedJobs.length === 0) return [];
+    return [...activeJobs, ...completedJobs];
+  }, [activeJobs, completedJobs]);
 
   return (
-    <div className='pb-6'>
+    <div className="pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Greeting + Availability */}
         <div className="flex flex-row sm:items-center justify-between pt-3 sm:pt-4 gap-3 sm:gap-0">
           <div>
-            <h2 className="text-lg sm:text-[22px] md:text-2xl lg:text-3xl font-semibold text-primary-500 leading-tight">Hi, {greetingName}</h2>
-            <p className="text-xs sm:text-sm text-primary-200 font-medium">Welcome back</p>
+            <h2 className="text-lg sm:text-[22px] md:text-2xl lg:text-3xl font-semibold text-primary-500 leading-tight">
+              Hi, {greetingName}
+            </h2>
+            <p className="text-sm sm:text-sm text-primary-200 font-medium">
+              Welcome back
+            </p>
           </div>
         </div>
 
@@ -369,67 +417,93 @@ const CleanerDashboard = () => {
           <div className="mt-4 sm:mt-5 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
             {subscriptionStatus ? (
               /* Credits Usage Card (Subscribed) */
-              <div className="bg-white rounded-[32px] p-5 sm:p-6 shadow-xl border border-primary-100/50 overflow-hidden relative">
+              <div className="rounded-[32px] p-5 sm:p-6 overflow-hidden relative">
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                  <img
+                    src={CleanerBG}
+                    alt="Cleaner Background"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 {/* Decoration */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
-                
+
                 <div className="relative z-10">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg sm:text-xl font-black text-[#111111] flex items-center gap-2">
-                       Credits Usage
+                    <h3 className="text-lg sm:text-xl font-semibold text-[#111111] flex items-center gap-2">
+                      Credits Usage
                     </h3>
-                    <button 
-                      onClick={() => navigate('/my-subscription')}
-                      className="text-primary-600 font-bold text-xs sm:text-sm hover:underline flex items-center gap-1"
-                    >
-                      View Plan <ChevronRight className="w-4 h-4" />
-                    </button>
                   </div>
 
                   <div className="mb-8 relative">
-                    <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden border border-gray-100 mb-6 relative">
-                      <div 
+                    <div className="w-full h-4 bg-[#E5E7EB] rounded-full overflow-hidden  mb-6 relative">
+                      <div
                         className="h-full bg-[#22C55E] rounded-full transition-all duration-1000 relative"
-                        style={{ 
+                        style={{
                           width: `${Math.min(100, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`,
-                          backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
-                          backgroundSize: '1rem 1rem'
+                          backgroundImage:
+                            "linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)",
+                          backgroundSize: "1rem 1rem",
                         }}
                       />
                     </div>
-                    
+
                     {/* Progress Indicator Tooltip */}
-                    <div 
+                    <div
                       className="absolute left-0 -bottom-2 transform translate-y-full"
-                      style={{ 
-                        left: `${Math.min(90, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`
+                      style={{
+                        left: `${Math.min(90, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`,
                       }}
                     >
                       <div className="relative bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm whitespace-nowrap">
                         {/* Triangle decorator */}
                         <div className="absolute -top-1 left-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45" />
-                        
+
                         <p className="text-sm font-bold text-gray-900">
-                          {subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits} <span className="text-gray-400 font-medium">of</span> {subscriptionStatus.subscription?.planId?.creditsPerMonth} <span className="text-gray-400 font-normal">Credits Used</span>
+                          {subscriptionStatus.subscription?.planId
+                            ?.creditsPerMonth -
+                            subscriptionStatus.availableCredits}{" "}
+                          <span className="text-gray-400 font-medium">of</span>{" "}
+                          {
+                            subscriptionStatus.subscription?.planId
+                              ?.creditsPerMonth
+                          }{" "}
+                          <span className="text-gray-400 font-normal">
+                            Credits Used
+                          </span>
                         </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center mt-12 mb-4 px-1">
-                    <p className="text-xs sm:text-sm font-bold text-gray-500">
-                      Remaining Credits: <span className="text-primary-600">{subscriptionStatus.availableCredits}</span>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Remaining Credits:{" "}
+                      <span className="text-black font-semibold">
+                        {subscriptionStatus.availableCredits}
+                      </span>
                     </p>
-                    <p className="text-xs sm:text-sm font-bold text-gray-500">
-                      Estimated leads: <span className="text-primary-600">{Math.floor(subscriptionStatus.availableCredits / (subscriptionStatus.subscription?.planId?.creditsPerLead || 1))}</span>
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Estimated leads:{" "}
+                      <span className="text-black font-semibold">
+                        {Math.floor(
+                          subscriptionStatus.availableCredits /
+                            (subscriptionStatus.subscription?.planId
+                              ?.creditsPerLead || 1),
+                        )}
+                      </span>
                     </p>
                   </div>
 
-                  <button 
-                    onClick={() => navigate('/wallet')}
-                    className="flex items-center gap-2 text-primary-500 font-black text-sm hover:translate-x-1 transition-transform cursor-pointer"
+                  <button
+                    onClick={() => navigate("/wallet")}
+                    className="flex items-center gap-2 text-[#1F6FEB] text-sm font-medium cursor-pointer"
                   >
-                    <PlusCircle className="w-5 h-5" /> Buy Credits
+                    <span className="flex items-center justify-center w-4 h-4 bg-[#1F6FEB] rounded-full font-medium">
+                      <Plus className="w-3 h-3 text-white stroke-[3]" />
+                    </span>
+                    Buy Credits
                   </button>
                 </div>
               </div>
@@ -437,30 +511,35 @@ const CleanerDashboard = () => {
               /* Start Getting Cleaning Leads (Not Subscribed) */
               <div className="bg-gradient-to-br from-white to-primary-50/30 rounded-[32px] p-6 sm:p-8 shadow-xl border border-primary-100/50 relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl" />
-                
+
                 <div className="relative z-10 max-w-lg">
-                  <h3 className="text-2xl sm:text-3xl font-black text-[#111111] mb-2">Start Getting Cleaning Leads</h3>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#111111] mb-2">
+                    Start Getting Cleaning Leads
+                  </h3>
                   <p className="text-gray-500 font-medium text-sm sm:text-base mb-6 leading-relaxed">
-                    To respond to customer jobs, you need an active subscription plan. Choose a plan and start receiving leads today.
+                    To respond to customer jobs, you need an active subscription
+                    plan. Choose a plan and start receiving leads today.
                   </p>
-                  
+
                   <div className="grid grid-cols-1 gap-3 mb-8">
                     {[
                       "Access verified cleaning jobs",
                       "Chat with customers instantly",
-                      "Get up to 15 leads per month"
+                      "Get up to 15 leads per month",
                     ].map((feat, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-primary-500" />
-                        <span className="text-sm font-bold text-gray-700">{feat}</span>
+                        <span className="text-sm font-bold text-gray-700">
+                          {feat}
+                        </span>
                       </div>
                     ))}
                   </div>
 
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     className="rounded-2xl h-14 px-8 font-black text-lg shadow-lg shadow-primary-200"
-                    onClick={() => navigate('/my-subscription')}
+                    onClick={() => navigate("/my-subscription")}
                   >
                     View Subscription Plans
                   </Button>
@@ -479,65 +558,96 @@ const CleanerDashboard = () => {
             I will HIDE the earnings card and old flow if subscription status is fetched.
         */}
 
-        {subscriptionStatus && (
+        {/* {subscriptionStatus && (
           <div className="mt-3 sm:mt-4 shadow-custom rounded-2xl">
             <div className="relative rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 overflow-hidden">
               <div className="absolute inset-0">
-                <img src={CleanerBG} alt="Cleaner Background" className="w-full h-full object-cover" />
+                <img
+                  src={CleanerBG}
+                  alt="Cleaner Background"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="relative z-10 p-2 sm:p-3">
-                <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">Earnings This Week</p>
+                <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">
+                  Earnings This Week
+                </p>
                 <div className="flex items-end justify-between mt-1">
                   <div>
                     <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-500 mb-1 sm:mb-2">
                       {formatCurrency(stats.weeklyEarnings)}
                     </div>
                     <div className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                      {stats.completedJobs || 0} {stats.completedJobs === 1 ? 'job' : 'jobs'} completed
+                      {stats.completedJobs || 0}{" "}
+                      {stats.completedJobs === 1 ? "job" : "jobs"} completed
                     </div>
-                    <button onClick={() => navigate('/earnings')} className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer">
+                    <button
+                      onClick={() => navigate("/earnings")}
+                      className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer"
+                    >
                       View Earnings <span className="inline-block ml-1">→</span>
                     </button>
                   </div>
                 </div>
               </div>
               <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
-                <img src={Coin3} alt="coins" className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36" />
+                <img
+                  src={Coin3}
+                  alt="coins"
+                  className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36"
+                />
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Live jobs near you */}
         <div className="mt-3 sm:mt-4 bg-white rounded-2xl border-[#F3F3F3] p-3 sm:p-4 shadow-custom">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary-50 flex items-center justify-center">
-                <img src={BoldJobIcon} alt="jobs" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-10" />
+                <img
+                  src={BoldJobIcon}
+                  alt="jobs"
+                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-10"
+                />
               </div>
-              <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-medium">Live Jobs near you</span>
+              <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-medium">
+                Live Jobs near you
+              </span>
             </div>
             <button
-              onClick={() => navigate('/cleaner-jobs', { state: { tab: 'live-jobs' } })}
+              onClick={() =>
+                navigate("/cleaner-jobs", { state: { tab: "live-jobs" } })
+              }
               className="text-xs sm:text-sm md:text-lg text-primary-600 font-medium flex items-center cursor-pointer"
             >
-              <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span> {liveJobsLabel}</button>
+              <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span>{" "}
+              {liveJobsLabel}
+            </button>
           </div>
         </div>
 
         {/* Active Jobs */}
         <div className="mt-3 sm:mt-4 md:mt-5 bg-white rounded-2xl border-[#F3F3F3] p-2 sm:p-3 md:p-4 lg:p-5 shadow-custom">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 md:mb-4 gap-2 sm:gap-3 md:gap-0">
-            <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-primary-500">Your Active Jobs</h3>
+            <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-primary-500">
+              Your Active Jobs
+            </h3>
 
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between sm:justify-end space-x-2">
               <Button
-                onClick={() => navigate('/cleaner-jobs', { state: { tab: 'live-jobs' } })}
+                onClick={() =>
+                  navigate("/cleaner-jobs", { state: { tab: "live-jobs" } })
+                }
                 size="sm"
                 className="bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm rounded-full px-2 flex items-center justify-center space-x-1"
                 icon={
-                  <BriefcaseBusiness className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4" strokeWidth={2} />
+                  <BriefcaseBusiness
+                    className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4"
+                    strokeWidth={2}
+                  />
                 }
               >
                 <span className="hidden sm:inline">View Jobs</span>
@@ -550,7 +660,12 @@ const CleanerDashboard = () => {
                   variant="ghost"
                   size="xs"
                   className="rounded-full p-1 sm:p-1.5 md:p-2"
-                  icon={<ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600" strokeWidth={2} />}
+                  icon={
+                    <ChevronLeft
+                      className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600"
+                      strokeWidth={2}
+                    />
+                  }
                 />
 
                 <Button
@@ -558,14 +673,21 @@ const CleanerDashboard = () => {
                   variant="ghost"
                   size="xs"
                   className="rounded-full p-1 sm:p-1.5 md:p-2"
-                  icon={<ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600" strokeWidth={2} />}
+                  icon={
+                    <ChevronRight
+                      className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600"
+                      strokeWidth={2}
+                    />
+                  }
                 />
               </div>
             </div>
           </div>
 
           {dashboardError && (
-            <div className="mt-3 text-sm text-red-500 font-medium">{dashboardError}</div>
+            <div className="mt-3 text-sm text-red-500 font-medium">
+              {dashboardError}
+            </div>
           )}
 
           {loadingDashboard ? (
@@ -606,33 +728,52 @@ const CleanerDashboard = () => {
                     <div className="flex flex-col justify-between h-full">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs sm:text-sm text-primary-200 font-medium truncate">#{job.id}</span>
+                          <span className="text-xs sm:text-sm text-primary-200 font-medium truncate">
+                            #{job.id}
+                          </span>
                           {(() => {
-                            const statusColors = getStatusColors(job.statusRaw || job.status)
+                            const statusColors = getStatusColors(
+                              job.statusRaw || job.status,
+                            );
                             return (
-                              <span className={`px-2 py-0.5 rounded-full font-semibold text-xs ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0 ml-2`}>
+                              <span
+                                className={`px-2 py-0.5 rounded-full font-semibold text-xs ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0 ml-2`}
+                              >
                                 {job.status}
                               </span>
-                            )
+                            );
                           })()}
                         </div>
                         <div className="text-primary-500 font-semibold text-sm sm:text-base mb-2 line-clamp-2 capitalize">
                           {job.title}
                         </div>
                         <div className="flex items-start text-primary-200 font-medium text-xs sm:text-sm mb-1.5">
-                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" strokeWidth={2} />
-                          <span className="line-clamp-2 leading-relaxed">{job.location || 'Location not specified'}</span>
+                          <MapPin
+                            className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5"
+                            strokeWidth={2}
+                          />
+                          <span className="line-clamp-2 leading-relaxed">
+                            {job.location || "Location not specified"}
+                          </span>
                         </div>
                         <div className="flex items-center text-primary-200 font-medium text-xs sm:text-sm mb-2">
-                          <Calendar className="w-4 h-4 mr-1.5 flex-shrink-0" strokeWidth={2} />
-                          <span>{job.date || 'Date not specified'}</span>
+                          <Calendar
+                            className="w-4 h-4 mr-1.5 flex-shrink-0"
+                            strokeWidth={2}
+                          />
+                          <span>{job.date || "Date not specified"}</span>
                         </div>
                         {/* Show quote price for in-progress jobs */}
-                        {job.statusRaw && (job.statusRaw.toLowerCase() === 'in_progress' || job.statusRaw.toLowerCase() === 'in progress' || job.statusRaw.toLowerCase() === 'in-progress' || job.statusRaw.toLowerCase() === 'accepted') && job.quotePrice && (
-                          <div className="text-primary-500 font-bold text-sm sm:text-base mt-1">
-                            {formatCurrency(job.quotePrice)}
-                          </div>
-                        )}
+                        {job.statusRaw &&
+                          (job.statusRaw.toLowerCase() === "in_progress" ||
+                            job.statusRaw.toLowerCase() === "in progress" ||
+                            job.statusRaw.toLowerCase() === "in-progress" ||
+                            job.statusRaw.toLowerCase() === "accepted") &&
+                          job.quotePrice && (
+                            <div className="text-primary-500 font-bold text-sm sm:text-base mt-1">
+                              {formatCurrency(job.quotePrice)}
+                            </div>
+                          )}
                       </div>
                       <Button
                         variant="secondary"
@@ -644,7 +785,10 @@ const CleanerDashboard = () => {
                           handleJobClick(job);
                         }}
                       >
-                        {((job.statusRaw || job.status || '').toLowerCase() === 'completed') ? 'View Summary' : 'Open Job'}
+                        {(job.statusRaw || job.status || "").toLowerCase() ===
+                        "completed"
+                          ? "View Summary"
+                          : "Open Job"}
                       </Button>
                     </div>
                   </div>
@@ -659,9 +803,7 @@ const CleanerDashboard = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CleanerDashboard
-
-
+export default CleanerDashboard;
