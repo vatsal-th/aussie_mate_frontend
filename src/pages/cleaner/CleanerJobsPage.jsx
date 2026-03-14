@@ -664,10 +664,10 @@ const CleanerJobsPage = () => {
             <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3">
               <Button
                 onClick={handleResetFilters}
-                variant="outline"
+                variant="secondary"
                 size="md"
                 fullWidth
-                className="border-primary-200 text-primary-500 hover:bg-primary-50"
+                className="border-[#9CC0F6] text-"
               >
                 Reset
               </Button>
