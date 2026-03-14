@@ -5,10 +5,10 @@ import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, BriefcaseBusiness, Calendar } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, BriefcaseBusiness, Calendar, CheckCircle2, PlusCircle, TrendingUp } from 'lucide-react'
 import { Button, Loader } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
-import { jobsAPI, authAPI } from '../../services/api'
+import { jobsAPI, authAPI, subscriptionsAPI } from '../../services/api'
 import { getStatusColors } from '../../utils/statusUtils'
 import CleanerBG from '../../assets/cleanerBG.jpg'
 import BoldJobIcon from '../../assets/boldJob.svg'
@@ -25,6 +25,8 @@ const CleanerDashboard = () => {
   const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 })
   const [loadingDashboard, setLoadingDashboard] = useState(false)
   const [dashboardError, setDashboardError] = useState('')
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null)
+  const [loadingSubscription, setLoadingSubscription] = useState(true)
 
   const formatLabel = (str) =>
     (str || "")
@@ -204,7 +206,8 @@ const CleanerDashboard = () => {
         const profileResponse = await authAPI.getCurrentUser().catch(() => null);
         const freshUser = profileResponse?.data?.user || profileResponse?.user || (profileResponse?.success ? profileResponse.data : null);
 
-        const allJobsResponse = await jobsAPI.getAllJobs({ page: 1, limit: 200 }).catch(() => null)
+        // Use the new feed API for live jobs (posted jobs)
+        const allJobsResponse = await jobsAPI.getCleanerJobFeed({ tab: 'posted', page: 1, limit: 200 }).catch(() => null)
         const allJobs = extractJobs(allJobsResponse)
 
         const inProgressJobs = allJobs
@@ -278,7 +281,9 @@ const CleanerDashboard = () => {
         const liveJobs = allJobs
           .filter((job) => !doesJobBelongToCleaner(job, cleanerId))
           .filter((job) => liveStatuses.has(normalizeStatus(getStatusRaw(job))))
-        setLiveJobsCount(liveJobs.length)
+        
+        // Use totalAvailable from response if provided, otherwise fallback to local filter length
+        setLiveJobsCount(allJobsResponse?.totalAvailable ?? liveJobs.length)
 
         const recentCompleted = completedJobEntries.filter((job) => {
           const completedAt = new Date(job.completedAt || job.updatedAt || job.createdAt || 0)
@@ -304,6 +309,20 @@ const CleanerDashboard = () => {
     }
 
     fetchDashboardData()
+
+    const fetchSubscription = async () => {
+      try {
+        const res = await subscriptionsAPI.getMyStatus().catch(() => ({ success: false }));
+        if (res.success && res.data?.subscription?.status === 'active') {
+          setSubscriptionStatus(res.data);
+        }
+      } catch (err) {
+        console.error('Error fetching subscription status:', err);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+    fetchSubscription();
   }, [user])
 
   const handleJobClick = (job) => {
@@ -345,39 +364,149 @@ const CleanerDashboard = () => {
           </div>
         </div>
 
-        {/* Earnings Card */}
-        <div className="mt-3 sm:mt-4 shadow-custom rounded-2xl">
-          <div className="relative rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 overflow-hidden">
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img src={CleanerBG} alt="Cleaner Background" className="w-full h-full object-cover" />
-            </div>
+        {/* Subscription / Credits Section */}
+        {!loadingSubscription && (
+          <div className="mt-4 sm:mt-5 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+            {subscriptionStatus ? (
+              /* Credits Usage Card (Subscribed) */
+              <div className="bg-white rounded-[32px] p-5 sm:p-6 shadow-xl border border-primary-100/50 overflow-hidden relative">
+                {/* Decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg sm:text-xl font-black text-[#111111] flex items-center gap-2">
+                       Credits Usage
+                    </h3>
+                    <button 
+                      onClick={() => navigate('/my-subscription')}
+                      className="text-primary-600 font-bold text-xs sm:text-sm hover:underline flex items-center gap-1"
+                    >
+                      View Plan <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-            {/* Content Overlay */}
-            <div className="relative z-10 p-2 sm:p-3">
-              <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">Earnings This Week</p>
-              <div className="flex items-end justify-between mt-1">
-                <div>
-                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-500 mb-1 sm:mb-2">
-                    {formatCurrency(stats.weeklyEarnings)}
+                  <div className="mb-8 relative">
+                    <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden border border-gray-100 mb-6 relative">
+                      <div 
+                        className="h-full bg-[#22C55E] rounded-full transition-all duration-1000 relative"
+                        style={{ 
+                          width: `${Math.min(100, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`,
+                          backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
+                          backgroundSize: '1rem 1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Progress Indicator Tooltip */}
+                    <div 
+                      className="absolute left-0 -bottom-2 transform translate-y-full"
+                      style={{ 
+                        left: `${Math.min(90, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`
+                      }}
+                    >
+                      <div className="relative bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm whitespace-nowrap">
+                        {/* Triangle decorator */}
+                        <div className="absolute -top-1 left-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45" />
+                        
+                        <p className="text-sm font-bold text-gray-900">
+                          {subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits} <span className="text-gray-400 font-medium">of</span> {subscriptionStatus.subscription?.planId?.creditsPerMonth} <span className="text-gray-400 font-normal">Credits Used</span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                    {stats.completedJobs || 0} {stats.completedJobs === 1 ? 'job' : 'jobs'} completed
+
+                  <div className="flex justify-between items-center mt-12 mb-4 px-1">
+                    <p className="text-xs sm:text-sm font-bold text-gray-500">
+                      Remaining Credits: <span className="text-primary-600">{subscriptionStatus.availableCredits}</span>
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-500">
+                      Estimated leads: <span className="text-primary-600">{Math.floor(subscriptionStatus.availableCredits / (subscriptionStatus.subscription?.planId?.creditsPerLead || 1))}</span>
+                    </p>
                   </div>
-                  <button onClick={() => navigate('/earnings')} className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer">
-                    View Earnings
-                    <span className="inline-block ml-1">→</span>
+
+                  <button 
+                    onClick={() => navigate('/wallet')}
+                    className="flex items-center gap-2 text-primary-500 font-black text-sm hover:translate-x-1 transition-transform cursor-pointer"
+                  >
+                    <PlusCircle className="w-5 h-5" /> Buy Credits
                   </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* Start Getting Cleaning Leads (Not Subscribed) */
+              <div className="bg-gradient-to-br from-white to-primary-50/30 rounded-[32px] p-6 sm:p-8 shadow-xl border border-primary-100/50 relative overflow-hidden">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl" />
+                
+                <div className="relative z-10 max-w-lg">
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#111111] mb-2">Start Getting Cleaning Leads</h3>
+                  <p className="text-gray-500 font-medium text-sm sm:text-base mb-6 leading-relaxed">
+                    To respond to customer jobs, you need an active subscription plan. Choose a plan and start receiving leads today.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 gap-3 mb-8">
+                    {[
+                      "Access verified cleaning jobs",
+                      "Chat with customers instantly",
+                      "Get up to 15 leads per month"
+                    ].map((feat, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-primary-500" />
+                        <span className="text-sm font-bold text-gray-700">{feat}</span>
+                      </div>
+                    ))}
+                  </div>
 
-            {/* Coin3 image positioned at bottom right */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
-              <img src={Coin3} alt="coins" className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36" />
+                  <Button 
+                    variant="primary" 
+                    className="rounded-2xl h-14 px-8 font-black text-lg shadow-lg shadow-primary-200"
+                    onClick={() => navigate('/my-subscription')}
+                  >
+                    View Subscription Plans
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Existing Earnings Card (keep it below subscription logic or remove if requested) */}
+        {/* User said: "remove kari nakhu che" (remove the old flow) and show subscription logic.
+            Actually the user said "remove kari nakhu che" referring to "quat send thay ne evu hatu".
+            The Earnings card might still be relevant if they HAVE a subscription.
+            In the screenshots, "Hi, John" is followed by Subscription CTA OR Credits Usage.
+            Earnings card is NOT in the new screenshots.
+            I will HIDE the earnings card and old flow if subscription status is fetched.
+        */}
+
+        {subscriptionStatus && (
+          <div className="mt-3 sm:mt-4 shadow-custom rounded-2xl">
+            <div className="relative rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 overflow-hidden">
+              <div className="absolute inset-0">
+                <img src={CleanerBG} alt="Cleaner Background" className="w-full h-full object-cover" />
+              </div>
+              <div className="relative z-10 p-2 sm:p-3">
+                <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">Earnings This Week</p>
+                <div className="flex items-end justify-between mt-1">
+                  <div>
+                    <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-500 mb-1 sm:mb-2">
+                      {formatCurrency(stats.weeklyEarnings)}
+                    </div>
+                    <div className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
+                      {stats.completedJobs || 0} {stats.completedJobs === 1 ? 'job' : 'jobs'} completed
+                    </div>
+                    <button onClick={() => navigate('/earnings')} className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer">
+                      View Earnings <span className="inline-block ml-1">→</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
+                <img src={Coin3} alt="coins" className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Live jobs near you */}
         <div className="mt-3 sm:mt-4 bg-white rounded-2xl border-[#F3F3F3] p-3 sm:p-4 shadow-custom">

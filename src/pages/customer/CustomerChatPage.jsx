@@ -77,16 +77,40 @@ const CustomerChatPage = () => {
       const messageId = message._id || message.id || `${message.content}-${message.senderId?._id}-${message.createdAt}`;
 
       setMessages(prev => {
-        // Check if message already exists to prevent duplicates
-        const messageExists = prev.some(msg => {
-          const existingId = msg._id || msg.id || `${msg.content}-${msg.senderId?._id}-${msg.createdAt}`;
-          return existingId === messageId;
-        });
+        const incomingContent = message.content || message.message || '';
+        const incomingId = message._id || message.id;
 
-        if (messageExists) {
+        console.log('📨 [SOCKET] Received message:', { id: incomingId, content: incomingContent });
+
+        // 1. Check if message with this _id already exists
+        const existsById = prev.some(msg => 
+          !msg.isOptimistic && (
+            (msg._id && msg._id === incomingId) || 
+            (msg.id && msg.id === incomingId)
+          )
+        );
+        if (existsById) {
+          console.log('🚫 [SOCKET] Message already exists by ID, skipping.');
           return prev;
         }
 
+        // 2. Check for optimistic match to replace
+        // We look for any optimistic message with matching content
+        const optimisticIndex = prev.findIndex(msg => 
+          msg.isOptimistic && (
+            (msg.content && msg.content.trim() === incomingContent.trim()) || 
+            (msg.message && msg.message.trim() === incomingContent.trim())
+          )
+        );
+
+        if (optimisticIndex !== -1) {
+          console.log('🔄 [SOCKET] Found optimistic match, replacing at index:', optimisticIndex);
+          const updated = [...prev];
+          updated[optimisticIndex] = { ...message, isOptimistic: false };
+          return updated;
+        }
+
+        console.log('➕ [SOCKET] Adding new message to list.');
         return [...prev, message];
       });
       scrollToBottom();
@@ -163,69 +187,16 @@ const CustomerChatPage = () => {
                 setCleanerName(`${cleanerObj.firstName || ''} ${cleanerObj.lastName || ''}`.trim());
               }
 
-              // Join chat with the actual cleaner ID and the MongoDB _id of the job
-              const resolvedCleanerId = cleanerQuote.cleaner?._id || 
-                                      cleanerQuote.cleanerId?._id || 
-                                      cleanerQuote.cleanerId?.id || 
-                                      cleanerQuote.cleanerId || 
-                                      cleanerQuote.id || 
-                                      cleanerQuote._id ||
-                                      cleanerQuote.cleaner?.id;
+              // Join chat with the actual cleaner ID or room ID
+              const actualCleanerId = cleanerQuote.cleanerId?._id || cleanerQuote.cleanerId?.id || cleanerQuote.cleanerId || cleanerQuote.id;
               
-              console.log('🔍 [CHAT DIAGNOSTIC] Cleaner ID Resolution:', {
-                urlCleanerId: cleanerId,
-                resolvedCleanerId,
-                quoteCleaner: cleanerQuote.cleaner,
-                quoteCleanerId: cleanerQuote.cleanerId
-              });
-
-              if (!resolvedCleanerId || resolvedCleanerId === 'undefined') {
-                console.warn('⚠️ [CHAT] Could not resolve actual cleaner ID from quote, using URL param');
-              }
-              
-              const actualJobId = jobResponse.data._id || jobId;
-              const actualCleanerIdToUse = resolvedCleanerId || cleanerId;
-
-              console.log('🔍 [CHAT DIAGNOSTIC] IDs used for Join:', {
-                actualJobId,
-                actualCleanerIdToUse,
-                fromJobResponse: jobResponse.data._id,
-                fromUrl: jobId
-              });
-
               if (cleanerQuote.chatRoomId) {
                 console.log('🚪 [CHAT] Found existing chatRoomId from quote:', cleanerQuote.chatRoomId);
                 setCurrentChatRoom({ chatRoomId: cleanerQuote.chatRoomId });
+                socketService.joinRoom(cleanerQuote.chatRoomId);
+              } else {
+                socketService.joinChat(jobId, actualCleanerId || cleanerId);
               }
-
-              // Verify room exists via chatAPI
-              try {
-                console.log('🔍 [CHAT DIAGNOSTIC] Checking chat history via REST API...');
-                const historyResp = await chatAPI.getChatHistory(actualJobId, actualCleanerIdToUse);
-                console.log('🔍 [CHAT DIAGNOSTIC] Chat history response:', historyResp);
-                if (historyResp.success && historyResp.data?.messages) {
-                  setMessages(historyResp.data.messages);
-                  const room = historyResp.room; // We'll update chatAPI to return the room object
-                  if (room && room._id) {
-                    console.log('🚪 [CHAT] Found chatRoomId from history:', room._id);
-                    setCurrentChatRoom({ chatRoomId: room._id });
-                  }
-                }
-              } catch (historyErr) {
-                console.warn('⚠️ [CHAT] Failed to fetch chat history:', historyErr.message);
-              }
-
-              // CRITICAL: Call connect API to ensure backend authorizes this connection
-              try {
-                console.log('🔗 [CHAT] Establishing backend connection:', { jobId: actualJobId, cleanerId: actualCleanerIdToUse });
-                const connectResp = await jobsAPI.connectCleaner(actualJobId, actualCleanerIdToUse);
-                console.log('✅ [CHAT] Backend connection response:', connectResp);
-              } catch (connectErr) {
-                console.warn('⚠️ [CHAT] Backend connect failed (might already be connected):', connectErr.message);
-              }
-
-              console.log('📤 [CHAT] Attempting socket join with:', { jobId: actualJobId, cleanerId: actualCleanerIdToUse });
-              socketService.joinChat(actualJobId, actualCleanerIdToUse);
             } else {
               console.warn('⚠️ [CHAT] No matching cleaner found in job data, trying to connect with URL params');
               const actualJobId = jobResponse.data._id || jobId;
@@ -300,25 +271,33 @@ const CustomerChatPage = () => {
   const handleSendMessage = () => {
     if (newMessage.trim()) {
 
+      const tempMessage = {
+        _id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`,
+        senderId: { _id: currentUser?.id || currentUser?._id || 'user' },
+        content: newMessage.trim(),
+        message: newMessage.trim(),
+        messageType: 'text',
+        createdAt: new Date().toISOString(),
+        time: new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).toLowerCase(),
+        isOptimistic: true
+      };
+
       if (currentChatRoom?.chatRoomId && isConnected) {
+        // Optimistically add to state
+        setMessages(prev => [...prev, tempMessage]);
         socketService.sendMessage(currentChatRoom.chatRoomId, newMessage.trim());
         setNewMessage('');
+        scrollToBottom();
       } else {
         // Fallback to static messages when not connected
-        const message = {
-          id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          sender: 'user',
-          message: newMessage.trim(),
-          timestamp: new Date().toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          })
-        };
-        setMessages(prev => {
-          return [...prev, message];
-        });
+        setMessages(prev => [...prev, { ...tempMessage, isOptimistic: false }]);
         setNewMessage('');
+        scrollToBottom();
       }
     }
   };
@@ -333,19 +312,23 @@ const CustomerChatPage = () => {
     try {
       setLoading(true);
       setError('');
+      
+      const cleanerIdToAssign = cleanerId;
+      if (!cleanerIdToAssign) {
+        setError('Cleaner information not found.');
+        return;
+      }
 
-      // Use the job assignment API as requested
-      const response = await jobsAPI.assignCleaner(jobId, cleanerId);
+      const response = await jobsAPI.assignCleaner(jobId, cleanerIdToAssign);
 
       if (response.success) {
-        // Success! Navigate directly to the booking confirmation page
-        navigate(`/booking-confirmation/${jobId}`);
+        navigate(`/booking-confirmation/${jobId}?cleaner=${cleanerIdToAssign}`);
       } else {
-        setError(response.message || 'Failed to accept quote. Please try again.');
+        setError(response.message || response.error || 'Failed to assign cleaner. Please try again.');
       }
     } catch (err) {
-      console.error('Error accepting quote:', err);
-      setError('An error occurred while accepting the quote. Please try again.');
+      console.error('Error assigning cleaner:', err);
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -538,13 +521,13 @@ const CustomerChatPage = () => {
               onClick={handleRejectQuote}
               className="text-red-500 text-sm sm:text-base font-bold hover:text-red-600 transition-colors"
             >
-              Reject Quote
+              Not Interested
             </button>
             <Button
               onClick={handleAcceptQuote}
               className="flex-1 max-w-[240px] bg-[#1D75FF] hover:bg-blue-600 text-white py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold shadow-md transition-all sm:translate-y-0"
             >
-              Accept Quote & Book
+              Assign & Book
             </Button>
           </div>
         </div>

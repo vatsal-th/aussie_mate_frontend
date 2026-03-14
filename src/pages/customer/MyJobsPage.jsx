@@ -295,7 +295,11 @@ const MyJobsPage = () => {
           params.endDate = endDate;
         }
 
-        const response = await jobsAPI.getCustomerJobs(currentUserId, params);
+        const response = await jobsAPI.getMyJobs({
+          ...params,
+          tab: activeTab === 'all' ? 'all' : activeTab,
+          categoryId: selectedCategories.join(','),
+        });
         const jobList = response?.data || [];
         const paginationMeta = response?.pagination;
         if (paginationMeta) {

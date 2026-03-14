@@ -88,6 +88,10 @@ class SocketService {
       this.notifyListeners('chatHistory', messages);
     });
     
+    this.socket.on('receive_message', (message) => {
+      this.notifyListeners('newMessage', message);
+    });
+
     this.socket.on('new_message', (message) => {
       this.notifyListeners('newMessage', message);
     });
@@ -175,7 +179,7 @@ class SocketService {
     this.socket.on('connect_error', (error) => {
       console.error('❌ Socket connection error:', error.message);
       this.notifyListeners('error', { 
-        message: 'Failed to connect to chat server. Please check if the backend is running.' 
+        message: 'Failed to connect to chat server. Please check if the backend is running.'
       });
     });
   }
@@ -213,8 +217,15 @@ class SocketService {
     if (this.socket && this.isConnected) {
       console.log('📤 [SOCKET] Emitting join_chat:', { jobId, cleanerId });
       this.socket.emit('join_chat', { jobId, cleanerId });
-    } else {
-      console.warn('⚠️ [SOCKET] Cannot join chat: Socket not connected', { isConnected: this.isConnected, hasSocket: !!this.socket });
+    }
+  }
+
+  joinRoom(chatRoomId) {
+    if (this.socket && this.isConnected) {
+      console.log('🚪 [SOCKET] Joining room:', chatRoomId);
+      // Emit as both string and object to be safe
+      this.socket.emit('join_room', chatRoomId);
+      this.socket.emit('join_room', { chatRoomId });
     }
   }
 

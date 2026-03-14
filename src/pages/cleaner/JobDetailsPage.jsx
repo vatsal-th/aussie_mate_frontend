@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { PageHeader, JobOverviewCard } from '../../components';
+import { PageHeader, JobOverviewCard, ContactCustomerModal } from '../../components';
 import ChatIcon from '../../assets/message2.svg';
 import { jobsAPI } from '../../services/api';
 import { Wallet, Clock3, Home as HomeIcon, Ruler, AlertTriangle, CalendarDays } from 'lucide-react';
@@ -12,6 +12,10 @@ const JobDetailsPage = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [isContacting, setIsContacting] = useState(false);
+  const [isContacted, setIsContacted] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -26,6 +30,20 @@ const JobDetailsPage = () => {
         if (response.success && response.data) {
           const jobData = response.data;
           setJob(jobData);
+
+          // Check if current cleaner has already contacted or is connected
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          const currentUserId = currentUser.id || currentUser._id;
+          
+          const contacted = (jobData.contactedCleaners || []).some(c => 
+            (c.cleanerId?._id || c.cleanerId) === currentUserId
+          );
+          setIsContacted(contacted);
+
+          const connected = (jobData.contactedCleaners || []).some(c => 
+            ((c.cleanerId?._id || c.cleanerId) === currentUserId) && c.isConnected
+          );
+          setIsConnected(connected || jobData.status === 'assigned' || jobData.status === 'accepted');
         } else {
           setError('Job not found');
         }
@@ -187,11 +205,51 @@ const JobDetailsPage = () => {
       });
     }
 
+    // Show customer contact info ONLY if connected
+    if (isConnected && job.customerId) {
+      if (job.customerId.phone) {
+        meta.push({
+          label: 'Customer Phone',
+          value: job.customerId.phone,
+          icon: <span className="text-primary-400">📞</span>,
+        });
+      }
+      if (job.customerId.email) {
+        meta.push({
+          label: 'Customer Email',
+          value: job.customerId.email,
+          icon: <span className="text-primary-400">📧</span>,
+        });
+      }
+    }
+
     return meta;
   }, [job]);
 
   const handleChatWithCustomer = () => {
-    navigate(`/chat/${jobId}`);
+    if (isContacted) {
+      navigate(`/chat/${jobId}`);
+    } else {
+      setShowContactModal(true);
+    }
+  };
+
+  const handleConfirmContact = async (message) => {
+    try {
+      setIsContacting(true);
+      const response = await jobsAPI.contactJob(jobId, { message });
+      if (response.success) {
+        setIsContacted(true);
+        setShowContactModal(false);
+        navigate(`/chat/${jobId}`);
+      } else {
+        setError(response.message || 'Failed to send message');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsContacting(false);
+    }
   };
 
 
@@ -255,18 +313,81 @@ const JobDetailsPage = () => {
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleChatWithCustomer}
-              className="bg-primary-500  text-white  cursor-pointer shadow-custom border border-[#EBF2FD] font-medium py-2 px-3 sm:py-3 sm:px-4 rounded-xl transition-colors duration-200 flex items-center gap-2 "
-            >
-              <img src={ChatIcon} alt="Chat" className="w-5 h-5 brightness-0 invert" />
-              Chat with Customer
-            </button>
+          {/* Posted By Section (from mockup) */}
+          {job.customerId && (
+            <div className="bg-white rounded-2xl p-4 mb-4 border border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={job.customerId.profileImage || `https://ui-avatars.com/api/?name=${job.customerId.firstName}+${job.customerId.lastName}&background=random`} 
+                  alt="Customer" 
+                  className="w-12 h-12 rounded-full border border-gray-200 object-cover" 
+                />
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Posted by</p>
+                  <p className="text-lg font-bold text-primary-500">{job.customerId.firstName} {job.customerId.lastName}.</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleChatWithCustomer}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F1F6FF] text-primary-600 rounded-full font-semibold text-sm border border-[#E0EAFF] hover:bg-blue-50 transition-colors cursor-pointer"
+                >
+                  <img src={ChatIcon} alt="Chat" className="w-4 h-4" />
+                   Chat
+                </button>
+                {/* Call button - only if phone is available (usually hidden until booking) */}
+                {job.status === 'assigned' && job.customerId.phone && (
+                   <button
+                    onClick={() => window.open(`tel:${job.customerId.phone}`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F1F6FF] text-primary-600 rounded-full font-semibold text-sm border border-[#E0EAFF] hover:bg-blue-50 transition-colors cursor-pointer"
+                  >
+                    <span className="text-primary-600">📞</span>
+                    Call
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3">
+            {/* Show "I'm on the way" button only if assigned to me */}
+            {(() => {
+              const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+              const currentUserId = currentUser.id || currentUser._id;
+              const isAssigned = job.status === 'assigned' || job.status === 'accepted' || job.status === 'in_progress';
+              const isAssignedToMe = job.assignedCleanerId === currentUserId || 
+                                    job.assignedCleanerId?._id === currentUserId ||
+                                    job.cleanerId === currentUserId ||
+                                    job.cleanerId?._id === currentUserId;
+              
+              if (isAssigned && isAssignedToMe) {
+                return (
+                  <button
+                    onClick={() => {
+                      // Logic for "I'm on the way"
+                      console.log('Sending "On the way" status for job:', job._id);
+                      alert('Status updated: You are on the way!');
+                    }}
+                    className="bg-green-600 text-white cursor-pointer shadow-custom border border-green-100 font-medium py-2 px-4 sm:py-3 sm:px-6 rounded-xl transition-colors duration-200 flex items-center gap-2 hover:bg-green-700"
+                  >
+                    I'm On The Way
+                  </button>
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
       </div>
+
+      <ContactCustomerModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        onConfirm={handleConfirmContact}
+        customerName={job.customerId?.firstName}
+        isLoading={isContacting}
+      />
     </>
   );
 };
