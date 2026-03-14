@@ -93,12 +93,7 @@ const SignupPage = () => {
       // Map role to userType for backend compatibility
       const roleMapping = {
         'Customer': 'customer',
-        'Student Cleaner': 'cleaner',
-        'Professional Cleaner': 'cleaner',
-        'NDIS Assistant': 'cleaner',
-        'Retail Auditor': 'cleaner',
-        'Pet Sitter': 'cleaner',
-        'Housekeeper': 'cleaner'
+        'Service Provider': 'cleaner'
       };
 
       // Create clean API data with only required fields
@@ -110,7 +105,7 @@ const SignupPage = () => {
         password: userData.password,
         confirmPassword: userData.confirmPassword,
         userType: roleMapping[userData.role] || userData.role.toLowerCase(),
-        role: userData.role,
+        role: userData.role === 'Service Provider' ? 'Professional Cleaner' : userData.role,
       };
 
       await register(apiData);
@@ -348,7 +343,7 @@ const SignupPage = () => {
                 ? 'Continue For NDIS Verification'
                 : formData.role === 'Customer'
                   ? 'Continue & Set My Location'
-                  : 'Continue For Verification'
+                  : 'Continue For Profile Setup'
               }
             </Button>
           </form>

@@ -325,7 +325,7 @@ export const jobsAPI = {
       }
     });
     const qs = query.toString();
-    return apiRequest(`/jobs/customer/${customerId}${qs ? `?${qs}` : ''}`);
+    return apiRequest(`/jobs?customerId=${customerId}${qs ? `&${qs}` : ''}`);
   },
 
   // Get all jobs (supports backend pagination/filters)
@@ -408,6 +408,20 @@ export const jobsAPI = {
     });
     const qs = query.toString();
     return apiRequest(`/jobs/${jobId}/extra-time-requests${qs ? `?${qs}` : ''}`);
+  },
+
+  // Connect with a cleaner
+  connectCleaner: async (jobId, cleanerId) => {
+    return apiRequest(`/jobs/${jobId}/connect/${cleanerId}`, {
+      method: 'POST',
+    });
+  },
+
+  // Assign cleaner to job
+  assignCleaner: async (jobId, cleanerId) => {
+    return apiRequest(`/jobs/${jobId}/assign/${cleanerId}`, {
+      method: 'POST',
+    });
   },
 };
 
@@ -1070,6 +1084,19 @@ export const jobDetailsAPI = {
   }
 };
 
+// Categories API
+export const categoriesAPI = {
+  // Get all categories
+  getCategories: async () => {
+    return apiRequest('/categories');
+  },
+
+  // Get service types for a category
+  getServiceTypes: async (categoryId) => {
+    return apiRequest(`/categories/${categoryId}/service-types`);
+  },
+};
+
 // File upload helper (Cloudinary)
 export const uploadFile = async (file) => {
   const formData = new FormData();
@@ -1196,6 +1223,7 @@ export default {
   jobPhotosAPI,
   reviewsAPI,
   jobDetailsAPI,
+  categoriesAPI,
   uploadFile,
   uploadFileToCloudinary,
   uploadMultipleFilesToCloudinary,
