@@ -120,19 +120,45 @@ const CleanerChatPage = () => {
             }
             
             setMessages(prev => {
-                // Check if message already exists in state
-                const messageExists = prev.some(msg => {
-                    const existingId = msg._id || msg.id || `${msg.content || msg.message}-${msg.senderId?._id}-${msg.createdAt}`;
-                    return existingId === messageId;
-                });
+                const incomingContent = message.content || message.message || '';
+                const incomingId = message._id || message.id;
                 
-                if (messageExists) {
+                console.log('📨 [SOCKET] Received message:', { id: incomingId, content: incomingContent });
+
+                // 1. Check if message with this real _id already exists
+                const existsById = prev.some(msg => 
+                    !msg.isOptimistic && (
+                        (msg._id && msg._id === incomingId) || 
+                        (msg.id && msg.id === incomingId)
+                    )
+                );
+                
+                if (existsById) {
+                    console.log('🚫 [SOCKET] Message already exists by ID, skipping.');
                     return prev;
                 }
-                
-                lastMessageRef.current = messageId;
+
+                // 2. Check for optimistic match to replace
+                // We look for any optimistic message with matching content
+                const optimisticIndex = prev.findIndex(msg => 
+                    msg.isOptimistic && (
+                        (msg.content && msg.content.trim() === incomingContent.trim()) || 
+                        (msg.message && msg.message.trim() === incomingContent.trim())
+                    )
+                );
+
+                if (optimisticIndex !== -1) {
+                    console.log('🔄 [SOCKET] Found optimistic match, replacing at index:', optimisticIndex);
+                    const updated = [...prev];
+                    updated[optimisticIndex] = { ...message, isOptimistic: false };
+                    return updated;
+                }
+
+                console.log('➕ [SOCKET] Adding new message to list.');
                 return [...prev, message];
             });
+            
+            lastMessageRef.current = messageId;
             scrollToBottom();
         });
         socketService.on('error', (error) => {
