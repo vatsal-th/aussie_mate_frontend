@@ -40,10 +40,8 @@ const JobDetailsPage = () => {
           );
           setIsContacted(contacted);
 
-          const connected = (jobData.contactedCleaners || []).some(c => 
-            ((c.cleanerId?._id || c.cleanerId) === currentUserId) && c.isConnected
-          );
-          setIsConnected(connected || jobData.status === 'assigned' || jobData.status === 'accepted');
+          const isAssignedStatus = ['assigned', 'accepted', 'on_the_way', 'started', 'in_progress'].includes(jobData.status);
+          setIsConnected(contacted || isAssignedStatus);
         } else {
           setError('Job not found');
         }
@@ -355,7 +353,7 @@ const JobDetailsPage = () => {
             {(() => {
               const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
               const currentUserId = currentUser.id || currentUser._id;
-              const isAssigned = job.status === 'assigned' || job.status === 'accepted' || job.status === 'in_progress';
+              const isAssigned = ['assigned', 'accepted', 'on_the_way', 'started', 'in_progress'].includes(job.status);
               const isAssignedToMe = job.assignedCleanerId === currentUserId || 
                                     job.assignedCleanerId?._id === currentUserId ||
                                     job.cleanerId === currentUserId ||
@@ -364,10 +362,18 @@ const JobDetailsPage = () => {
               if (isAssigned && isAssignedToMe) {
                 return (
                   <button
-                    onClick={() => {
-                      // Logic for "I'm on the way"
-                      console.log('Sending "On the way" status for job:', job._id);
-                      alert('Status updated: You are on the way!');
+                    onClick={async () => {
+                      try {
+                        const response = await jobsAPI.updateJobStatus(jobId, 'on_the_way');
+                        if (response.success) {
+                          navigate(`/in-progress-job/${jobId}`);
+                        } else {
+                          alert(response.message || 'Failed to update status');
+                        }
+                      } catch (err) {
+                        console.error('Error updating status:', err);
+                        alert('Failed to update status. Please try again.');
+                      }
                     }}
                     className="bg-green-600 text-white cursor-pointer shadow-custom border border-green-100 font-medium py-2 px-4 sm:py-3 sm:px-6 rounded-xl transition-colors duration-200 flex items-center gap-2 hover:bg-green-700"
                   >

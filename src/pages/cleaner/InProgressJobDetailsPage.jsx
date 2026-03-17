@@ -8,7 +8,7 @@ import MapPinIcon1 from '../../assets/location.svg';
 import PhoneIcon from '../../assets/phone.svg';
 import PhoneIcon1 from '../../assets/phone2.svg';
 import ChatIcon from '../../assets/message2.svg';
-import { jobsAPI, userAPI } from '../../services/api';
+import { jobsAPI, userAPI, jobPhotosAPI } from '../../services/api';
 import { paymentService } from '../../services/paymentService';
 import { socketService } from '../../services/socketService';
 
@@ -89,6 +89,7 @@ const InProgressJobDetailsPage = () => {
     const [isTrackingLocation, setIsTrackingLocation] = useState(false);
     const [locationError, setLocationError] = useState(null);
     const [selectedWorkProgressId, setSelectedWorkProgressId] = useState(null);
+    const [isCompleting, setIsCompleting] = useState(false);
     const cleanerLocationRef = useRef(null);
 
     // Helper function to check if a date is today
@@ -105,13 +106,35 @@ const InProgressJobDetailsPage = () => {
                 setLoading(true);
 
                 // Fetch cleaner progress data which includes job, quote, customer, workProgress, and occurrences
-                const [progressResponse, paymentResponse] = await Promise.all([
-                    jobsAPI.getCleanerProgress(jobId),
-                    paymentService.getPaymentHistory().catch(() => null)
-                ]);
+                let progressData = null;
+                try {
+                    const progressResponse = await jobsAPI.getCleanerProgress(jobId);
+                    if (progressResponse.success && progressResponse.data) {
+                        progressData = progressResponse.data;
+                    }
+                } catch (err) {
+                    console.warn('getCleanerProgress failed, attempting fallback to getJobById', err);
+                }
 
-                if (progressResponse.success && progressResponse.data) {
-                    const { job, quote, customer, workProgress, occurrences } = progressResponse.data;
+                // Fallback to basic job details if progress endpoint fails
+                if (!progressData) {
+                    const jobResponse = await jobsAPI.getJobById(jobId);
+                    if (jobResponse.success && jobResponse.data) {
+                        const job = jobResponse.data;
+                        progressData = {
+                            job,
+                            customer: job.customerId || job.customer,
+                            quote: job.acceptedQuote || (job.quotes || []).find(q => q.status === 'accepted' || q.isAccepted),
+                            workProgress: job.workProgress,
+                            occurrences: job.occurrences || []
+                        };
+                    }
+                }
+
+                const paymentResponse = await paymentService.getPaymentHistory().catch(() => null);
+
+                if (progressData && progressData.job) {
+                    const { job, quote, customer, workProgress, occurrences } = progressData;
 
                     if (job.status === 'completed') {
                         navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
@@ -162,8 +185,9 @@ const InProgressJobDetailsPage = () => {
                             lat = coords.lat;
                             lng = coords.lng;
                         } else if (Array.isArray(coords)) {
-                            lat = coords[1];
-                            lng = coords[0];
+                            // Standardize to [lat, lng] from backend
+                            lat = coords[0];
+                            lng = coords[1];
                         }
 
                         if (lat && lng && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
@@ -226,10 +250,13 @@ const InProgressJobDetailsPage = () => {
         }
     }, [cleanerLocation, customerLocation]);
 
-    // Auto-redirect only if job is completed
+    // Auto-redirect only if job is completed, and auto-show map if on the way
     useEffect(() => {
         if (job?.status === 'completed') {
             navigate(`/cleaner-job-completed/${jobId}`, { replace: true });
+        }
+        if (job?.status === 'on_the_way') {
+            setShowMap(true);
         }
     }, [job?.status, jobId, navigate]);
 
@@ -338,9 +365,9 @@ const InProgressJobDetailsPage = () => {
             lat = coordinates.lat;
             lng = coordinates.lng;
         } else if (Array.isArray(coordinates)) {
-            // If it's an array like [21.236941, 72.862925]
-            lat = coordinates[1];
-            lng = coordinates[0];
+            // Standardize to [lat, lng] from backend
+            lat = coordinates[0];
+            lng = coordinates[1];
         }
 
         // Validate coordinates (lat should be between -90 and 90, lng between -180 and 180)
@@ -381,45 +408,114 @@ const InProgressJobDetailsPage = () => {
         }
     };
 
-    const handleOnTheWay = () => {
-        // Handle "On the way" action
+    const handleOnTheWay = async () => {
+        try {
+            const response = await jobsAPI.updateJobStatus(jobId, 'on_the_way');
+            if (response.success) {
+                // Re-fetch job details to reflect status change
+                const progressResponse = await jobsAPI.getCleanerProgress(jobId);
+                if (progressResponse.success) {
+                    setJob(progressResponse.data.job);
+                }
+            } else {
+                alert(response.message || 'Failed to update status');
+            }
+        } catch (err) {
+            console.error('Error updating status:', err);
+            alert('An error occurred. Please try again.');
+        }
     };
 
-    const handleStartJob = () => {
+    const handleStartJob = async () => {
         console.log('Starting job. Frequency:', job?.frequency);
+        
+        try {
+            const response = await jobsAPI.updateJobStatus(jobId, 'started');
+            if (response.success) {
+                // Re-fetch job details to reflect status change
+                const progressResponse = await jobsAPI.getCleanerProgress(jobId);
+                if (progressResponse.success) {
+                    setJob(progressResponse.data.job);
+                }
+            } else {
+                alert(response.message || 'Failed to update status');
+            }
+        } catch (err) {
+            console.error('Error updating status:', err);
+            alert('An error occurred. Please try again.');
+        }
+    };
 
+    const handleRequestCompletion = async () => {
+        let occId = null;
         if (job?.frequency === 'Weekly') {
+            occId = selectedWorkProgressId;
             const selectedOccurrence = weeklySchedule.find(item => item.id === selectedWorkProgressId);
 
-            if (selectedOccurrence && selectedOccurrence.status === 'pending') {
-                navigate(`/cleaner/complete-job/${jobId}?occurrenceId=${selectedWorkProgressId}`, { replace: true });
-            } else if (selectedOccurrence && selectedOccurrence.status === 'completed') {
-                alert('This occurrence is already completed. You cannot start a completed job.');
-            } else {
-                alert('Please select a pending occurrence for today to start the job.');
+            if (!selectedOccurrence) {
+                alert('Please select a pending occurrence for today to request completion.');
+                return;
+            }
+            if (selectedOccurrence.status === 'completed') {
+                alert('This occurrence is already completed.');
+                return;
             }
         } else if (job?.frequency === 'Custom') {
-            // For Custom jobs, use the selected occurrence from occurrences array
+            occId = selectedWorkProgressId;
             const selectedOccurrence = occurrences.find(occ => occ._id === selectedWorkProgressId);
             
-            if (selectedOccurrence && selectedOccurrence.status === 'pending' && isToday(selectedOccurrence.scheduledDate)) {
-                navigate(`/cleaner/complete-job/${jobId}?occurrenceId=${selectedWorkProgressId}`, { replace: true });
-            } else if (selectedOccurrence && selectedOccurrence.status === 'completed') {
-                alert('This occurrence is already completed. You cannot start a completed job.');
-            } else if (selectedOccurrence && !isToday(selectedOccurrence.scheduledDate)) {
-                alert('You can only start jobs scheduled for today. Please select today\'s pending occurrence.');
-            } else {
-                alert('Please select a pending occurrence for today to start the job.');
+            if (!selectedOccurrence) {
+                alert('Please select a pending occurrence for today.');
+                return;
+            }
+            if (selectedOccurrence.status === 'completed') {
+                alert('This occurrence is already completed.');
+                return;
+            }
+            if (!isToday(selectedOccurrence.scheduledDate)) {
+                alert('You can only complete jobs scheduled for today.');
+                return;
             }
         } else {
-            // For One Time jobs, navigate directly without occurrence selection
-            // If there's a specific occurrence ID available (like occurrences[0]._id), we could pass it
-            const occurrenceId = occurrences?.[0]?._id;
-            const url = occurrenceId
-                ? `/cleaner/complete-job/${jobId}?occurrenceId=${occurrenceId}`
-                : `/cleaner/complete-job/${jobId}`;
+            // One-time jobs
+            occId = occurrences?.[0]?._id;
+        }
 
-            navigate(url, { replace: true });
+        try {
+            setIsCompleting(true);
+            
+            // 1. Try to capture payment first
+            try {
+                console.log(`🔌 Attempting to capture payment for job ${jobId}...`);
+                const paymentStatusResponse = await paymentService.getPaymentStatus(jobId);
+                
+                if (paymentStatusResponse?.success && paymentStatusResponse?.data?.payment?._id) {
+                    const paymentId = paymentStatusResponse.data.payment._id;
+                    const pStatus = paymentStatusResponse.data.payment.status;
+
+                    if (pStatus === 'authorized') {
+                        console.log(`💰 Capturing payment ${paymentId}...`);
+                        await paymentService.capturePayment(paymentId);
+                    }
+                }
+            } catch (paymentError) {
+                console.warn('⚠️ Payment capture failed or not needed:', paymentError);
+            }
+
+            // 2. Update job status
+            const response = await jobPhotosAPI.updateJobStatus(jobId, 'pending_customer_confirmation', occId);
+
+            if (response.success) {
+                // Success - Redirect directly to completed jobs tab
+                navigate('/cleaner-jobs', { state: { tab: 'completed' }, replace: true });
+            } else {
+                alert(response.message || 'Failed to update job status');
+            }
+        } catch (err) {
+            console.error('Error completing job:', err);
+            alert('An error occurred while completing the job. Please try again.');
+        } finally {
+            setIsCompleting(false);
         }
     };
 
@@ -941,12 +1037,31 @@ const InProgressJobDetailsPage = () => {
                         </div>
                         {/* Bottom Action Button */}
                         <div className=" p-4 flex justify-end">
-                            {isNearCustomer ? (
-                                <Button onClick={handleStartJob} variant="primary">
+                            {job.status === 'started' || job.status === 'in_progress' ? (
+                                <Button 
+                                    onClick={handleRequestCompletion} 
+                                    variant="primary"
+                                    className="w-full sm:w-auto"
+                                    loading={isCompleting}
+                                    disabled={isCompleting}
+                                >
+                                    Request For Complete Job
+                                </Button>
+                            ) : job.status === 'on_the_way' ? (
+                                <Button 
+                                    onClick={handleStartJob} 
+                                    variant="primary"
+                                    disabled={!isNearCustomer}
+                                    className={`w-full sm:w-auto ${!isNearCustomer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
                                     Start Job
                                 </Button>
                             ) : (
-                                <Button onClick={handleOnTheWay} variant="primary">
+                                <Button 
+                                    onClick={handleOnTheWay} 
+                                    variant="primary"
+                                    className="w-full sm:w-auto"
+                                >
                                     I'm On The Way
                                 </Button>
                             )}

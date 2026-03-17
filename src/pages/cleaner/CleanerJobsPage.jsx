@@ -13,34 +13,27 @@ const CleanerJobsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Persistent activeTab using localStorage
+  const normalizeTab = (tab) => {
+    if (tab === 'live-jobs') return 'posted';
+    if (tab === 'my-bids') return 'booking_request';
+    if (tab === 'accepted') return 'assigned';
+    return tab;
+  };
+
   const [activeTab, setActiveTab] = useState(() => {
-    // Priority: location.state > localStorage > default
-    const savedTab = location.state?.tab || localStorage.getItem('cleanerActiveTab');
-    if (savedTab === 'live-jobs') return 'posted';
-    if (savedTab === 'my-bids') return 'booking_request';
-    if (savedTab === 'accepted') return 'assigned';
-    return savedTab || 'posted';
+    return normalizeTab(location.state?.tab) || 'posted';
   });
 
-  const [subFilter, setSubFilter] = useState(() => {
-    return localStorage.getItem('cleanerSubFilter') || 'request_sent';
-  });
+  const [subFilter, setSubFilter] = useState('request_sent');
 
   // Update tab if location state changes (e.g. navigating from dashboard to a specific tab)
   useEffect(() => {
     if (location.state?.tab) {
-      setActiveTab(location.state.tab);
+      setActiveTab(normalizeTab(location.state.tab));
     }
   }, [location.state]);
 
-  useEffect(() => {
-    localStorage.setItem('cleanerActiveTab', activeTab);
-  }, [activeTab]);
 
-  useEffect(() => {
-    localStorage.setItem('cleanerSubFilter', subFilter);
-  }, [subFilter]);
 
   const [showSortModal, setShowSortModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -301,7 +294,11 @@ const CleanerJobsPage = () => {
   };
 
   const handleJobClick = (jobId, jobStatus) => {
-    if (jobStatus === 'in_progress') return;
+    // If job is in assigned tab or is active, always go to in-progress detail page
+    if (activeTab === 'assigned' || ['on_the_way', 'started', 'in_progress'].includes(jobStatus)) {
+      navigate(`/in-progress-job/${jobId}`);
+      return;
+    }
     if (jobStatus === 'completed') {
       navigate(`/cleaner-job-completed/${jobId}`);
       return;
@@ -523,8 +520,8 @@ const CleanerJobsPage = () => {
                       </div>
                     )}
 
-                    {/* View Details Button for Assigned In Progress Jobs */}
-                    {activeTab === 'assigned' && job.originalJob?.status === 'in_progress' && (
+                    {/* View Details Button for Assigned Jobs that are active */}
+                    {activeTab === 'assigned' && ['on_the_way', 'started', 'in_progress'].includes(job.originalJob?.status) && (
                       <div className="flex items-center justify-end cursor-pointer mt-3">
                         <button
                           onClick={(e) => {

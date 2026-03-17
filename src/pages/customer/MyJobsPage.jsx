@@ -21,14 +21,8 @@ const tabs = [
   { id: 'completed', label: 'Completed' }
 ];
 
-const categoryOptions = [
-  { id: 'cleaning', label: 'Cleaning' },
-  { id: 'housekeeping', label: 'Housekeeping' },
-  { id: 'commercialCleaning', label: 'Commercial Cleaning' },
-  { id: 'petsitting', label: 'Pet Sitter' },
-  { id: 'handyman', label: 'Handyman' },
-  { id: 'supportServices', label: 'Support Service' }
-];
+// Remove hardcoded categoryOptions if they are now dynamic
+// const categoryOptions = [ ... ];
 
 // Helpers
 const dateFormatter = new Intl.DateTimeFormat('en-AU', {
@@ -146,6 +140,7 @@ const MyJobsPage = () => {
   const [draftBondCleaning, setDraftBondCleaning] = useState(false);
   const [draftDate, setDraftDate] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -170,8 +165,9 @@ const MyJobsPage = () => {
 
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((job) => {
-        const serviceType = (job.originalJob?.serviceType || job.serviceType || '').toLowerCase();
-        return selectedCategories.includes(serviceType);
+        // Use category ID or name for filtering
+        const jobCategoryId = job.originalJob?.categoryId?._id || job.originalJob?.categoryId || job.categoryId;
+        return selectedCategories.includes(jobCategoryId);
       });
     }
 
@@ -194,10 +190,21 @@ const MyJobsPage = () => {
     setJobs(applyFilters(allJobs));
   }, [allJobs, applyFilters]);
 
-  // Get current user ID
+  // Fetch categories and get current user ID
   useEffect(() => {
-    const getCurrentUserId = async () => {
+    const fetchInitialData = async () => {
       try {
+        // Fetch categories
+        const catResponse = await jobsAPI.getCategories();
+        if (catResponse.success && Array.isArray(catResponse.data)) {
+          const formattedCategories = catResponse.data.map(cat => ({
+            id: cat._id || cat.id,
+            label: cat.name || cat.title || 'Unknown Category'
+          }));
+          setCategoryOptions(formattedCategories);
+        }
+
+        // Fetch user profile if needed
         if (user?.id) {
           setCurrentUserId(user.id);
         } else {
@@ -206,12 +213,12 @@ const MyJobsPage = () => {
           setCurrentUserId(userData?._id || userData?.id);
         }
       } catch (error) {
-        console.error('Error fetching user ID:', error);
-        setError('Failed to load user information');
+        console.error('Error fetching initial data:', error);
+        setError('Failed to load initial information');
       }
     };
 
-    getCurrentUserId();
+    fetchInitialData();
   }, [user]);
 
   useEffect(() => {
@@ -328,7 +335,7 @@ const MyJobsPage = () => {
             }
 
             const shouldShowQuotes = quoteCount > 0 && !['accepted', 'in_progress', 'completed', 'pending_customer_confirmation'].includes(statusLower);
-            const quotes = shouldShowQuotes ? `${quoteCount} Quotes Received` : null;
+            const quotes = job.quotesReceivedDisplay || (shouldShowQuotes ? `${quoteCount} Quotes Received` : null);
 
             const jobIdentifier = job._id?.toString?.() || job.id || job.jobId || `job-${Math.random()}`;
             const messageCount = await getMessageCountForJob(jobIdentifier);
@@ -384,7 +391,7 @@ const MyJobsPage = () => {
     };
 
     fetchJobs();
-  }, [currentUserId, statusFilter, debouncedQuery, startDate, endDate, page]);
+  }, [currentUserId, statusFilter, debouncedQuery, startDate, endDate, page, selectedCategories]);
 
   return (
     <div className="overflow-x-hidden">

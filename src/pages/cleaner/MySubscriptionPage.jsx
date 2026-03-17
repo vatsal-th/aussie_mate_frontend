@@ -10,7 +10,8 @@ import {
   PlusCircle,
   Briefcase,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react';
 import { subscriptionsAPI, categoriesAPI } from '../../services/api';
 import { Button, Loader, PageHeader } from '../../components';
@@ -142,6 +143,26 @@ const MySubscriptionPage = () => {
         {activeSubscription ? (
           /* Active Subscription View */
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Out of Credits Alert */}
+            {activeSubscription.availableCredits === 0 && (
+              <div className="bg-white rounded-[32px] p-8 shadow-xl border border-gray-100 flex flex-col items-center text-center animate-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-10 h-10 text-red-500" />
+                </div>
+                <h3 className="text-2xl font-black text-[#111111] mb-2">You're out of credits!</h3>
+                <p className="text-gray-500 font-medium max-w-xs mb-6">
+                  You have used all your available credits. Purchase additional credits to continue responding to customer leads.
+                </p>
+                <Button 
+                  onClick={() => navigate('/buy-credits')}
+                  className="rounded-2xl h-14 px-10 font-black flex items-center gap-2"
+                >
+                  <PlusCircle className="w-5 h-5" />
+                  Buy More Credits
+                </Button>
+              </div>
+            )}
+
             {/* Active Plan Card */}
             <div className="relative bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-6 md:p-8">
               {/* Card Decoration */}
@@ -188,20 +209,35 @@ const MySubscriptionPage = () => {
                       <TrendingUp className="w-4 h-4 text-primary-500" /> Credit Usage
                     </p>
                     <p className="text-sm font-medium text-gray-500">
-                      {(activeSubscription.subscription?.planId?.creditsPerMonth - activeSubscription.availableCredits) || 0} of {activeSubscription.subscription?.planId?.creditsPerMonth || 0} used
+                      {activeSubscription.extraCredits > 0
+                        ? `${activeSubscription.availableCredits} Credits Available (${activeSubscription.extraCredits} Top-up)`
+                        : `${activeSubscription.usedCredits || 0} of ${activeSubscription.planCredits || 0} used`
+                      }
                     </p>
                   </div>
                   <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                     <div 
                       className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000"
                       style={{ 
-                        width: `${Math.min(100, Math.max(0, ((activeSubscription.subscription?.planId?.creditsPerMonth - activeSubscription.availableCredits) / activeSubscription.subscription?.planId?.creditsPerMonth) * 100))}%` 
+                        width: `${Math.min(100, Math.max(0, ((activeSubscription?.usedCredits || 0) / (activeSubscription?.planCredits || 1)) * 100))}%` 
                       }}
                     />
                   </div>
                   <p className="mt-2 text-xs text-gray-500 italic">
                     Estimated Leads Remaining: <span className="font-bold text-primary-600">{Math.floor(activeSubscription.availableCredits / (activeSubscription.subscription?.planId?.creditsPerLead || 1))} leads</span>
                   </p>
+                  
+                  <div className="mt-6 pt-6 border-t border-gray-50">
+                    <button 
+                      onClick={() => navigate('/buy-credits')}
+                      className="text-primary-600 font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
+                        <PlusCircle className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      Buy Credits
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
@@ -217,7 +253,7 @@ const MySubscriptionPage = () => {
                     variant="outline" 
                     className="rounded-2xl h-14 px-6 border-2"
                     icon={<PlusCircle className="w-6 h-6" />}
-                    onClick={() => navigate('/wallet')} // Assuming wallet is for buying more credits
+                    onClick={() => navigate('/buy-credits')} 
                   >
                     Buy Credits
                   </Button>
@@ -244,7 +280,7 @@ const MySubscriptionPage = () => {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-gray-800 mb-0.5">{item.description}</p>
-                          <p className="text-xs text-gray-500 font-medium">#{item.jobId || 'N/A'} • {formatDate(item.createdAt)}</p>
+                          <p className="text-xs text-gray-500 font-medium">#{typeof item.jobId === 'object' ? item.jobId?.jobId : (item.jobId || 'N/A')} • {formatDate(item.createdAt)}</p>
                         </div>
                       </div>
                       <div className="text-right">

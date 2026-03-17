@@ -54,21 +54,26 @@ const CompleteJobPage = () => {
           return;
         }
 
-        // Fetch existing photos
-        const photosResponse = await jobPhotosAPI.getJobPhotos(jobId);
-        const photosData = photosResponse.data || photosResponse;
-
         setJob(jobData);
 
-        // Set existing photos
-        if (photosData.beforePhotos && photosData.beforePhotos.length > 0) {
-          setUploadedPhotos(photosData.beforePhotos);
-          setBeforePhotosUploaded(true);
-        }
+        // Fetch existing photos
+        try {
+          const photosResponse = await jobPhotosAPI.getJobPhotos(jobId);
+          const photosData = photosResponse.data || photosResponse;
 
-        if (photosData.afterPhotos && photosData.afterPhotos.length > 0) {
-          setAfterPhotos(photosData.afterPhotos);
-          setAfterPhotosUploaded(true);
+          // Set existing photos
+          if (photosData.beforePhotos && photosData.beforePhotos.length > 0) {
+            setUploadedPhotos(photosData.beforePhotos);
+            setBeforePhotosUploaded(true);
+          }
+
+          if (photosData.afterPhotos && photosData.afterPhotos.length > 0) {
+            setAfterPhotos(photosData.afterPhotos);
+            setAfterPhotosUploaded(true);
+          }
+        } catch (photoError) {
+          console.warn('Could not fetch job photos (endpoint might not exist):', photoError);
+          // Don't set error state here as it's not critical for the page to load
         }
 
       } catch (error) {
@@ -290,12 +295,18 @@ const CompleteJobPage = () => {
         // Continue with job completion even if payment capture fails
       }
 
-      // Direct navigation to cleaner dashboard without API call
-      console.log('🔄 Directly navigating to cleaner dashboard');
-      setSuccessMessage('Job completed successfully! Redirecting...');
-      setTimeout(() => {
-        navigate('/cleaner-dashboard');
-      }, 1500);
+      // Update job status to pending_customer_confirmation
+      console.log('🔄 Updating job status to pending_customer_confirmation...');
+      const response = await jobPhotosAPI.updateJobStatus(jobId, 'pending_customer_confirmation', occurrenceId);
+
+      if (response.success) {
+        setSuccessMessage('Job completed successfully! Redirecting to completed jobs...');
+        setTimeout(() => {
+          navigate('/cleaner-jobs', { state: { tab: 'completed' } });
+        }, 1500);
+      } else {
+          throw new Error(response.message || 'Failed to update job status');
+      }
     } catch (error) {
       console.error('Error completing job:', error);
       setUploadError(handleAPIError(error));

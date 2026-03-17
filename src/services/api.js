@@ -323,6 +323,11 @@ export const jobsAPI = {
   getWeeklyJobProgress: async (jobId) => {
     return apiRequest(`/jobs/${jobId}/weekly-progress`);
   },
+
+  // Get all job categories
+  getCategories: async () => {
+    return apiRequest('/categories');
+  },
   getMyJobs: async (params = {}) => {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -393,7 +398,13 @@ export const jobsAPI = {
     });
   },
 
-  // Extra Time Request APIs
+  // Assign cleaner to job
+  assignCleaner: async (jobId, cleanerId) => {
+    return apiRequest(`/jobs/${jobId}/assign/${cleanerId}`, {
+      method: 'POST',
+    });
+  },
+
   // Request extra time for a job (Cleaner)
   requestExtraTime: async (jobId, { time, amount, reason }) => {
     return apiRequest(`/jobs/${jobId}/extra-time-request`, {
@@ -575,6 +586,19 @@ export const userAPI = {
   deleteProfilePhoto: async () => {
     return apiRequest('/auth/profile/photo', {
       method: 'DELETE',
+    });
+  },
+
+  // Get search radius
+  getSearchRadius: async () => {
+    return apiRequest('/auth/search-radius');
+  },
+
+  // Update search radius
+  updateSearchRadius: async (radius) => {
+    return apiRequest('/auth/search-radius', {
+      method: 'PUT',
+      body: JSON.stringify({ searchRadius: radius }),
     });
   },
 
@@ -880,6 +904,42 @@ export const userAPI = {
     }
   },
 
+  // Update document verification
+  verifyDocuments: async (data) => {
+    try {
+      const token = getAuthToken();
+      const isFormData = data instanceof FormData;
+      
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+      };
+      
+      if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/documents/verify`, {
+        method: 'PUT',
+        headers: headers,
+        body: isFormData ? data : JSON.stringify(data),
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Server returned HTML instead of JSON (Status: ${response.status})`);
+      }
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.message || `Verification update failed with status ${response.status}`);
+      }
+      return json;
+    } catch (error) {
+      console.error('Verification update error:', error);
+      throw error;
+    }
+  },
+
   getDocumentStatus: async () => {
     return apiRequest('/auth/documents/status');
   },
@@ -1100,9 +1160,23 @@ export const subscriptionsAPI = {
 
   // Get subscription history
   getHistory: async (page = 1, limit = 20) => {
-    return apiRequest('/subscriptions/history', {
+    return apiRequest(`/subscriptions/history?page=${page}&limit=${limit}`, {
+      method: 'GET',
+    });
+  },
+
+  // Get credit packages
+  getCredits: async () => {
+    return apiRequest('/subscriptions/credits', {
+      method: 'GET',
+    });
+  },
+
+  // Checkout credits
+  checkoutCredits: async (packageId) => {
+    return apiRequest('/subscriptions/checkout-credits', {
       method: 'POST',
-      body: JSON.stringify({ page, limit }),
+      body: JSON.stringify({ packageId }),
     });
   },
 };

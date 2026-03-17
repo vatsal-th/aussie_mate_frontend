@@ -391,7 +391,7 @@ const CleanerDashboard = () => {
                       <div 
                         className="h-full bg-[#22C55E] rounded-full transition-all duration-1000 relative"
                         style={{ 
-                          width: `${Math.min(100, Math.max(0, ((subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits) / subscriptionStatus.subscription?.planId?.creditsPerMonth) * 100))}%`,
+                        width: `${Math.min(100, Math.max(0, ((subscriptionStatus?.usedCredits || 0) / (subscriptionStatus?.planCredits || 1)) * 100))}%`,
                           backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
                           backgroundSize: '1rem 1rem'
                         }}
@@ -410,7 +410,10 @@ const CleanerDashboard = () => {
                         <div className="absolute -top-1 left-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45" />
                         
                         <p className="text-sm font-bold text-gray-900">
-                          {subscriptionStatus.subscription?.planId?.creditsPerMonth - subscriptionStatus.availableCredits} <span className="text-gray-400 font-medium">of</span> {subscriptionStatus.subscription?.planId?.creditsPerMonth} <span className="text-gray-400 font-normal">Credits Used</span>
+                          {subscriptionStatus.extraCredits > 0
+                            ? `${subscriptionStatus.availableCredits} Credits Available (${subscriptionStatus.extraCredits} Top-up)`
+                            : `${subscriptionStatus.usedCredits || 0} of ${subscriptionStatus.planCredits || 0} Credits Used`
+                          }
                         </p>
                       </div>
                     </div>
@@ -426,7 +429,7 @@ const CleanerDashboard = () => {
                   </div>
 
                   <button 
-                    onClick={() => navigate('/wallet')}
+                    onClick={() => navigate('/buy-credits')}
                     className="flex items-center gap-2 text-primary-500 font-black text-sm hover:translate-x-1 transition-transform cursor-pointer"
                   >
                     <PlusCircle className="w-5 h-5" /> Buy Credits

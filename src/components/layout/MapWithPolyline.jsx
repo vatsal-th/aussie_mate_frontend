@@ -31,6 +31,7 @@ const MapWithRealtimeTracking = ({ customerLocation, cleanerLocation: externalCl
 
   // Memoize loader options to prevent re-initialization
   const loaderOptions = useMemo(() => ({
+    id: 'google-map-script',
     googleMapsApiKey: apiKey,
     libraries: GOOGLE_MAPS_LIBRARIES,
   }), [apiKey]);

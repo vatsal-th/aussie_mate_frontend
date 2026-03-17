@@ -16,7 +16,7 @@ import RatingIcon from '../../assets/rating.svg';
 import SilverBadgeIcon from '../../assets/silverBadge.svg';
 import GoldBadgeIcon from '../../assets/goldBadge.svg';
 import BronzeBadgeIcon from '../../assets/bronzeBadge.svg';
-import MessageIcon from '../../assets/message2.svg';
+
 import CloseIcon from '../../assets/close.svg';
 import { jobsAPI, quotesAPI } from '../../services/api';
 import { chatAPI } from '../../services/chatAPI';
@@ -554,6 +554,8 @@ const CustomerJobDetailsPage = () => {
     const cleaner = item.cleaner;
     const cleanerId = item.cleanerId?._id || item.cleanerId || cleaner?._id || cleaner?.id;
 
+    const distance = item.distance || cleaner?.distance;
+
     return {
       id: cleanerId,
       name: cleaner ? `${cleaner.firstName || ''} ${cleaner.lastName || ''}`.trim() : 'Cleaner',
@@ -565,7 +567,7 @@ const CustomerJobDetailsPage = () => {
       isVerified: cleaner?.isVerified || false,
       isConnected: item.isConnected || false,
       chatRoomId: item.chatRoomId,
-      distance: cleaner?.distance ? `${cleaner.distance} km away` : 'Distance unknown',
+      distance: distance ? `${distance} km away` : 'Distance unknown',
       message: item.introMessage || 'Hi, I can do this job. I have experience in cleaning.',
       isWaitlisted: item.isWaitlisted || false,
     };
@@ -793,30 +795,86 @@ const CustomerJobDetailsPage = () => {
 
           {/* Waitlisted Section */}
           {waitlistedCleaners.length > 0 && (
-             <div className="mt-8">
-               <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Waitlisted Cleaners</h4>
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {waitlistedCleaners.map((item, index) => {
-                    const cleaner = formatCleanerData(item);
-                    return (
-                      <div key={`waitlisted-${index}`} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <img 
-                          src={cleaner.photo || `https://ui-avatars.com/api/?name=${cleaner.name}&background=random`} 
-                          alt={cleaner.name} 
-                          className="w-10 h-10 rounded-full object-cover border border-gray-200" 
-                        />
-                        <div>
-                          <p className="text-sm font-bold text-primary-500">{cleaner.name}</p>
-                          <div className="flex items-center gap-1">
-                            <img src={RatingIcon} alt="Rating" className="w-3 h-3" />
-                            <span className="text-xs font-semibold">{cleaner.rating}</span>
+            <div className="mt-8">
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Waitlisted Cleaners</h4>
+              <div className="space-y-4">
+                {waitlistedCleaners.map((item, index) => {
+                  const cleaner = formatCleanerData(item);
+
+                  return (
+                    <div key={`waitlisted-${index}`} className="bg-white rounded-[24px] border border-gray-100 p-4 sm:p-5 shadow-sm opacity-95">
+                      {/* Upper Header: Avatar, Name, Phone, and Tier Badge */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
+                            {cleaner.photo ? (
+                              <img src={cleaner.photo} alt={cleaner.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-primary-50 text-primary-300">
+                                <img src={UserIcon} className="w-6 h-6 sm:w-8 sm:h-8" alt="User" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="pt-0.5 sm:pt-1">
+                            <h4 className="text-[18px] sm:text-lg font-semibold text-primary-500 mb-1">
+                              {cleaner.name}
+                            </h4>
+                            <div className="flex items-center gap-1.5 text-[#374151] mb-1">
+                              <div className="flex items-center gap-1">
+                                <img src={RatingIcon} alt="Rating" className="w-3.5 h-3.5" />
+                                <span className="text-sm font-semibold">{cleaner.rating}</span>
+                                <span className="text-xs text-gray-400">({cleaner.reviews} reviews)</span>
+                              </div>
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-400 font-normal">
+                              {cleaner.distance}
+                            </div>
                           </div>
                         </div>
+
+                        {/* Tier Badge Pill */}
+                        {cleaner.tier && cleaner.tier !== 'none' && (
+                          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-100 bg-gray-50/50 shadow-sm`}>
+                            <img
+                              src={
+                                cleaner.tier === 'gold'
+                                  ? GoldBadgeIcon
+                                  : cleaner.tier === 'silver'
+                                    ? SilverBadgeIcon
+                                    : BronzeBadgeIcon
+                              }
+                              alt="Badge"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
+                            />
+                            <span className="text-xs sm:text-sm text-[#374151] font-semibold capitalize whitespace-nowrap">
+                              {cleaner.tier} Tier
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    );
-                 })}
-               </div>
-             </div>
+
+                      {/* Intro Message Bubble */}
+                      <div className="bg-[#F8FAFC] rounded-[20px] p-4 mb-4 border border-blue-50/50">
+                        <p className="text-gray-500 text-sm font-medium leading-[1.45] italic">
+                          "I'm on the waitlist for this job. Connect with me to discuss how I can help!"
+                        </p>
+                      </div>
+
+                      {/* Footer Action Button */}
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={() => handleAcceptQuote(cleaner.id)}
+                          variant=""
+                          className="px-8 py-2.5 text-sm sm:text-md font-bold rounded-full border border-[#DCE4FF] bg-white text-[#1F6FEB] hover:bg-[#1F6FEB] hover:text-white hover:border-[#1F6FEB] shadow-sm transition-all cursor-pointer"
+                        >
+                          Connect & Message
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {cleanerQuotes.filter(quote => quote.status !== 'rejected').length === 0 && (
