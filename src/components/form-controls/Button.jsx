@@ -26,7 +26,7 @@ const Button = ({
     danger: 'bg-red-500 hover:text-[#B80A34] text-red-500',
     success: 'bg-green-500 hover:text-[#00832D] text-green-500',
     warning: 'bg-yellow-500 hover:bg-yellow-600 text-white ',
-    link: 'bg-transparent text-primary-600 hover:underline  p-0'
+    link: 'bg-transparent text-primary-600 hover:underline  p-0',
   };
   
   // Size classes
