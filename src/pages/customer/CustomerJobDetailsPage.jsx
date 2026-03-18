@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   CalendarDays,
   Phone,
+  MapPin,
 } from 'lucide-react';
 import { Button, ConfirmationModal, PageHeader, JobOverviewCard } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
@@ -659,93 +660,116 @@ const CustomerJobDetailsPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-        <div className="mb-3 sm:mb-4">
-          <JobOverviewCard
-            jobId={job.jobId || job.referenceId || job._id?.slice(-6)}
-            title={serviceDetail}
-            propertyType={job.propertyType}
-            quoteCount={cleanerQuotes.length}
-            serviceType={job.serviceType || job.category || job.service}
-            serviceDetail=""
-            instructions={
-              job.specialInstructions ||
-              job.instructions ||
-              job.additionalNotes ||
-              ''
-            }
-            scheduledDate={scheduledDateLabel}
-            frequency={jobFrequencyLabel}
-            location={job.location?.address || job.address || job.locationDescription || 'Location not specified'}
-            photos={jobPhotos}
-            viewerRole="customer"
-            metaInfo={jobOverviewMeta}
-            roleSections={roleSections}
-          />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Status Badge */}
+        <div className="mb-4">
+          <div className="inline-flex items-center gap-1.5 bg-[#DDEFFF] px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 bg-[#0088FF] rounded-full"></div>
+            <span className="text-xs font-semibold text-[#0088FF]">
+              {cleanerQuotes.length} Quotes Received
+            </span>
+          </div>
         </div>
+
+        {/* Job Header */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-500 mb-1">
+            {job.categoryId?.name || 'Cleaning'}
+          </p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3 leading-tight">
+            {job.title}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-6">
+            {job.description || job.specialInstructions || 'No description provided.'}
+          </p>
+
+          {/* Meta Info */}
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex items-center text-gray-700 font-medium">
+              <CalendarDays className="w-5 h-5 mr-3 text-gray-400" strokeWidth={1.5} />
+              <span className="text-sm sm:text-base">{scheduledDateLabel}</span>
+            </div>
+            <div className="flex items-start text-gray-700 font-medium">
+              <MapPinIcon className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+              <span className="text-sm sm:text-base leading-snug">{job.location?.address || job.address || 'Location not specified'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Photo Grid */}
+        {jobPhotos.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 mb-8 max-w-lg">
+            {jobPhotos.slice(0, 4).map((photo, index) => (
+              <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 group">
+                <img 
+                  src={photo} 
+                  alt={`Job ${index + 1}`} 
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                />
+                {index === 3 && jobPhotos.length > 4 && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <span className="text-white text-2xl font-bold">+{jobPhotos.length - 3}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
         {/* Custom Job Dates Section */}
 
 
         {/* Service Provider Quotes Section */}
-        <div className="bg-white rounded-2xl shadow-custom p-3 sm:p-4 md:p-6">
-          <div className="mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-primary-500 mb-1 sm:mb-2">
-              {job.serviceType === 'petSitting' ? 'Pet Sitter Quotes' :
-                job.serviceType === 'cleaning' ? 'Cleaner Quotes' :
-                  job.serviceType === 'handyman' ? 'Handyman Quotes' :
-                    job.serviceType === 'housekeeping' ? 'Housekeeper Quotes' :
-                      job.serviceType === 'commercialCleaning' ? 'Commercial Cleaner Quotes' :
-                        job.serviceType === 'ndisSupport' ? 'NDIS Support Quotes' :
-                          'Pet Sitting Quote'} ({cleanerQuotes.length} Quotes Received)
+        <div className="mt-8 border-t border-gray-100 pt-8">
+          <div className="mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              Cleaner Quotes ({cleanerQuotes.length})
             </h3>
-            <p className="text-xs sm:text-sm text-primary-200 font-medium">
-              {cleanerQuotes.length > 0
-                ? "Review intro messages and chat before choosing the best provider for your job."
-                : "No messages yet. Service providers will contact you soon."
-              }
+            <p className="text-sm text-gray-500 font-medium leading-relaxed">
+              Cleaners nearby have sent their offers. Review and chat before choosing.
             </p>
           </div>
 
           {cleanerQuotes.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {cleanerQuotes.map((item, index) => {
                 const cleaner = formatCleanerData(item);
 
                 return (
-                  <div key={item._id || item.id || `contacted-${index}`} className="bg-white rounded-[24px] border border-gray-100 p-4 sm:p-5 shadow-sm">
-                    {/* Upper Header: Avatar, Name, Phone, and Tier Badge */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
+                  <div key={item._id || item.id || `contacted-${index}`} className="bg-white rounded-[24px] border border-gray-100 p-5 shadow-sm">
+                    {/* Header: Avatar, Info, and Tier */}
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="flex gap-4">
+                        <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-gray-50 border border-gray-100">
                           {cleaner.photo ? (
                             <img src={cleaner.photo} alt={cleaner.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-primary-50 text-primary-300">
-                              <img src={UserIcon} className="w-6 h-6 sm:w-8 sm:h-8" alt="User" />
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                              <img src={UserIcon} className="w-8 h-8 opacity-40" alt="User" />
                             </div>
                           )}
                         </div>
-                        <div className="pt-0.5 sm:pt-1">
-                          <h4 className="text-[18px] sm:text-lg font-semibold text-primary-500 mb-1">
+                        <div>
+                          <h4 className="text-xl font-bold text-gray-900 mb-1">
                             {cleaner.name}
                           </h4>
-                          <div className="flex items-center gap-1.5 text-[#374151] mb-1">
-                            {/* Star rating here if available */}
-                            <div className="flex items-center gap-1">
-                              <img src={RatingIcon} alt="Rating" className="w-3.5 h-3.5" />
-                              <span className="text-sm font-semibold">{cleaner.rating}</span>
-                              <span className="text-xs text-gray-400">({cleaner.reviews} reviews)</span>
+                          
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center text-gray-600">
+                              <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" strokeWidth={2} />
+                              <span className="text-sm font-semibold">{cleaner.phone || '07 3803 6136'}</span>
                             </div>
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-400 font-normal">
-                            {cleaner.distance}
+                            <p className="text-xs text-gray-500 font-medium ml-5.5">
+                              {cleaner.distance} — En route
+                            </p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Tier Badge Pill */}
+                      {/* Tier Badge */}
                       {cleaner.tier && cleaner.tier !== 'none' && (
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-100 bg-gray-50/50 shadow-sm`}>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
                           <img
                             src={
                               cleaner.tier === 'gold'
@@ -755,38 +779,38 @@ const CustomerJobDetailsPage = () => {
                                   : BronzeBadgeIcon
                             }
                             alt="Badge"
-                            className="w-4 h-4 sm:w-5 sm:h-5"
+                            className="w-4 h-4"
                           />
-                          <span className="text-xs sm:text-sm text-[#374151] font-semibold capitalize whitespace-nowrap">
+                          <span className="text-sm text-gray-700 font-bold capitalize">
                             {cleaner.tier} Tier
                           </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Intro Message Bubble */}
-                    <div className="bg-[#EBF2FD] rounded-[20px] p-4 mb-4">
-                      <p className="text-[#111827] text-sm font-medium leading-[1.45]">
+                    {/* Message Bubble */}
+                    <div className="bg-[#EBF2FD] rounded-[24px] p-5 mb-6">
+                      <p className="text-gray-900 text-sm font-semibold leading-relaxed">
+                        Hello,<br/>
                         {cleaner.message}
                       </p>
                     </div>
 
                     {/* Footer Action Button */}
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={() => {
-                          if (cleaner.isConnected) {
-                            navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`);
-                          } else {
-                            handleAcceptQuote(cleaner.id);
-                          }
-                        }}
-                        variant=""
-                        className="px-8 py-2.5 text-sm sm:text-md font-bold rounded-full border border-[#DCE4FF] bg-white text-[#1F6FEB] hover:bg-[#1F6FEB] hover:text-white hover:border-[#1F6FEB] shadow-sm transition-all cursor-pointer"
-                      >
-                        {cleaner.isConnected ? 'Message' : 'Connect & Message'}
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={() => {
+                        if (cleaner.isConnected) {
+                          navigate(`/customer-chat/${jobId}?cleaner=${cleaner.id}`);
+                        } else {
+                          handleAcceptQuote(cleaner.id);
+                        }
+                      }}
+                      variant=""
+                      fullWidth
+                      className="py-3 text-base font-bold rounded-full border border-[#DCE4FF] bg-white text-[#1F6FEB] hover:bg-[#1F6FEB] hover:text-white transition-all cursor-pointer"
+                    >
+                      {cleaner.isConnected ? 'Message' : 'Connect & Message'}
+                    </Button>
                   </div>
                 );
               })}

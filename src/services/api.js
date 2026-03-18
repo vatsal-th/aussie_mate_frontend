@@ -355,7 +355,7 @@ export const jobsAPI = {
   },
 
   // Get cleaner job feed with tabs and subfilters
-  getCleanerJobFeed: async ({ tab, subFilter, page = 1, limit = 20, categoryId, location } = {}) => {
+  getCleanerJobFeed: async ({ tab, subFilter, page = 1, limit = 20, categoryId, location, isUrgent } = {}) => {
     const params = new URLSearchParams();
     if (tab) params.set('tab', tab);
     if (subFilter) params.set('subFilter', subFilter);
@@ -363,6 +363,7 @@ export const jobsAPI = {
     if (limit) params.set('limit', String(limit));
     if (categoryId) params.set('categoryId', categoryId);
     if (location) params.set('location', location);
+    if (isUrgent) params.set('isUrgent', 'true');
     
     const qs = params.toString();
     return apiRequest(`/jobs/feed/cleaner${qs ? `?${qs}` : ''}`);
@@ -460,6 +461,14 @@ export const jobsAPI = {
     return apiRequest(`/jobs/${jobId}/contact`, {
       method: 'POST',
       body: JSON.stringify({ message }),
+    });
+  },
+
+  // Withdraw bid (Cleaner) - used from Booking Requests flow
+  withdrawBid: async (jobId) => {
+    return apiRequest(`/jobs/${jobId}/withdraw`, {
+      method: 'DELETE',
+      body: JSON.stringify({}),
     });
   },
 };

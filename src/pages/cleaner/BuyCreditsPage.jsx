@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
-  PlusCircle, 
+  Plus, 
   CheckCircle2, 
   CreditCard, 
   Info,
@@ -85,16 +85,17 @@ const BuyCreditsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-white pb-32">
       <div className="max-w-xl mx-auto px-4 sm:px-6">
         <PageHeader 
           title="My Subscription" 
           onBack={() => navigate(-1)} 
+          className="py-4"
         />
 
-        <div className="mt-8 mb-10">
-          <h1 className="text-3xl font-black text-[#111111] mb-2 tracking-tight">Purchase More Credits</h1>
-          <p className="text-gray-500 font-medium text-lg leading-relaxed">
+        <div className="mt-6 mb-8">
+          <h1 className="text-2xl sm:text-2xl font-[600] text-[#111111] mb-2 tracking-tight">Purchase More Credits</h1>
+          <p className="text-gray-500 font-medium text-sm sm:text-base leading-relaxed">
             Continue responding to cleaning job leads by purchasing additional credits.
           </p>
         </div>
@@ -111,52 +112,37 @@ const BuyCreditsPage = () => {
             <div 
               key={pkg._id}
               onClick={() => handlePackageSelect(pkg)}
-              className={`relative bg-white rounded-3xl p-6 border-2 transition-all cursor-pointer ${
+              className={`relative bg-[#F8FAFF] rounded-[24px] p-6 border transition-all cursor-pointer ${
                 selectedPackage?._id === pkg._id 
-                ? 'border-primary-500 shadow-xl shadow-primary-100 ring-4 ring-primary-50' 
-                : 'border-transparent shadow-sm hover:border-gray-200 hover:shadow-md'
+                ? 'border-blue-500 bg-white ring-1 ring-blue-500 shadow-lg shadow-blue-50' 
+                : 'border-blue-50 hover:border-blue-200'
               }`}
             >
               {pkg.isPopular && (
-                <div className="absolute top-0 right-6 -translate-y-1/2 bg-gradient-to-r from-orange-400 to-orange-500 text-white px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-orange-100">
-                  <Flame className="w-4 h-4" />
-                  <span className="text-xs font-black uppercase tracking-wider">Most Popular</span>
+                <div className="absolute top-0 right-4 -translate-y-1/2 bg-[#FFF4E5] text-[#FF8A00] px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#FFE0BD]">
+                  <Flame className="w-3.5 h-3.5" fill="currentColor" />
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Most Popular</span>
                 </div>
               )}
 
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">{pkg.credits} Credits</p>
-                  <h3 className="text-4xl font-black text-[#111111] mb-2">
+                <div className="space-y-1">
+                  <p className="text-xs sm:text-sm font-semibold text-[#111827]">{pkg.credits} Credits</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-[#111111]">
                     {formatCurrency(pkg.price)}
                   </h3>
-                  <p className="text-sm font-bold text-gray-500 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-primary-500" />
-                    {pkg.approxLeads}
+                  <p className="text-xs sm:text-sm font-medium text-gray-400 mt-2">
+                    {pkg.approxLeads || "5 leads"}
                   </p>
-                </div>
-
-                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  selectedPackage?._id === pkg._id 
-                  ? 'border-primary-500 bg-primary-500' 
-                  : 'border-gray-200'
-                }`}>
-                  {selectedPackage?._id === pkg._id ? (
-                    <CheckCircle2 className="w-5 h-5 text-white" />
-                  ) : (
-                    <PlusCircle className="w-5 h-5 text-gray-300" />
-                  )}
                 </div>
               </div>
               
               <button 
-                className={`mt-4 w-full py-3 rounded-2xl text-sm font-black transition-colors flex items-center justify-center gap-2 ${
-                  selectedPackage?._id === pkg._id
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-primary-600 hover:bg-primary-50'
-                }`}
+                className="mt-4 flex items-center gap-2.5 text-[#1F6FEB] text-base hover:opacity-80 transition-opacity"
               >
-                <PlusCircle className="w-5 h-5" />
+                <div className="w-6 h-6 rounded-full bg-[#1F6FEB] flex items-center justify-center">
+                  <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                </div>
                 Purchase Credits
               </button>
             </div>
@@ -164,16 +150,27 @@ const BuyCreditsPage = () => {
         </div>
       </div>
 
-      {/* Floating Action Button / Summary */}
+      {/* Optimized Bottom Bar for Web */}
       {selectedPackage && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-6 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)] z-50 animate-in slide-in-from-bottom duration-500">
-          <div className="max-w-xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Credit Package: <span className="text-[#111111]">{selectedPackage.credits} Credits</span></p>
-              <p className="text-2xl font-black text-primary-500">{formatCurrency(selectedPackage.price)}</p>
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-100 p-4 sm:p-6 z-50 transition-all duration-300">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="hidden sm:block">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Credit Package: <span className="text-[#111111]">{selectedPackage.credits} Credits</span>
+              </p>
+              <p className="text-2xl font-black text-[#111111]">{formatCurrency(selectedPackage.price)}</p>
             </div>
+            
+            {/* Mobile Summary */}
+            <div className="sm:hidden w-full flex justify-between items-center mb-1">
+               <div className="text-left">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Credit Package: {selectedPackage.credits}</p>
+                  <p className="text-xl font-black text-[#111111]">{formatCurrency(selectedPackage.price)}</p>
+               </div>
+            </div>
+
             <Button 
-              className="h-16 px-12 rounded-2xl font-black text-lg shadow-xl shadow-primary-200 min-w-[240px]"
+              className="w-full sm:w-auto h-14 sm:h-16 px-12 rounded-2xl font-black text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-100 transition-all active:scale-95"
               onClick={handleCheckout}
               loading={checkoutLoading}
             >

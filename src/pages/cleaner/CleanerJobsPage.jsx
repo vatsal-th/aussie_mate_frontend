@@ -7,7 +7,7 @@ import MapPinIcon from '../../assets/map-pin 1.png';
 import CurrentLocationIcon from '../../assets/currentLocation.svg';
 import SearchIcon from '../../assets/search.svg';
 import { jobsAPI, userAPI, reviewsAPI } from '../../services/api';
-import ChatIcon from '../../assets/message2.svg';
+
 
 const CleanerJobsPage = () => {
   const navigate = useNavigate();
@@ -40,6 +40,7 @@ const CleanerJobsPage = () => {
   const [jobs, setJobs] = useState([]); // jobs for the current page
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,9 +148,9 @@ const CleanerJobsPage = () => {
   ];
 
   // --- NEW: helper to fetch jobs list once per (status,page) and cache ---
-  const fetchJobsList = async ({ tab, subFilter, page = 1, limit = jobsPerPage, signal, categoryId, location }) => {
+  const fetchJobsList = async ({ tab, subFilter, page = 1, limit = jobsPerPage, signal, categoryId, location, isUrgent }) => {
     // key includes tab & subFilter & page so cache is per page
-    const cacheKey = `feed::tab:${tab}::sub:${subFilter}::page:${page}::limit:${limit}::cat:${categoryId}::loc:${location}`;
+    const cacheKey = `feed::tab:${tab}::sub:${subFilter}::page:${page}::limit:${limit}::cat:${categoryId}::loc:${location}::urgent:${isUrgent}`;
 
     if (apiCache.current[cacheKey]) {
       return apiCache.current[cacheKey];
@@ -163,6 +164,7 @@ const CleanerJobsPage = () => {
       limit,
       categoryId,
       location,
+      isUrgent,
       signal
     });
 
@@ -218,6 +220,7 @@ const CleanerJobsPage = () => {
           page: currentPage,
           limit: jobsPerPage,
           location: distance, // Assuming backend takes distance as location filter or similar
+          isUrgent,
           signal: controller.signal
         });
 
@@ -250,7 +253,7 @@ const CleanerJobsPage = () => {
       controller.abort();
       activeController.current = null;
     };
-  }, [activeTab, subFilter, currentPage, searchQuery, distance, isUrgent]);
+  }, [activeTab, subFilter, currentPage, searchQuery, distance, isUrgent, refreshTrigger]);
 
   // transform helper (keeps the UI shape identical to your original)
   const transformJobForUI = (job) => {
@@ -266,19 +269,22 @@ const CleanerJobsPage = () => {
 
     return {
       id: job._id || job.jobId || job.id,
-      title: job.title || job.serviceTypeDisplay || `${(job.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim(),
+      title: job.serviceTypeId?.name || job.title || 'Cleaning Job',
       location: job.location?.address || job.location?.fullAddress || 'Location not specified',
       date: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-AU', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
       }) : 'Date not specified',
-      price: myQuote ? `$${myQuote.price}` : (job.estimatedPrice ? `$${job.estimatedPrice}` : job.budget ? `$${job.budget}` : 'Price not specified'),
+      // price: job.budget ? `$${job.budget}` : 'Price not specified',
       status: job.status || 'posted',
       timeAgo: job.createdAt ? getTimeAgo(new Date(job.createdAt)) : 'Recently posted',
       type: job.serviceType || 'general',
       originalJob: job,
       myQuote,
       isRequestSent: job.isRequestSent || false,
-      isWaitlisted: job.isWaitlisted || false
+      isWaitlisted: job.isWaitlisted || false,
+      distance: job.distance !== undefined ? job.distance : null,
+      isUrgent: job.isUrgent || false,
+      category: job.categoryId?.name || 'Cleaning'
     };
   };
 
@@ -303,7 +309,8 @@ const CleanerJobsPage = () => {
       navigate(`/cleaner-job-completed/${jobId}`);
       return;
     }
-    navigate(`/job-details/${jobId}`);
+    // Pass tab context so details page can show tab-specific actions (e.g., withdraw bid in booking requests)
+    navigate(`/job-details/${jobId}`, { state: { fromTab: activeTab } });
   };
 
   const handleInProgressJobClick = (jobId) => navigate(`/in-progress-job/${jobId}`);
@@ -318,8 +325,9 @@ const CleanerJobsPage = () => {
 
   const handleApplyFilters = () => {
     setShowSortModal(false);
-    apiCache.current = {}; // Clear cache to force fresh fetch with new filters
-    setCurrentPage(1); // Reset to first page
+    apiCache.current = {}; 
+    setRefreshTrigger(prev => prev + 1);
+    setCurrentPage(1); 
   };
 
   // Jobs are now filtered on backend, no need for client-side filtering
@@ -357,7 +365,8 @@ const CleanerJobsPage = () => {
           }
         />
 
-        <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-custom">
+        {/* Flat container (no extra rounded background behind tabs/cards) to match Figma */}
+        <div className="bg-transparent rounded-none p-0 shadow-none">
           {/* Search & Sort */}
           <div className="px-4 py-3">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -386,8 +395,8 @@ const CleanerJobsPage = () => {
             <div className="flex gap-2 overflow-x-auto no-scrollbar scrollbar-hide pb-1">
               {tabs.map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${activeTab === tab.id ? 'bg-[#EBF2FD] text-primary-600 shadow-sm font-semibold border-none' : 'bg-[#F9FAFB] text-gray-600 border border-[#F3F3F3] hover:bg-gray-50'}`}>
-                  {tab.label}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${activeTab === tab.id ? 'bg-[#EBF2FD] text-primary-600 font-semibold border-none' : 'bg-[#F3F3F3] text-gray-600 border border-[#F3F3F3] hover:bg-gray-50'}`}>
+                  {tab.label} 
                 </button>
               ))}
             </div>
@@ -434,106 +443,76 @@ const CleanerJobsPage = () => {
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {filteredJobs.map(job => (
-                  <div key={job.id} onClick={() => handleJobClick(job.id, job.originalJob?.status)}
-                    className={`bg-white border border-gray-200 rounded-2xl px-4 py-2 shadow-sm transition-all duration-200 ${job.originalJob?.status === 'in_progress' ? 'cursor-default' : 'cursor-pointer hover:shadow-md'}`}>
-                    {/* Job ID and Status */}
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="text-sm text-primary-200 font-medium">
-                        #{job.originalJob?.jobId || job.id?.substring(0, 8) || 'AM' + Math.random().toString(36).substr(2, 5).toUpperCase()}
-                      </div>
-                      {activeTab === 'completed' && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#D1FAE5] border border-[#D1FAE5] text-[#059669]">
-                          Completed
+                  <div 
+                    key={job.id} 
+                    onClick={() => handleJobClick(job.id, job.originalJob?.status)}
+                    className="bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer"
+                  >
+                    <div className="flex flex-col gap-3">
+                      {/* Top Info: Category and Status */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-500">
+                          {job.category}
                         </span>
-                      )}
-                      {activeTab === 'assigned' && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#D1FAE5] border border-[#D1FAE5] text-[#059669]">
-                          Assigned
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Job Title */}
-                    <h3 className="text-lg font-semibold text-primary-500 mb-2 capitalize">{job.title}</h3>
-
-                    {/* Withdraw Bid Button for Booking Requests (Moved to bottom) */}
-
-                    {/* Job Details with Icons */}
-                    <div className="space-y-1">
-                      {/* Location */}
-                      <div className="flex items-center">
-                        <img src={MapPinIcon} alt="Location" className="w-4 h-4 mr-3" />
-                        <span className="text-sm text-primary-200 font-medium">{job.location}</span>
-                      </div>
-
-                      {/* Date & Time */}
-                      <div className="flex items-center">
-                        <img src={CalendarIcon} alt="Date" className="w-4 h-4 mr-3" />
-                        <span className="text-sm text-primary-200 font-medium">
-                          {activeTab === 'completed' ? `Completed: ${job.date}` : job.date}
-                        </span>
-                      </div>
-
-                    </div>
-
-                    {/* Assigned By Section for Assigned Jobs */}
-                    {activeTab === 'assigned' && job.originalJob?.customerId && (
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-3">
-                        <img 
-                          src={job.originalJob.customerId.profileImage || `https://ui-avatars.com/api/?name=${job.originalJob.customerId.firstName}+${job.originalJob.customerId.lastName}&background=random`} 
-                          alt="Customer" 
-                          className="w-10 h-10 rounded-full border border-gray-200 object-cover" 
-                        />
-                        <div>
-                          <p className="text-xs text-gray-400 font-medium">Assigned by</p>
-                          <p className="text-sm font-bold text-primary-500">{job.originalJob.customerId.firstName} {job.originalJob.customerId.lastName.charAt(0)}.</p>
+                        <div className="flex gap-2">
+                          {/* {job.isUrgent && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 uppercase tracking-wider">
+                              Urgent
+                            </span>
+                          )} */}
+                          {activeTab === 'completed' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-600 border border-green-200 uppercase tracking-wider">
+                              Completed
+                            </span>
+                          )}
+                          {activeTab === 'assigned' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-100 text-primary-600 border border-primary-200 uppercase tracking-wider">
+                              Assigned
+                            </span>
+                          )}
                         </div>
                       </div>
-                    )}
 
-                    {/* Chat with Customer Button for All Active Tabs */}
-                    {['posted', 'booking_request', 'assigned'].includes(activeTab) && (
-                      <div className="flex items-center justify-end cursor-pointer mt-3 gap-2">
-                        {activeTab === 'booking_request' && (job.isRequestSent || job.isWaitlisted) && (
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (window.confirm('Are you sure you want to withdraw your bid/request?')) {
-                                console.log('Withdrawing bid for:', job.id);
-                              }
-                            }}
-                            className="text-xs font-bold text-red-500 hover:text-red-600 border border-red-200 px-3 py-2 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            Withdraw
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/chat/${job.id}`);
-                          }}
-                          className="text-primary-600 px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
-                        >
-                          <img src={ChatIcon} alt="Chat" className="w-5 h-5 " />
-                          Chat
-                        </button>
-                      </div>
-                    )}
+                      {/* Job Title */}
+                      <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                        {job.title}
+                      </h3>
 
-                    {/* View Details Button for Assigned Jobs that are active */}
-                    {activeTab === 'assigned' && ['on_the_way', 'started', 'in_progress'].includes(job.originalJob?.status) && (
-                      <div className="flex items-center justify-end cursor-pointer mt-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleInProgressJobClick(job.id);
-                          }}
-                          className="text-primary-600 px-3 py-2 rounded-full font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer text-sm border border-[#9CC0F6] shadow-custom"
-                        >
-                          View Details
-                        </button>
+                      {/* Details with Icons */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <img src={CalendarIcon} alt="Date" className="w-4 h-4 opacity-60" />
+                          <span className="text-sm font-medium">{job.date}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <img src={MapPinIcon} alt="Location" className="w-4 h-4 opacity-60" />
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium truncate block">{job.location}</span>
+                            {job.distance !== null && job.distance > 0 && (
+                              <span className="text-[11px] font-bold text-primary-500 uppercase">
+                                {job.distance} KM AWAY
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    )}
+
+                   
+
+                      {/* Assigned By (Simple) */}
+                      {activeTab === 'assigned' && job.originalJob?.customerId && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
+                          <img 
+                            src={job.originalJob.customerId.profileImage || `https://ui-avatars.com/api/?name=${job.originalJob.customerId.firstName}+${job.originalJob.customerId.lastName}&background=random`} 
+                            alt="Customer" 
+                            className="w-6 h-6 rounded-full object-cover" 
+                          />
+                          <p className="text-xs text-gray-400">
+                            Assigned by <span className="font-bold text-gray-700">{job.originalJob.customerId.firstName}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

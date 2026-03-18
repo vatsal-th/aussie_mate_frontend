@@ -56,6 +56,7 @@ const EarningsPage = React.lazy(() => import('./pages/cleaner/EarningsPage'))
 const MySubscriptionPage = React.lazy(() => import('./pages/cleaner/MySubscriptionPage'))
 const SubscriptionSuccessPage = React.lazy(() => import('./pages/cleaner/SubscriptionSuccessPage'))
 const BuyCreditsPage = React.lazy(() => import('./pages/cleaner/BuyCreditsPage'))
+const CreditsSuccessPage = React.lazy(() => import('./pages/cleaner/CreditsSuccessPage'))
 
 // Shared pages
 const StripeSuccessPage = React.lazy(() => import('./pages/StripeSuccessPage'))
@@ -112,6 +113,7 @@ export const cleanerRoutes = [
   { path: '/my-subscription', component: MySubscriptionPage },
   { path: '/buy-credits', component: BuyCreditsPage },
   { path: '/subscription/success', component: SubscriptionSuccessPage },
+  { path: '/credits/success', component: CreditsSuccessPage },
   { path: '/cleaner/stripe/success', component: StripeSuccessPage },
   { path: '/platform-policy', component: PlatformPolicyPage },
   { path: '/location', component: LocationPage, allowedRoles: ['Customer', ...CLEANER_ROLES], showHeader: false },

@@ -21,6 +21,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { jobsAPI, authAPI, subscriptionsAPI } from "../../services/api";
 import { getStatusColors } from "../../utils/statusUtils";
 import CleanerBG from "../../assets/cleanerbg.svg";
+import CTABG from "../../assets/cta_bg.jpg";
 import BoldJobIcon from "../../assets/boldJob.svg";
 import Coin3 from "../../assets/coin3.svg";
 
@@ -31,6 +32,7 @@ const CleanerDashboard = () => {
   const swiperRef = useRef(null);
   const [activeJobs, setActiveJobs] = useState([]);
   const [completedJobs, setCompletedJobs] = useState([]);
+  const [liveJobs, setLiveJobs] = useState([]);
   const [liveJobsCount, setLiveJobsCount] = useState(0);
   const [stats, setStats] = useState({ weeklyEarnings: 0, completedJobs: 0 });
   const [loadingDashboard, setLoadingDashboard] = useState(false);
@@ -104,6 +106,7 @@ const CleanerDashboard = () => {
       };
 
       const buildJobTitle = (job) =>
+        job.serviceTypeId?.name ||
         job.title ||
         job.jobTitle ||
         (job.serviceTypeDisplay
@@ -269,8 +272,11 @@ const CleanerDashboard = () => {
             location: jobLocation,
             date: jobDate,
             note: getJobNote(job),
+            category: job.categoryId?.name || "Cleaning",
+            distance: job.distance !== undefined ? job.distance : null,
           };
         });
+console.log("formattedActiveJobs =",formattedActiveJobs);
 
         setActiveJobs(formattedActiveJobs);
 
@@ -307,19 +313,39 @@ const CleanerDashboard = () => {
             note: getJobNote(job),
             status: "Completed",
             statusRaw: "completed",
+            category: job.categoryId?.name || "Cleaning",
+            distance: job.distance !== undefined ? job.distance : null,
           }));
 
         setCompletedJobs(formattedCompletedJobs);
 
         const liveStatuses = new Set(["posted", "quoted"]);
-        const liveJobs = allJobs
+        const rawLiveJobs = allJobs
           .filter((job) => !doesJobBelongToCleaner(job, cleanerId))
           .filter((job) =>
             liveStatuses.has(normalizeStatus(getStatusRaw(job))),
           );
 
+        const formattedLiveJobs = rawLiveJobs.slice(0, 10).map((job) => {
+          const statusRaw = getStatusRaw(job);
+          return {
+            id: getJobIdentifier(job),
+            rawId: job._id || job.id || job.jobId,
+            title: buildJobTitle(job),
+            status: formatLabel(statusRaw || "Available"),
+            statusRaw,
+            price: getJobPrice(job),
+            location: getJobLocation(job),
+            date: getJobDate(job),
+            note: getJobNote(job),
+            category: job.categoryId?.name || "Cleaning",
+          };
+        });
+
+        setLiveJobs(formattedLiveJobs);
+
         // Use totalAvailable from response if provided, otherwise fallback to local filter length
-        setLiveJobsCount(allJobsResponse?.totalAvailable ?? liveJobs.length);
+        setLiveJobsCount(allJobsResponse?.totalAvailable ?? rawLiveJobs.length);
 
         const recentCompleted = completedJobEntries.filter((job) => {
           const completedAt = new Date(
@@ -383,7 +409,8 @@ const CleanerDashboard = () => {
     } else if (["in_progress", "in progress", "in-progress"].includes(status)) {
       navigate(`/in-progress-job/${jobIdentifier}`);
     } else {
-      navigate(`/job-details/${jobIdentifier}`);
+      // Coming from dashboard "Live Jobs" context
+      navigate(`/job-details/${jobIdentifier}`, { state: { fromTab: "posted" } });
     }
   };
 
@@ -393,22 +420,24 @@ const CleanerDashboard = () => {
   }, [user]);
 
   const swiperJobs = useMemo(() => {
-    if (activeJobs.length === 0 && completedJobs.length === 0) return [];
+    if (activeJobs.length === 0 && completedJobs.length === 0) return liveJobs;
     return [...activeJobs, ...completedJobs];
-  }, [activeJobs, completedJobs]);
+  }, [activeJobs, completedJobs, liveJobs]);
 
   return (
     <div className="pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Greeting + Availability */}
-        <div className="flex flex-row sm:items-center justify-between pt-3 sm:pt-4 gap-3 sm:gap-0">
-          <div>
-            <h2 className="text-lg sm:text-[22px] md:text-2xl lg:text-3xl font-semibold text-primary-500 leading-tight">
-              Hi, {greetingName}
-            </h2>
-            <p className="text-sm sm:text-sm text-primary-200 font-medium">
-              Welcome back
-            </p>
+        <div className="flex flex-col pt-3 sm:pt-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            Hi, {greetingName}
+          </h2>
+          <p className="text-gray-500 font-medium">
+            Welcome to AussieMate
+          </p>
+          <div className="mt-4">
+            <p className="text-gray-900 font-bold">Start getting cleaning jobs near you.</p>
+            <p className="text-gray-500 font-medium">Purchase a plan to unlock customer leads.</p>
           </div>
         </div>
 
@@ -486,7 +515,7 @@ const CleanerDashboard = () => {
                   </div>
 
                   <button 
-                    onClick={() => navigate('/wallet')}
+                    onClick={() => navigate('/buy-credits')}
                     className="flex items-center gap-2 text-primary-500 font-black text-sm hover:translate-x-1 transition-transform cursor-pointer"
                   >
                     <span className="flex items-center justify-center w-4 h-4 bg-[#1F6FEB] rounded-full font-medium">
@@ -498,27 +527,35 @@ const CleanerDashboard = () => {
               </div>
             ) : (
               /* Start Getting Cleaning Leads (Not Subscribed) */
-              <div className="bg-gradient-to-br from-white to-primary-50/30 rounded-[32px] p-6 sm:p-8 shadow-xl border border-primary-100/50 relative overflow-hidden">
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl" />
-
-                <div className="relative z-10 max-w-lg">
-                  <h3 className="text-2xl sm:text-3xl font-black text-[#111111] mb-2">
+              <div className="rounded-[32px] p-6 sm:p-8 relative overflow-hidden">
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                  <img
+                    src={CTABG}
+                    alt="Background"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     Start Getting Cleaning Leads
                   </h3>
-                  <p className="text-gray-500 font-medium text-sm sm:text-base mb-6 leading-relaxed">
+                  <p className="text-gray-500 font-medium mb-6">
                     To respond to customer jobs, you need an active subscription
                     plan. Choose a plan and start receiving leads today.
                   </p>
 
-                  <div className="grid grid-cols-1 gap-3 mb-8">
+                  <div className="space-y-3 mb-8">
                     {[
                       "Access verified cleaning jobs",
-                      "Chat with customers instantly",
+                      "Chat with customers instantly if you're among the first 3 applicants",
                       "Get up to 15 leads per month",
                     ].map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-primary-500" />
-                        <span className="text-sm font-bold text-gray-700">
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-gray-500" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-600">
                           {feat}
                         </span>
                       </div>
@@ -527,7 +564,7 @@ const CleanerDashboard = () => {
 
                   <Button
                     variant="primary"
-                    className="rounded-2xl h-14 px-8 font-black text-lg shadow-lg shadow-primary-200"
+                    className="w-full sm:w-auto rounded-2xl h-14 px-10 font-bold text-lg"
                     onClick={() => navigate("/my-subscription")}
                   >
                     View Subscription Plans
@@ -537,92 +574,34 @@ const CleanerDashboard = () => {
             )}
           </div>
         )}
-
-        {/* Existing Earnings Card (keep it below subscription logic or remove if requested) */}
-        {/* User said: "remove kari nakhu che" (remove the old flow) and show subscription logic.
-            Actually the user said "remove kari nakhu che" referring to "quat send thay ne evu hatu".
-            The Earnings card might still be relevant if they HAVE a subscription.
-            In the screenshots, "Hi, John" is followed by Subscription CTA OR Credits Usage.
-            Earnings card is NOT in the new screenshots.
-            I will HIDE the earnings card and old flow if subscription status is fetched.
-        */}
-
-        {/* {subscriptionStatus && (
-          <div className="mt-3 sm:mt-4 shadow-custom rounded-2xl">
-            <div className="relative rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 overflow-hidden">
-              <div className="absolute inset-0">
-                <img
-                  src={CleanerBG}
-                  alt="Cleaner Background"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="relative z-10 p-2 sm:p-3">
-                <p className="text-xs sm:text-sm md:text-lg lg:text-xl text-[#374151]">
-                  Earnings This Week
-                </p>
-                <div className="flex items-end justify-between mt-1">
-                  <div>
-                    <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-500 mb-1 sm:mb-2">
-                      {formatCurrency(stats.weeklyEarnings)}
-                    </div>
-                    <div className="text-xs sm:text-sm md:text-base text-primary-200 font-medium">
-                      {stats.completedJobs || 0}{" "}
-                      {stats.completedJobs === 1 ? "job" : "jobs"} completed
-                    </div>
-                    <button
-                      onClick={() => navigate("/earnings")}
-                      className="text-primary-500 text-xs sm:text-sm md:text-base font-semibold mt-1 sm:mt-2 cursor-pointer"
-                    >
-                      View Earnings <span className="inline-block ml-1">→</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
-                <img
-                  src={Coin3}
-                  alt="coins"
-                  className="w-12 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 lg:w-36 lg:h-36"
-                />
-              </div>
-            </div>
-          </div>
-        )} */}
-
-        {/* Live jobs near you */}
-        <div className="mt-3 sm:mt-4 bg-white rounded-2xl border-[#F3F3F3] p-3 sm:p-4 shadow-custom">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-primary-50 flex items-center justify-center">
+        {subscriptionStatus && (
+          <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex justify-between items-center transition-all hover:shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center">
                 <img
                   src={BoldJobIcon}
                   alt="jobs"
-                  className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-10"
+                  className="w-5 h-5"
                 />
               </div>
-              <span className="ml-2 text-xs sm:text-sm md:text-xl text-primary-500 font-medium">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
                 Live Jobs near you
-              </span>
+              </h3>
             </div>
-            <button
-              onClick={() =>
-                navigate("/cleaner-jobs", { state: { tab: "live-jobs" } })
-              }
-              className="text-xs sm:text-sm md:text-lg text-primary-600 font-medium flex items-center cursor-pointer"
-            >
-              <span className="w-2 h-2 rounded-full bg-primary-500 mr-2"></span>{" "}
+            <div className="flex items-center gap-2 text-primary-600 font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-primary-500"></span>
               {liveJobsLabel}
-            </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Active Jobs */}
-        <div className="mt-3 sm:mt-4 md:mt-5 bg-white rounded-2xl border-[#F3F3F3] p-2 sm:p-3 md:p-4 lg:p-5 shadow-custom">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-3 md:mb-4 gap-2 sm:gap-3 md:gap-0">
-            <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-primary-500">
-              Your Active Jobs
-            </h3>
+        {/* Active Jobs - Only if Subscribed */}
+        {subscriptionStatus && (
+          <div className="mt-6 mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">
+            Your Assigned Jobs
+              </h3>
 
             {/* Navigation Buttons */}
             <div className="flex items-center justify-between sm:justify-end space-x-2">
@@ -711,75 +690,43 @@ const CleanerDashboard = () => {
               {swiperJobs.map((job, index) => (
                 <SwiperSlide key={`job-${job.id || index}`}>
                   <div
-                    className="bg-white rounded-2xl border border-[#F3F3F3] p-3 sm:p-4 md:p-5 shadow-custom min-h-[180px] sm:min-h-[200px] cursor-pointer hover:border-primary-300 transition-colors"
+                    className="bg-white rounded-[24px] border border-[#F3F3F3] p-5 sm:p-6 shadow-sm min-h-[160px] cursor-pointer transition-all duration-300"
                     onClick={() => handleJobClick(job)}
                   >
-                    <div className="flex flex-col justify-between h-full">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs sm:text-sm text-primary-200 font-medium truncate">
-                            #{job.id}
-                          </span>
-                          {(() => {
-                            const statusColors = getStatusColors(
-                              job.statusRaw || job.status,
-                            );
-                            return (
-                              <span
-                                className={`px-2 py-0.5 rounded-full font-semibold text-xs ${statusColors.bg} ${statusColors.text} ${statusColors.border} flex-shrink-0 ml-2`}
-                              >
-                                {job.status}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                        <div className="text-primary-500 font-semibold text-sm sm:text-base mb-2 line-clamp-2 capitalize">
-                          {job.title}
-                        </div>
-                        <div className="flex items-start text-primary-200 font-medium text-xs sm:text-sm mb-1.5">
-                          <MapPin
-                            className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5"
-                            strokeWidth={2}
-                          />
-                          <span className="line-clamp-2 leading-relaxed">
-                            {job.location || "Location not specified"}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-primary-200 font-medium text-xs sm:text-sm mb-2">
-                          <Calendar
-                            className="w-4 h-4 mr-1.5 flex-shrink-0"
-                            strokeWidth={2}
-                          />
-                          <span>{job.date || "Date not specified"}</span>
-                        </div>
-                        {/* Show quote price for in-progress jobs */}
-                        {job.statusRaw &&
-                          (job.statusRaw.toLowerCase() === "in_progress" ||
-                            job.statusRaw.toLowerCase() === "in progress" ||
-                            job.statusRaw.toLowerCase() === "in-progress" ||
-                            job.statusRaw.toLowerCase() === "accepted") &&
-                          job.quotePrice && (
-                            <div className="text-primary-500 font-bold text-sm sm:text-base mt-1">
-                              {formatCurrency(job.quotePrice)}
+                      <div className="flex flex-col h-full relative">
+                        {/* Red Left Accent Bar */}
+                        
+                        <div className="flex-1">
+                          <div className="flex flex-col gap-1 mb-3">
+                            <span className="text-[13px] font-medium text-gray-400">
+                              {job.category}
+                            </span>
+                            <div className="text-[#111827] font-bold text-[17px] leading-tight capitalize">
+                              {job.title}
                             </div>
-                          )}
+                          </div>
+
+                          <div className="space-y-2.5">
+                            <div className="flex items-center text-gray-500 font-medium text-[14px]">
+                              <Calendar
+                                className="w-5 h-5 mr-3 flex-shrink-0 text-gray-400"
+                                strokeWidth={1.5}
+                              />
+                              <span>{job.date || "Date not specified"}</span>
+                            </div>
+                            
+                            <div className="flex items-start text-gray-500 font-medium text-[14px]">
+                              <MapPin
+                                className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-gray-400"
+                                strokeWidth={1.5}
+                              />
+                              <span className="line-clamp-2 leading-tight">
+                                {job.location || "Location not specified"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        fullWidth
-                        className="mt-2 py-2 rounded-xl border border-primary-300 text-primary-600 font-medium hover:bg-primary-50 shadow-custom text-xs sm:text-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleJobClick(job);
-                        }}
-                      >
-                        {(job.statusRaw || job.status || "").toLowerCase() ===
-                        "completed"
-                          ? "View Summary"
-                          : "Open Job"}
-                      </Button>
-                    </div>
                   </div>
                 </SwiperSlide>
               ))}
@@ -790,9 +737,10 @@ const CleanerDashboard = () => {
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default CleanerDashboard;
