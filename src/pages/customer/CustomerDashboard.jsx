@@ -10,9 +10,6 @@ import { Button, Loader } from '../../components';
 import { jobsAPI, userAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { getStatusChip } from '../../utils/statusUtils';
-import CardBG2 from '../../assets/CardBG2.png';
-import CardBG3 from '../../assets/CardBG3.png';
-import CardBG4 from '../../assets/CardBG4.png';
 import RewardImage from '../../assets/Reward.jpg';
 import CoinImage from '../../assets/coin.png';
 import CalendarIcon from '../../assets/Calendar.svg';
@@ -60,10 +57,11 @@ const CustomerDashboard = () => {
 
   const getActionText = (status) => {
     const s = (status || '').toString().toLowerCase();
-    if (s === 'in_progress') return 'Track Job';
+    if (['in_progress', 'in progress', 'started'].includes(s)) return 'Track Job';
     if (s === 'completed') return 'Rate & Review';
     return 'View Quotes';
   };
+
   const handleViewJobs = () => {
     navigate('/my-jobs', { state: { tab: 'all' } });
   };
@@ -108,21 +106,36 @@ const CustomerDashboard = () => {
 
         const normalized = list.map((j) => {
           const status = (j.status || '').toString();
-          const assignedTo = j.assignedCleaner?.name || j.assignedCleaner?.fullName || j.cleaner?.name || j.assignedTo || null;
+          
+          // Improved name extraction
+          const cleaner = j.assignedCleanerId || j.completedBy || j.assignedCleaner || j.cleaner;
+          let assignedTo = null;
+          if (cleaner) {
+            if (cleaner.firstName) {
+              assignedTo = `${cleaner.firstName} ${cleaner.lastName || ''}`.trim();
+            } else {
+              assignedTo = cleaner.name || cleaner.fullName || j.assignedTo || null;
+            }
+          }
+
           const dateLabel = formatDate(j.createdAt);
+
           const title = j.title || j.serviceTypeDisplay || `${(j.serviceType || '').toString().replace(/\b\w/g, c => c.toUpperCase())}`.trim();
+          const categoryName = j.categoryName || (j.serviceTypeDisplay && j.serviceTypeDisplay.split(' ')[0]) || 'Other Categories';
           const statusChip = getStatusChip(status);
 
           return {
             id: j.jobId || j._id || j.reference || j.id,
             rawId: j.id || j._id, // Add raw database ID for navigation if needed
             title,
+            categoryName,
             status: statusChip.label,
             rawStatus: status.toLowerCase(),
             date: dateLabel,
             action: getActionText(status),
             assignedTo
           };
+
         });
 
         setOngoingJobs(normalized);
@@ -332,56 +345,64 @@ const CustomerDashboard = () => {
             >
               {ongoingJobs.map((job) => (
                 <SwiperSlide key={job.id}>
-                  <div
-                    onClick={() => {
-                      if (job.rawStatus === 'completed' || job.rawStatus === 'pending_customer_confirmation') {
-                        navigate(`/job-completed/${job.rawId}`);
-                      } else if (job.rawStatus === 'in_progress') {
-                        navigate(`/customer-in-progress-job/${job.rawId}`);
-                      } else {
-                        navigate(`/customer-job-details/${job.rawId}`);
-                      }
-                    }}
+                    <div
+                      onClick={() => {
+                        if (job.rawStatus === 'completed' || job.rawStatus === 'pending_customer_confirmation') {
+                          navigate(`/job-completed/${job.rawId}`);
+                        } else if (job.rawStatus === 'in_progress') {
+                          navigate(`/customer-in-progress-job/${job.rawId}`);
+                        } else {
+                          navigate(`/customer-job-details/${job.rawId}`);
+                        }
+                      }}
                     className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-custom h-44 sm:h-48 cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                  >
-                    <div className="flex flex-col justify-between h-full">
-                      <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="text-xs sm:text-sm text-primary-200 font-medium">#{job.id}</div>
-                          {job.status && (
-                            <span className={`inline-block font-semibold text-xs px-2 py-1 rounded-full ${job.rawStatus === 'quoted' || job.rawStatus === 'posted'
-                              ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
-                              : job.rawStatus === 'in_progress'
-                                ? 'bg-[#FFEBCA] text-yellow-500 border border-yellow-500'
-                                : job.rawStatus === 'completed'
-                                  ? 'bg-green-500 text-[#10B981] border border-[#D2F8E0]'
-                                  : 'bg-[#E5F3FF] text-[#0088FF] border border-[#E5F3FF]'
-                              }`}>
-                              {job.status}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-semibold text-primary-500 mb-2 line-clamp-2 text-sm sm:text-base capitalize" >{job.title}</h4>
-                        <div className="flex items-center text-xs font-medium text-primary-200 mb-1">
-                          <img src={CalendarIcon} alt="Calendar" className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          {job.date}
-                        </div>
-                        {job.assignedTo && (
-                          <div className="flex items-center text-xs text-[#6B7280]">
-                            <img src={PersonIcon} alt="Person" className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            <span className="truncate">Assigned to: {job.assignedTo}</span>
+                    >
+                      <div className="flex flex-col justify-between h-full">
+                        <div>
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="text-[10px] sm:text-xs text-gray-400 font-medium ">
+                              {job.categoryName}
+                            </div>
+                            {job.status && (
+                              <span className={`inline-block font-semibold text-[10px] px-2 py-0.5 rounded-full ${job.rawStatus === 'quoted' || job.rawStatus === 'posted'
+                                ? 'bg-[#E5F3FF] text-[#0088FF] border border-[#DDEFFF]'
+                                : job.rawStatus === 'in_progress' || job.rawStatus === 'started'
+                                  ? 'bg-[#FFEBCA] text-[#FF8800] border-[#FFEBCA]'
+                                  : job.rawStatus === 'completed'
+                                    ? 'bg-[#DBF9E7] text-green-500 border-green-500'
+                                    : 'bg-[#E5F3FF] text-[#0088FF] border-[#E5F3FF]'
+                                }`}>
+                                {job.status}
+                              </span>
+
+                            )}
                           </div>
-                        )}
+                          <h4 className="font-semibold text-[#111827] mb-2 line-clamp-1 text-sm sm:text-lg capitalize">{job.title}</h4>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center text-xs font-medium text-gray-500">
+                              <img src={CalendarIcon} alt="Calendar" className="w-3.5 h-3.5 mr-2 opacity-60" />
+                              {job.date} 
+                            </div>
+                            {job.assignedTo && (
+                              <div className="flex items-center text-xs font-medium text-gray-500">
+                                <img src={PersonIcon} alt="Person" className="w-3.5 h-3.5 mr-2 opacity-60" />
+                                <span className="truncate">Assigned to: {job.assignedTo}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="secondary"
+
+
+                          size="sm"
+                          className="w-full mt-3 text-xs sm:text-sm font-semibold py-2"
+                        >
+                          {job.action}
+                        </Button>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="xs"
-                        className="w-full mt-2 sm:mt-3 text-xs sm:text-sm font-medium"
-                      >
-                        {job.action}
-                      </Button>
                     </div>
-                  </div>
+
                 </SwiperSlide>
               ))}
             </Swiper>

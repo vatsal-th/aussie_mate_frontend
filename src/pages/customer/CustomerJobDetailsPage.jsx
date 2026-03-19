@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Phone,
   MapPin,
+  MapPinIcon,
 } from 'lucide-react';
 import { Button, ConfirmationModal, PageHeader, JobOverviewCard } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
@@ -105,6 +106,7 @@ const CustomerJobDetailsPage = () => {
   const getServiceDetail = (job) => {
     if (!job) return '';
     return (
+      job.serviceTypeId?.name ||
       job.serviceDetail ||
       job.serviceDetailName ||
       job.service?.detail ||
@@ -660,62 +662,62 @@ const CustomerJobDetailsPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Status Badge */}
-        <div className="mb-4">
-          <div className="inline-flex items-center gap-1.5 bg-[#DDEFFF] px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 bg-[#0088FF] rounded-full"></div>
-            <span className="text-xs font-semibold text-[#0088FF]">
-              {cleanerQuotes.length} Quotes Received
-            </span>
-          </div>
-        </div>
-
-        {/* Job Header */}
-        <div className="mb-6">
-          <p className="text-sm font-medium text-gray-500 mb-1">
-            {job.categoryId?.name || 'Cleaning'}
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3 leading-tight">
-            {job.title}
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-6">
-            {job.description || job.specialInstructions || 'No description provided.'}
-          </p>
-
-          {/* Meta Info */}
-          <div className="flex flex-col gap-3 mb-6">
-            <div className="flex items-center text-gray-700 font-medium">
-              <CalendarDays className="w-5 h-5 mr-3 text-gray-400" strokeWidth={1.5} />
-              <span className="text-sm sm:text-base">{scheduledDateLabel}</span>
-            </div>
-            <div className="flex items-start text-gray-700 font-medium">
-              <MapPinIcon className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-              <span className="text-sm sm:text-base leading-snug">{job.location?.address || job.address || 'Location not specified'}</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          {/* Status Badge */}
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-1.5 bg-[#DDEFFF] px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 bg-[#0088FF] rounded-full"></div>
+              <span className="text-xs font-semibold text-[#0088FF]">
+                {cleanerQuotes.length} Quotes Received
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Photo Grid */}
-        {jobPhotos.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 mb-8 max-w-lg">
-            {jobPhotos.slice(0, 4).map((photo, index) => (
-              <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 group">
-                <img 
-                  src={photo} 
-                  alt={`Job ${index + 1}`} 
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                />
-                {index === 3 && jobPhotos.length > 4 && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">+{jobPhotos.length - 3}</span>
-                  </div>
-                )}
+          {/* Job Header */}
+          <div className="mb-6">
+            <p className="text-xl font-medium text-gray-500 mb-1 leading-tight">
+              {job.categoryId?.name || 'Cleaning'}
+            </p>
+            <h1 className="text-1xl sm:text-2xl font-extrabold text-[#111827] mb-2 leading-tight">
+              {serviceDetail || job.title}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-6">
+              {job.description || job.specialInstructions || 'No description provided.'}
+            </p>
+
+            {/* Meta Info */}
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="flex items-center text-gray-700 font-medium">
+                <CalendarDays className="w-5 h-5 mr-3 text-gray-400" strokeWidth={1.5} />
+                <span className="text-sm sm:text-base">{scheduledDateLabel}</span>
               </div>
-            ))}
+              <div className="flex items-start text-gray-700 font-medium">
+                <MapPinIcon className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                <span className="text-sm sm:text-base leading-snug">{job.location?.address || job.address || 'Location not specified'}</span>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Photo Grid */}
+          {jobPhotos.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-8 max-w-lg">
+              {jobPhotos.slice(0, 4).map((photo, index) => (
+                <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 group">
+                  <img
+                    src={photo}
+                    alt={`Job ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  {index === 3 && jobPhotos.length > 4 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">+{jobPhotos.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Custom Job Dates Section */}
 
@@ -754,7 +756,7 @@ const CustomerJobDetailsPage = () => {
                           <h4 className="text-xl font-bold text-gray-900 mb-1">
                             {cleaner.name}
                           </h4>
-                          
+
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center text-gray-600">
                               <Phone className="w-3.5 h-3.5 mr-2 text-gray-400" strokeWidth={2} />
@@ -791,7 +793,7 @@ const CustomerJobDetailsPage = () => {
                     {/* Message Bubble */}
                     <div className="bg-[#EBF2FD] rounded-[24px] p-5 mb-6">
                       <p className="text-gray-900 text-sm font-semibold leading-relaxed">
-                        Hello,<br/>
+                        Hello,<br />
                         {cleaner.message}
                       </p>
                     </div>
