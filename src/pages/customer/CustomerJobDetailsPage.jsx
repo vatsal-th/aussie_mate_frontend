@@ -9,8 +9,8 @@ import {
   CalendarDays,
   Phone,
   MapPin,
-  MapPinIcon,
 } from 'lucide-react';
+
 import { Button, ConfirmationModal, PageHeader, JobOverviewCard } from '../../components';
 import ThreeDotIcon from '../../assets/3dot.svg';
 import UserIcon from '../../assets/user.svg';
@@ -682,7 +682,7 @@ const CustomerJobDetailsPage = () => {
               {serviceDetail || job.title}
             </h1>
             <p className="text-sm sm:text-base text-gray-500 leading-relaxed mb-6">
-              {job.description || job.specialInstructions || 'No description provided.'}
+              {job.instructions || 'No description provided.'}
             </p>
 
             {/* Meta Info */}
@@ -692,9 +692,10 @@ const CustomerJobDetailsPage = () => {
                 <span className="text-sm sm:text-base">{scheduledDateLabel}</span>
               </div>
               <div className="flex items-start text-gray-700 font-medium">
-                <MapPinIcon className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                <MapPin className="w-5 h-5 mr-3 mt-0.5 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
                 <span className="text-sm sm:text-base leading-snug">{job.location?.address || job.address || 'Location not specified'}</span>
               </div>
+
             </div>
           </div>
 

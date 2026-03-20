@@ -13,9 +13,8 @@ const CompleteJobPage = () => {
   const { jobId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+
   const occurrenceId = searchParams.get('occurrenceId');
-  console.log('CompleteJobPage - occurrenceId:', occurrenceId);
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(300);
@@ -37,6 +36,7 @@ const CompleteJobPage = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [uploadError, setUploadError] = useState(null);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -761,7 +761,7 @@ const CompleteJobPage = () => {
           {/* Bottom Action Button */}
           <div className="flex justify-end pb-6">
             <Button
-              onClick={handleCompleteJob}
+              onClick={() => setShowCompleteModal(true)}
               variant="secondary"
               className={` rounded-xl font-semibold text-lg transition-colors ${beforePhotosUploaded && afterPhotosUploaded && !completingJob
                 ? 'bg-gray-200 text-gray-900 hover:bg-gray-300 cursor-pointer'
@@ -777,6 +777,42 @@ const CompleteJobPage = () => {
               }
             </Button>
           </div>
+
+          {/* Complete Job Confirmation Modal */}
+          {showCompleteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+                onClick={() => setShowCompleteModal(false)}
+              ></div>
+              <div className="relative bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+                <div className="p-8 text-center">
+                  <h3 className="text-2xl font-bold text-primary-500 mb-3">Complete Job?</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-8">
+                    Check your assigned work along with the before and after photos, and complete the job.
+                  </p>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowCompleteModal(false)}
+                      className="flex-1 py-4 px-6 rounded-full bg-gray-100 text-primary-500 font-semibold text-base hover:bg-gray-200 transition-colors"
+                    >
+                      Not Now
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCompleteModal(false);
+                        handleCompleteJob();
+                      }}
+                      className="flex-1 py-4 px-6 rounded-full bg-primary-500 text-white font-semibold text-base hover:bg-blue-700 transition-shadow hover:shadow-lg shadow-blue-200 transition-colors"
+                    >
+                      Complete Job
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

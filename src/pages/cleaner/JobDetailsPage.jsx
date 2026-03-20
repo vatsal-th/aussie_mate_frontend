@@ -140,20 +140,40 @@ const JobDetailsPage = () => {
 
   const myQuote = useMemo(() => {
     if (!job || !currentUserId) return null;
+    
+    // Check in quotes array
     const quotes = Array.isArray(job.quotes) ? job.quotes : [];
-    return quotes.find((q) => {
+    const fromQuotes = quotes.find((q) => {
       const qCleanerId = q?.cleanerId?._id || q?.cleanerId || q?.cleaner?._id || q?.cleaner;
       return qCleanerId?.toString() === currentUserId?.toString();
-    }) || null;
+    });
+
+    if (fromQuotes) return fromQuotes;
+
+    // Fallback: Check in contactedCleaners array (requests)
+    const contacted = Array.isArray(job.contactedCleaners) ? job.contactedCleaners : [];
+    const fromContacted = contacted.find((c) => {
+      const cCleanerId = c?.cleanerId?._id || c?.cleanerId || c?.cleaner?._id || c?.cleaner;
+      return cCleanerId?.toString() === currentUserId?.toString();
+    });
+
+    return fromContacted || null;
   }, [job, currentUserId]);
 
+
   const canWithdrawBid = useMemo(() => {
-    if (fromTab !== 'booking_request') return false;
-    if (!myQuote) return false;
-    const status = (myQuote.status || '').toLowerCase();
-    // allow withdraw if still pending / waiting
-    return !['withdrawn', 'rejected', 'accepted'].includes(status);
-  }, [fromTab, myQuote]);
+    if (!myQuote || !job) return false;
+    
+    // If the job is already assigned to SOMEONE (including me) or in progress, usually can't withdraw bid
+    const isJobAssigned = ['on_the_way', 'started', 'in_progress', 'completed'].includes(job.status?.toLowerCase());
+    if (isJobAssigned) return false;
+
+    const quoteStatus = (myQuote.status || '').toLowerCase();
+    // allow withdraw if still pending / waiting / connected / accepted (as long as job is still 'posted' or 'quoting')
+    return !['withdrawn', 'rejected'].includes(quoteStatus);
+  }, [myQuote, job]);
+
+
 
   const jobOverviewMeta = useMemo(() => {
     if (!job) return [];
@@ -410,10 +430,11 @@ const JobDetailsPage = () => {
       <ConfirmationModal
         isOpen={showWithdrawModal}
         onClose={() => { if (isWithdrawing) return null; setShowWithdrawModal(false); setModalError(''); }}
-        title="Withdraw Bid?"
-        message="Are you sure you want to withdraw this bid? This job will no longer appear in your Booking Requests."
+        title="Withdraw Request?"
+        message="Are you sure you want to withdraw your request? You will need to contact the customer again if you change your mind."
         confirmText="Withdraw"
         cancelText="Cancel"
+
         confirmButtonColor="bg-[#EF4444] hover:bg-red-600"
         errorMessage={modalError}
         autoCloseAfter={3000}
