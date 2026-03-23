@@ -214,7 +214,6 @@ const VerificationStatusPage = () => {
 
             {/* Common rounded container */}
             <div className="bg-white rounded-2xl border border-[#F3F3F3] p-4 sm:p-5 space-y-6">
-
                 {/* ABN verified card */}
                 {documents?.documents?.abnNumber !== undefined && (
                     <div className="rounded-2xl border border-[#F3F3F3] bg-white p-4 sm:p-5 shadow-custom">
