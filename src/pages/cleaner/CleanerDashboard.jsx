@@ -19,11 +19,10 @@ import {
 import { Button, Loader } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import { jobsAPI, authAPI, subscriptionsAPI } from "../../services/api";
-import { getStatusColors } from "../../utils/statusUtils";
+
 import CleanerBG from "../../assets/cleanerbg.svg";
 import CTABG from "../../assets/cta_bg.jpg";
 import BoldJobIcon from "../../assets/boldJob.svg";
-import Coin3 from "../../assets/coin3.svg";
 
 const CleanerDashboard = () => {
   const navigate = useNavigate();
@@ -594,6 +593,7 @@ console.log("formattedActiveJobs =",formattedActiveJobs);
             </div>
           </div>
         )}
+
 
         {/* Active Jobs - Only if Subscribed */}
         {subscriptionStatus && (
