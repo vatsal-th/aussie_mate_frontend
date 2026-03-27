@@ -221,8 +221,12 @@ const VerificationStatusPage = () => {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm sm:text-base font-medium text-primary-500">ABN Number :-</span>
-                                    {documents?.verificationStatus === 'verified' && !isEditingAbn && (
-                                        <Pill label="Verified" tone="green" />
+                                    {!isEditingAbn && (
+                                        (documents?.documents?.abnVerified || documents?.verificationStatus === 'verified') ? (
+                                            <Pill label="Verified" tone="green" />
+                                        ) : (
+                                            <Pill label="Pending" tone="yellow" />
+                                        )
                                     )}
                                 </div>
                                 {!isEditingAbn && (

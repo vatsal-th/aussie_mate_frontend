@@ -14,30 +14,27 @@ const SubscriptionSuccessPage = () => {
   const [subscription, setSubscription] = useState(null);
 
   useEffect(() => {
-    if (sessionId) {
-      verifySubscription();
-    } else {
-      setLoading(false);
-    }
-  }, [sessionId]);
+    verifySubscription();
+  }, []);
 
-  const verifySubscription = async () => {
+  const verifySubscription = async (retryCount = 0) => {
     try {
-      setLoading(true);
-      // Even if we don't have a specific verify session API, 
-      // fetching status will confirm if the subscription is active now
+      if (retryCount === 0) setLoading(true);
+      
       const res = await subscriptionsAPI.getMyStatus().catch(() => ({ success: false }));
       
       if (res.success && res.data?.subscription?.status === 'active') {
         setSubscription(res.data);
+        setLoading(false);
+      } else if (retryCount < 3) {
+        // Retry after 2 seconds to allow for webhook processing
+        setTimeout(() => verifySubscription(retryCount + 1), 2000);
       } else {
-        // Fallback: stay on page but show generic success
-        console.log('Subscription might still be processing');
+        setLoading(false);
       }
     } catch (err) {
       console.error('Error verifying subscription:', err);
-    } finally {
-      setLoading(false);
+      if (retryCount >= 3) setLoading(false);
     }
   };
 
@@ -62,7 +59,7 @@ const SubscriptionSuccessPage = () => {
           
           <div className="relative z-10">
             {/* Success Icon */}
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100/50 animate-bounce">
+            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100/50">
               <CheckCircle2 className="w-12 h-12 text-green-600" />
             </div>
 
@@ -75,32 +72,44 @@ const SubscriptionSuccessPage = () => {
             </p>
 
             {subscription && (
-              <div className="bg-primary-50 rounded-3xl p-6 mb-8 border border-primary-100 text-left">
-                <p className="text-[10px] font-black text-primary-400 uppercase tracking-widest mb-3">PLAN DETAILS</p>
+              <div className="bg-[#F8FAFC] rounded-3xl p-6 mb-8 border border-gray-100 text-left shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">PLAN DETAILS</p>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h3 className="text-xl font-black text-primary-700">{subscription.subscription?.planId?.name}</h3>
-                    <p className="text-sm font-bold text-primary-500">Active until {new Date(subscription.subscription?.currentPeriodEnd).toLocaleDateString()}</p>
+                    <h3 className="text-xl font-bold text-gray-900">{subscription.subscription?.planId?.name}</h3>
+                    <p className="text-sm font-medium text-gray-500">Active until {new Date(subscription.subscription?.currentPeriodEnd).toLocaleDateString()}</p>
                   </div>
-                  <div className="bg-white p-2 rounded-2xl shadow-sm">
-                    <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                  <div className="bg-white p-2.5 rounded-2xl shadow-sm border border-gray-50">
+                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-bold text-primary-600 bg-white/50 p-3 rounded-2xl">
+                <div className="flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100/50">
                   <CheckCircle2 className="w-4 h-4" /> {subscription.availableCredits} Credits added to your account
                 </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              <Button 
-                fullWidth 
-                variant="primary" 
-                className="rounded-2xl h-14 font-black text-lg shadow-xl shadow-primary-200"
+            <div className="space-y-4 flex flex-col items-center">
+              <button
                 onClick={() => navigate('/cleaner-dashboard')}
+                className="
+                  w-[220px]
+                  max-w-xs
+                  h-12
+                  rounded-xl
+                  text-base
+                  font-bold
+                  text-white
+                  bg-gradient-to-r from-blue-500 to-blue-600
+                  shadow-md shadow-blue-200
+                  hover:from-blue-600 hover:to-blue-700
+                  transition-all duration-200
+                  active:scale-[0.98]
+                "
               >
                 Go to Dashboard
-              </Button>
+                
+              </button>
               <button 
                 onClick={() => navigate('/cleaner-jobs')}
                 className="flex items-center justify-center gap-2 text-primary-600 font-black text-sm hover:translate-x-1 transition-transform mx-auto py-2"
