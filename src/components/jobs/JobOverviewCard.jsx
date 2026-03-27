@@ -20,6 +20,7 @@ const JobOverviewCard = ({
   title,
   propertyType,
   quoteCount = 0,
+  showQuotePill = true,
   serviceType,
   serviceDetail,
   instructions,
@@ -129,7 +130,7 @@ const JobOverviewCard = ({
       <div className="space-y-5">
         {/* Top Section: Pill and Property Type */}
         <div className="space-y-2">
-          {quoteCount >= 0 && (
+          {showQuotePill && Number.isFinite(quoteCount) && quoteCount >= 0 && (
             <div className="inline-flex items-center gap-2 bg-[#E0F2FE] text-[#0088FF] px-4 py-1.5 rounded-full text-sm font-medium">
               <span className="w-2 h-2 bg-[#0088FF] rounded-full"></span>
               {quoteCount} {quoteCount === 1 ? 'Quote' : 'Quotes'} Received
@@ -320,6 +321,7 @@ JobOverviewCard.propTypes = {
   title: PropTypes.string,
   propertyType: PropTypes.string,
   quoteCount: PropTypes.number,
+  showQuotePill: PropTypes.bool,
   serviceType: PropTypes.string,
   serviceDetail: PropTypes.string,
   instructions: PropTypes.string,
@@ -362,6 +364,7 @@ JobOverviewCard.defaultProps = {
   title: '',
   propertyType: '',
   quoteCount: 0,
+  showQuotePill: true,
   serviceType: '',
   serviceDetail: '',
   instructions: '',

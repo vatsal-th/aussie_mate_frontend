@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { FloatingLabelInput, ConfirmationModal, PhoneValidationAlert, PageHeader, Loader } from '../../components';
+import { FloatingLabelInput, ConfirmationModal, PhoneValidationAlert, PageHeader, Loader, Button } from '../../components';
 import InfoIcon from '../../assets/info.svg';
 import SendIcon from '../../assets/sendChat.svg';
 import MessageIcon from '../../assets/message2.svg';
@@ -167,24 +167,26 @@ const CleanerChatPage = () => {
                 setPhoneValidationError(error.message);
                 setShowPhoneAlert(true);
                 // No auto-hide - user must manually close
-            } else if (error.message === 'Failed to join chat') {
-                // Silently handle chat room join failure
-                setMessages([
-                    {
-                        _id: 'demo_welcome',
-                        id: 1,
-                        senderId: { _id: currentUser?.id || currentUser?._id || 'cleaner_demo' },
-                        content: "Hi! I'm ready to discuss this cleaning job with you.",
-                        message: "Hi! I'm ready to discuss this cleaning job with you.",
-                        messageType: 'text',
-                        createdAt: new Date(Date.now() - 60000).toISOString(),
-                        time: new Date(Date.now() - 60000).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                        }).toLowerCase()
-                    }
-                ]);
+            } else if (error.message === 'Failed to join chat' || error.message === 'Chat room not found') {
+                // Silently handle chat room join failure - room might not exist yet for first contact
+                if (messages.length === 0) {
+                    setMessages([
+                        {
+                            _id: 'demo_welcome',
+                            id: 1,
+                            senderId: { _id: currentUser?.id || currentUser?._id || 'cleaner_demo' },
+                            content: "Hi! I'm ready to discuss this cleaning job with you.",
+                            message: "Hi! I'm ready to discuss this cleaning job with you.",
+                            messageType: 'text',
+                            createdAt: new Date(Date.now() - 60000).toISOString(),
+                            time: new Date(Date.now() - 60000).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                            }).toLowerCase()
+                        }
+                    ]);
+                }
             } else if (error.message === 'You must submit a quote for this job first. Once the customer accepts your quote, you can start chatting.') {
                 // Silently handle quote requirement message
             } else if (error.message === 'Access denied. Please check your login status or contact support.') {
@@ -388,14 +390,15 @@ const CleanerChatPage = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (newMessage.trim()) {
+            const messageContent = newMessage.trim();
             const tempMessage = {
                 _id: `temp-${Date.now()}`,
                 id: `temp-${Date.now()}`,
                 senderId: { _id: currentUser?.id || currentUser?._id || 'cleaner' },
-                content: newMessage.trim(),
-                message: newMessage.trim(),
+                content: messageContent,
+                message: messageContent,
                 messageType: 'text',
                 createdAt: new Date().toISOString(),
                 time: new Date().toLocaleTimeString('en-US', {
@@ -409,12 +412,30 @@ const CleanerChatPage = () => {
             if (currentChatRoom?.chatRoomId && isConnected) {
                 // Optimistically add to state
                 setMessages(prev => [...prev, tempMessage]);
-                socketService.sendMessage(currentChatRoom.chatRoomId, newMessage.trim());
+                socketService.sendMessage(currentChatRoom.chatRoomId, messageContent);
                 setNewMessage('');
             } else {
-                // Fallback: add message locally for demo
-                setMessages(prev => [...prev, { ...tempMessage, isOptimistic: false }]);
-                setNewMessage('');
+                // Room doesn't exist? Try to initiate contact via API
+                try {
+                    // Show message optimistically
+                    setMessages(prev => [...prev, { ...tempMessage, isOptimistic: false }]);
+                    setNewMessage('');
+                    
+                    const response = await jobsAPI.contactJob(jobId, { message: messageContent });
+                    if (response.success) {
+                        // After contact, refresh to get room info if possible, or wait for socket
+                        const updatedJob = await jobsAPI.getJobById(jobId);
+                        if (updatedJob.success && updatedJob.data) {
+                            setJob(updatedJob.data);
+                        }
+                    } else {
+                        setError(response.message || 'Failed to send message');
+                    }
+                } catch (err) {
+                    console.error('Error initiating contact:', err);
+                    // Fallback to local only for demo if offline
+                    setError('Failed to connect to chat server. Message shown locally.');
+                }
             }
             scrollToBottom();
         }

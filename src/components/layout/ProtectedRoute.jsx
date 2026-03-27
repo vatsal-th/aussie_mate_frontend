@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles = [], showHeader = true }) => {
   if (allowedRoles.length > 0) {
     const userRole = user.role || user.userType
     const hasAccess = allowedRoles.includes(userRole)
-    
+
     if (!hasAccess) {
       // Redirect to appropriate dashboard based on user role
       if (userRole === 'Customer') {

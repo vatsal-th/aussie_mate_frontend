@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ChevronRight, 
-  CheckCircle2, 
-  History as HistoryIcon, 
-  CreditCard, 
-  Info, 
+import {
+  ChevronRight,
+  CheckCircle2,
+  History as HistoryIcon,
+  Info,
   X,
-  PlusCircle,
+  Plus,
   Briefcase,
-  TrendingUp,
-  ExternalLink
+  AlertTriangle,
+  Clock,
+  Coins
 } from 'lucide-react';
 import { subscriptionsAPI, categoriesAPI } from '../../services/api';
 import { Button, Loader, PageHeader } from '../../components';
 import { useAuth } from '../../contexts/AuthContext';
-import CardBG7 from '../../assets/CardBG7.png'; // Using existing assets if possible
+import BGVector from '../../assets/BG Vector.png';
+
 
 const MySubscriptionPage = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const MySubscriptionPage = () => {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [selectedPlanCategories, setSelectedPlanCategories] = useState([]);
   const [selectedPlanName, setSelectedPlanName] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,8 +49,9 @@ const MySubscriptionPage = () => {
       // Fetch my status
       const statusRes = await subscriptionsAPI.getMyStatus().catch(() => ({ success: false }));
       if (statusRes.success && statusRes.data?.subscription?.status === 'active') {
+        console.log(statusRes.data);
         setActiveSubscription(statusRes.data);
-        
+
         // Fetch history if active subscription exists
         const historyRes = await subscriptionsAPI.getHistory().catch(() => ({ success: false }));
         if (historyRes.success) {
@@ -126,10 +129,10 @@ const MySubscriptionPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <PageHeader 
-          title={activeSubscription ? "Your Active Plan" : "My Subscription"} 
-          onBack={() => navigate(-1)} 
+      <div className="max-w-7xl mx-auto mt-4">
+        <PageHeader
+          title={activeSubscription ? "Your Active Plan" : "My Subscription"}
+          onBack={() => navigate(-1)}
         />
 
         {error && (
@@ -142,222 +145,348 @@ const MySubscriptionPage = () => {
         {activeSubscription ? (
           /* Active Subscription View */
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Active Plan Card */}
-            <div className="relative bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-6 md:p-8">
-              {/* Card Decoration */}
-              <div 
-                className="absolute top-0 right-0 w-48 h-48 opacity-10 pointer-events-none"
-                style={{ backgroundImage: `url(${CardBG7})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }}
-              />
-              
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold mb-2">
-                      <CheckCircle2 className="w-3 h-3 mr-1" /> ACTIVE
-                    </span>
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-[#111111]">
-                      {activeSubscription.subscription?.planId?.name}
-                    </h2>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500 font-medium">Monthly Cost</p>
-                    <p className="text-2xl font-bold text-primary-500">
-                      {formatCurrency(activeSubscription.subscription?.planId?.pricePerMonth || 0)}
-                    </p>
-                  </div>
+            {/* Out of Credits Alert - Web optimized centering */}
+            {activeSubscription.availableCredits === 0 && (
+              <div className="bg-white rounded-[32px] p-10 shadow-sm border border-red-100 flex flex-col md:flex-row items-center gap-8 animate-in zoom-in duration-500">
+                <div className="w-20 h-20 bg-red-50 rounded-[28px] flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-10 h-10 text-red-500" />
+                </div>
+                <div className="text-center md:text-left flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">You're out of credits!</h3>
+                  <p className="text-gray-500 font-medium max-w-xl">
+                    You have used all your available credits. Purchase additional credits to continue responding to customer leads and growing your business.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => navigate('/buy-credits')}
+                  className="rounded-3xl h-14 px-10 font-bold whitespace-nowrap"
+                  variant="primary"
+                >
+                  Buy More Credits
+                </Button>
+              </div>
+            )}
+
+            {/* Main Content - Single Vertical Stack for Full Width */}
+            <div className="flex flex-col gap-8 w-full">
+
+              {/* Active Plan Card */}
+              <div className="relative bg-white rounded-[40px] overflow-hidden border border-gray-100">
+                {/* SVG Background Layer - Soft, Prominent Glow from Figma */}
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 overflow-visible">
+                  {/* SVG Vector */}
+                  <div
+                    className="absolute inset-0 opacity-80 bg-no-repeat bg-right-top bg-contain -mr-40 -mt-40"
+                    style={{ backgroundImage: `url(${BGVector})` }}
+                  />
+                  {/* Additional CSS Glow for Vividness */}
+                  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-purple-400/30 via-blue-300/20 to-transparent blur-[100px] rounded-full -mr-32 -mt-32" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="bg-primary-50 rounded-2xl p-4 border border-primary-100">
-                    <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mb-1">Available Credits</p>
-                    <p className="text-2xl font-black text-primary-700">{activeSubscription.availableCredits}</p>
+                <div className="p-6 md:p-8 relative z-10 flex flex-col gap-6 text-[#111827]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="inline-flex items-center px-4 py-1 rounded-full border border-[#DBF9E7] bg-[#EBFBF5] text-[#10B981] text-xs font-medium mb-4">
+                        Active
+                      </span>
+                      <h2 className="text-2xl font-medium text-[#111827]">
+                        {activeSubscription.subscription?.planId?.name}
+                      </h2>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Plan Period</p>
-                    <p className="text-sm font-bold text-gray-700">
+
+                  {/* Credits Badge Box - Refined Figma Style */}
+                  <div className="bg-white border border-[#F3F3F3] rounded-[14px] p-2 flex flex-col gap-2 max-w-2xl">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Coins className="w-3.5 h-3.5 text-[#1F6FEB]" />
+                      </div>
+                      <span className="text-[#1F6FEB] font-bold text-base">Credits</span>
+                    </div>
+                    <p className="text-xl font-black text-[#111827]">{activeSubscription.availableCredits} Credits</p>
+                  </div>
+
+                  <div className="mt-2">
+                    <p className="text-lg font-medium text-[#374151]">
                       {formatDate(activeSubscription.subscription?.currentPeriodStart)} - {formatDate(activeSubscription.subscription?.currentPeriodEnd)}
                     </p>
                   </div>
-                </div>
 
-                {/* Credit Usage Progress Bar */}
-                <div className="mb-8">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-primary-500" /> Credit Usage
-                    </p>
-                    <p className="text-sm font-medium text-gray-500">
-                      {(activeSubscription.subscription?.planId?.creditsPerMonth - activeSubscription.availableCredits) || 0} of {activeSubscription.subscription?.planId?.creditsPerMonth || 0} used
-                    </p>
+                  {/* Bonus Leads Box - Clean White per Figma */}
+                  <div className="bg-white border border-[#F3F3F3] rounded-[14px] p-2 flex items-center gap-4 max-w-2xl">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                      <span className="text-3xl">🎁</span>
+                    </div>
+                    <p className="text-xl font-medium text-[#111827]">{activeSubscription?.subscription?.planId?.bonusLeads} Free Bonus Leads</p>
                   </div>
-                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                    <div 
-                      className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-1000"
-                      style={{ 
-                        width: `${Math.min(100, Math.max(0, ((activeSubscription.subscription?.planId?.creditsPerMonth - activeSubscription.availableCredits) / activeSubscription.subscription?.planId?.creditsPerMonth) * 100))}%` 
+                </div>
+              </div>
+
+              {/* Credit Usage Section - Moved to its own card as requested */}
+              <div className="bg-[#F9FAFB] rounded-[32px] border border-[#F3F3F3] p-8 shadow-sm">
+                <p className="text-2xl font-black text-[#111827] mb-2">Credit Usage</p>
+                <p className="text-base text-gray-500 font-medium mb-6">
+                  Track the credits used when you respond to customer job leads.
+                </p>
+
+                <div className="mb-8 relative">
+                  <div className="w-full h-4 bg-[#E5E7EB] rounded-full overflow-hidden  mb-6 relative">
+                    <div
+                      className="h-full bg-[#22C55E] rounded-full transition-all duration-1000 relative"
+                      style={{
+                        backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)',
+                        backgroundSize: '1rem 1rem',
+                        width: `${Math.min(100, Math.max(0, (((activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 1) - activeSubscription.availableCredits) / (activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 1)) * 100))}%`
                       }}
                     />
                   </div>
-                  <p className="mt-2 text-xs text-gray-500 italic">
-                    Estimated Leads Remaining: <span className="font-bold text-primary-600">{Math.floor(activeSubscription.availableCredits / (activeSubscription.subscription?.planId?.creditsPerLead || 1))} leads</span>
-                  </p>
+                  <div
+                    className="absolute left-0 -bottom-2 transform translate-y-full"
+                    style={{
+                      left: `${Math.min(
+                        90,
+                        Math.max(
+                          0,
+                          (
+                            ((activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 1) - activeSubscription.availableCredits) /
+                            (activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 1)
+                          ) * 100
+                        )
+                      )}%`,
+                    }}
+                  >
+                    <div className="relative bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm whitespace-nowrap">
+
+                      {/* Triangle */}
+                      <div className="absolute -top-1 left-4 w-2 h-2 bg-white border-t border-l border-gray-200 rotate-45" />
+
+                      <p className="text-sm font-bold text-gray-900">
+                        {Math.max(
+                          0,
+                          (activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 0) -
+                          activeSubscription.availableCredits
+                        )}{' '}
+                        <span className="text-gray-400 font-medium">of</span>{' '}
+                        {(activeSubscription?.subscription?.planId?.creditsPerMonth || activeSubscription?.planCredits || 0)}{' '}
+                        <span className="text-gray-400 font-normal">Credits Used</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <Button 
-                    fullWidth 
-                    variant="primary" 
-                    className="rounded-2xl h-14 font-bold text-lg shadow-lg shadow-primary-200"
-                    onClick={() => navigate('/cleaner-jobs')}
-                  >
-                    Find Jobs
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="rounded-2xl h-14 px-6 border-2"
-                    icon={<PlusCircle className="w-6 h-6" />}
-                    onClick={() => navigate('/wallet')} // Assuming wallet is for buying more credits
-                  >
-                    Buy Credits
-                  </Button>
-                </div>
-              </div>
-            </div>
+                <p className="text-base font-black text-[#111827] mb-6">
+                  Estimated Leads Remaining: <span className="text-[#111827] ml-1">{Math.floor(activeSubscription.availableCredits / (activeSubscription.subscription?.planId?.creditsPerLead || 1))} leads</span>
+                </p>
 
-            {/* Lead Usage History */}
-            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <HistoryIcon className="w-5 h-5 text-primary-500" /> Lead Usage History
-                </h3>
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Activity</span>
+                <button
+                  onClick={() => navigate('/buy-credits')}
+                  className="flex items-center gap-2 text-[#1F6FEB] font-black text-sm hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#1F6FEB] flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                  </div>
+                  Buy Credits
+                </button>
               </div>
-              
-              <div className="divide-y divide-gray-50">
-                {history.length > 0 ? (
-                  history.map((item, idx) => (
-                    <div key={item._id || idx} className="p-5 hover:bg-gray-50 transition-colors flex justify-between items-center">
-                      <div className="flex gap-4 items-center">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">
-                          <Briefcase className="w-5 h-5" />
+
+              {/* Lead Usage History */}
+              <div className="overflow-hidden">
+                <div className="p-6 pb-4 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+         
+                    <div className="flex flex-col">
+                      <h3 className="text-[20px] font-black text-[#111827]">
+                        Lead Usage History
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Track the credits used when you respond to customer job leads.
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                    RECENT ACTIVITY
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[#F9FAFB]">
+                  {history.length > 0 ? (
+                    history.map((item, idx) => (
+                      <div key={item._id || idx} className="px-6 py-5 hover:bg-[#F9FAFB] transition-colors flex justify-between items-center">
+                        <div className="flex gap-4 items-center">
+                          {/* <div className="w-12 h-12 rounded-full border border-[#F3F3F3] flex items-center justify-center bg-white text-gray-400 shadow-sm">
+                            <Briefcase className="w-6 h-6" strokeWidth={1.5} />
+                          </div> */}
+                          <div>
+                            <p className="text-[16px] font-black text-[#111827] leading-tight mb-1">
+                              {item.type === 'debit' && item.jobId?.categoryId?.name && item.jobId?.serviceTypeId?.name
+                                ? `${item.jobId.categoryId.name} - ${item.jobId.serviceTypeId.name}`
+                                : item.description}
+                            </p>
+                            <p className="text-[13px] text-gray-400 font-semibold">
+                              {item.jobId ? (
+                                <>
+                                  #{typeof item.jobId === 'object' ? item.jobId?.jobId : item.jobId} • 
+                                </>
+                              ) : null} {formatDate(item.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-800 mb-0.5">{item.description}</p>
-                          <p className="text-xs text-gray-500 font-medium">#{item.jobId || 'N/A'} • {formatDate(item.createdAt)}</p>
+                        <div className="text-right flex flex-col items-end">
+                          <p className={`text-[17px] font-black leading-none mb-1 ${item.type === 'credit' ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                            {item.type === 'credit' ? '+' : '-'}{Math.abs(item.amount)}
+                          </p>
+                          <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest leading-none">CREDITS</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-black ${item.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                          {item.type === 'credit' ? '+' : '-'}{Math.abs(item.amount)}
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase">Credits</p>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center">
+                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
+                        <HistoryIcon className="w-8 h-8 text-gray-300" />
                       </div>
+                      <p className="text-gray-500 font-bold text-lg">No Lead Activity Yet</p>
+                      <p className="text-gray-400 text-sm max-w-xs mx-auto mt-1">Your lead activity will appear here once you start responding to customer jobs.</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
-                      <HistoryIcon className="w-8 h-8 text-gray-300" />
-                    </div>
-                    <p className="text-gray-500 font-bold text-lg">No Lead Activity Yet</p>
-                    <p className="text-gray-400 text-sm max-w-xs mx-auto mt-1">Your lead activity will appear here once you start responding to customer jobs.</p>
+                  )}
+                </div>
+                {history.length > 5 && (
+                  <div className="p-4 border-t border-gray-50 text-center">
+                    <button
+                      onClick={() => setShowHistoryModal(true)}
+                      className="text-primary-600 font-bold text-sm hover:underline flex items-center gap-1 mx-auto cursor-pointer"
+                    >
+                      View Full History <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
               </div>
-              {history.length > 0 && (
-                <div className="p-4 border-t border-gray-50 text-center">
-                  <button className="text-primary-600 font-bold text-sm hover:underline flex items-center gap-1 mx-auto">
-                    View Full History <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         ) : (
           /* "No Subscription" Plan Selection View */
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header / Why Subscribe Section */}
-            <div className="text-center md:text-left">
-              <h2 className="text-3xl font-black text-[#111111] mb-2">Get Cleaning Leads</h2>
-              <p className="text-gray-500 font-medium text-lg leading-relaxed mb-8">
-                Subscribe to access verified customer jobs in your service categories.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  "Get direct job leads from customers",
-                  "Chat with customers instantly if you're among the first 3 applicants",
-                  "Secure verified leads only",
-                  "Flexible credit usage for multiple jobs"
-                ].map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-primary-600" />
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header section - split layout for desktop */}
+            <div className="flex flex-col gap-10">
+              <div className="max-w-4xl">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Get Cleaning Leads</h2>
+                <p className="text-gray-500 font-medium text-lg leading-relaxed">
+                  Subscribe to access verified customer jobs in your service categories.
+                </p>
+              </div>
+
+              <div className="w-full">
+                <p className="text-2xl font-bold text-gray-900 mb-6">Why Subscribe?</p>
+                <div className="space-y-5">
+                  {[
+                    "Get direct job leads from customers",
+                    "Chat with customers instantly (top 3 applicants)",
+                    "Secure verified leads only",
+                    "Flexible credit usage for multiple jobs"
+                  ].map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-4">
+                      <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center bg-white shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary-500" />
+                      </div>
+                      <p className="text-base font-medium text-gray-700">{feature}</p>
                     </div>
-                    <p className="text-sm font-bold text-gray-700">{feature}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Plans List */}
-            <div className="space-y-6">
+            {/* Plans List - Vertically stacked cards - Full Width */}
+            <div className="flex flex-col gap-8 w-full">
               {plans.map((plan) => (
-                <div 
-                  key={plan._id} 
-                  className="relative bg-white rounded-[32px] p-6 md:p-8 shadow-xl border-2 border-transparent hover:border-primary-300 transition-all group overflow-hidden"
+                <div
+                  key={plan._id}
+                  className="bg-[#F9FAFB] rounded-[32px] border border-[#F3F3F3] transition-all duration-300 relative overflow-hidden flex flex-col group"
                 >
-                  {/* Glassmorphism gradient effect */}
-                  <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-500/5 rounded-full blur-3xl" />
-                  
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
-                      <div>
-                        <h4 className="text-lg font-black text-gray-400 uppercase tracking-widest mb-1">{plan.name}</h4>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-black text-[#111111]">{formatCurrency(plan.pricePerMonth)}</span>
-                          <span className="text-gray-400 font-bold mb-1">/ month</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="bg-orange-50 text-orange-600 px-4 py-2 rounded-2xl border border-orange-100 flex flex-col items-center justify-center min-w-[100px]">
-                          <span className="text-[10px] font-black uppercase tracking-wider mb-0.5 opcity-70">Duration</span>
-                          <span className="text-sm font-black">{plan.durationMonths} Month Contract</span>
-                        </div>
-                        <div className="bg-primary-50 text-primary-600 px-4 py-2 rounded-2xl border border-primary-100 flex flex-col items-center justify-center min-w-[100px]">
-                          <span className="text-[10px] font-black uppercase tracking-wider mb-0.5 opacity-70">Credits</span>
-                          <span className="text-sm font-black">{plan.creditsPerMonth} Credits</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 mb-8">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-                        <p className="text-sm font-bold">{plan.creditsPerLead} credits per lead</p>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-                        <p className="text-sm font-bold">Approx. {plan.approxLeads}</p>
+                  {/* SVG Background Layer - Soft, Prominent Glow from Figma */}
+                  <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none z-0 overflow-visible">
+                    {/* SVG Vector */}
+                    <div
+                      className="absolute inset-0 opacity-80 bg-no-repeat bg-right-top bg-contain -mr-40 -mt-40"
+                      style={{ backgroundImage: `url(${BGVector})` }}
+                    />
+                    {/* Additional CSS Glow for Vividness */}
+                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-purple-400/30 via-blue-300/20 to-transparent blur-[100px] rounded-full -mr-32 -mt-32" />
+                  </div>
+                  <div className="p-6 md:p-8 relative z-10 flex flex-col gap-6 text-[#111827]">
+                    {/* Row 1: Plan Name & Actions - Spread Out */}
+                    <div className="flex flex-wrap justify-between items-center w-full gap-4">
+                      <h4 className="text-[22px] font-bold">
+                        {plan.name}
+                      </h4>
+                      <div className="flex items-center gap-6">
+                        <button
+                          onClick={() => handleViewCategories(plan)}
+                          className="text-[#111827] font-bold text-sm hover:text-primary-600 transition-colors"
+                        >
+                          View Included Categories
+                        </button>
+                        <Button
+                          variant="primary"
+                          className="h-12 rounded-full font-bold text-sm bg-[#1F6FEB] hover:bg-blue-700 transition-colors px-8 whitespace-nowrap"
+                          onClick={() => handleSubscribe(plan._id)}
+                        >
+                          Subscribe to {plan.name.split(/[\s/-]/)[0]} Plan
+                        </Button>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Button 
-                        fullWidth 
-                        variant="primary" 
-                        className="rounded-2xl h-14 font-black text-lg shadow-lg group-hover:scale-[1.02] transition-transform active:scale-95"
-                        onClick={() => handleSubscribe(plan._id)}
-                      >
-                        Subscribe to {plan.name.split(' ')[0]} Plan
-                      </Button>
-                      <button 
-                        onClick={() => handleViewCategories(plan)}
-                        className="flex items-center justify-center gap-2 text-primary-600 font-black text-sm hover:translate-x-1 transition-transform cursor-pointer h-14"
-                      >
-                        View Included Categories <ChevronRight className="w-5 h-5 text-primary-500" />
-                      </button>
+                    {/* Row 2: Price - Compacted */}
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[40px] leading-tight font-bold tracking-tight">${plan.pricePerMonth}</span>
+                      <span className="text-gray-400 font-medium text-lg">/ month</span>
+                    </div>
+
+                    {/* Row 3: Info Boxes (50/50) - Balanced */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                      {/* Box 1: Duration & Credits - No Divider, Compact Gap */}
+                      <div className="bg-white/80 backdrop-blur-xl border border-gray-100 rounded-xl p-4 flex items-center gap-12">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                            <Clock className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-medium text-gray-400 leading-tight">Duration Badge</p>
+                            <p className="text-[15px] font-bold whitespace-nowrap">{plan.durationMonths || 6} Month Contract</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                            <Coins className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-medium text-gray-400 leading-tight">Credits</p>
+                            <p className="text-[15px] font-bold whitespace-nowrap">{plan.creditsPerMonth} Credits</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Box 2: Bonus Leads */}
+                      <div className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-blue-50 rounded-xl">
+                          <span className="text-2xl">🎁</span>
+                        </div>
+                        <p className="text-[15px] font-bold">{plan.bonusLeads || 2} Free Bonus Leads</p>
+                      </div>
+                    </div>
+
+                    {/* Row 4: Usage Details - Vertical Stack as requested */}
+                    <div className="pt-2">
+                      <p className="text-[16px] font-bold mb-3">Usage</p>
+                      <ul className="space-y-2">
+                        <li className="flex items-center gap-2 text-gray-500 font-medium text-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                          {plan.creditsPerLead} credits per lead
+                        </li>
+                        <li className="flex items-center gap-2 text-gray-500 font-medium text-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                          Approx. {plan.approxLeads}
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -370,46 +499,100 @@ const MySubscriptionPage = () => {
         {showCategoriesModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100">
-              <div className="p-6 md:p-8 flex justify-between items-center border-b border-gray-50">
+              <div className="p-4 md:p-6 flex justify-between items-center border-b border-gray-50">
                 <div>
-                  <h3 className="text-2xl font-black text-[#111111]">{selectedPlanName}</h3>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Included Services</p>
+                  <h3 className="text-xl font-bold text-[#111111]">{selectedPlanName}</h3>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Included Services</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowCategoriesModal(false)}
-                  className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-800"
+                  className="p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-800"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              
-              <div className="p-6 md:p-8 max-h-[60vh] overflow-y-auto">
+
+              <div className="p-4 md:p-6 max-h-[50vh] overflow-y-auto">
                 {modalLoading ? (
-                  <div className="py-20 flex justify-center">
+                  <div className="py-10 flex justify-center">
                     <Loader message="Loading service types..." />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 gap-2">
                     {selectedPlanCategories.map((type, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-primary-50 hover:border-primary-100 transition-all group"
+                      <div
+                        key={idx}
+                        className="flex items-center p-3.5 bg-gray-50 rounded-xl border border-gray-100 hover:bg-primary-50 hover:border-primary-100 transition-all group"
                       >
-                        <div className="w-3 h-3 rounded-full bg-primary-200 group-hover:bg-primary-500 mr-4 transition-colors" />
-                        <span className="text-gray-800 font-bold text-lg">{type.name}</span>
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary-200 group-hover:bg-primary-500 mr-3 transition-colors" />
+                        <span className="text-gray-800 font-bold text-base">{type.name}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              
-              <div className="p-6 md:p-8 bg-gray-50/50 flex justify-center">
-                <Button 
-                  onClick={() => setShowCategoriesModal(false)} 
-                  variant="ghost" 
-                  className="text-gray-500 font-black hover:text-gray-800"
+
+              <div className="p-4 md:p-6 bg-gray-50/50 flex justify-center">
+                <Button
+                  onClick={() => setShowCategoriesModal(false)}
+                  variant="ghost"
+                  className="text-gray-400 text-sm font-bold hover:text-gray-800"
                 >
                   Close Categories
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* History Modal */}
+        {showHistoryModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100">
+              <div className="p-6 md:p-8 flex justify-between items-center border-b border-gray-50">
+                <div>
+                  <h3 className="text-2xl font-black text-[#111111]">Lead Usage History</h3>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Full Activity Log</p>
+                </div>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-800"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="max-h-[60vh] overflow-y-auto">
+                <div className="divide-y divide-gray-50">
+                  {history.map((item, idx) => (
+                    <div key={item._id || idx} className="p-6 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                      <div className="flex gap-4 items-center">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-500">
+                          <Briefcase className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-base font-bold text-gray-800 mb-0.5">{item.description}</p>
+                          <p className="text-sm text-gray-500 font-medium">#{typeof item.jobId === 'object' ? item.jobId?.jobId : (item.jobId || 'N/A')} • {formatDate(item.createdAt)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-black ${item.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
+                          {item.type === 'credit' ? '+' : '-'}{Math.abs(item.amount)}
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">Credits</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 md:p-8 bg-gray-50/50 flex justify-center">
+                <Button
+                  onClick={() => setShowHistoryModal(false)}
+                  variant="primary"
+                  className="rounded-2xl px-12"
+                >
+                  Close History
                 </Button>
               </div>
             </div>
